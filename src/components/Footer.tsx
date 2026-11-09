@@ -35,25 +35,16 @@ export default function Footer({ setCurrentView }: FooterProps) {
     }
   };
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, view: string) => {
     if (setCurrentView) {
       e.preventDefault();
-      setCurrentView('home');
-      setTimeout(() => {
-        const el = document.querySelector(sectionId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      }, 50);
+      setCurrentView(view);
     }
   };
 
   const handleViewSwitch = (view: string) => {
     if (setCurrentView) {
       setCurrentView(view);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -130,12 +121,12 @@ export default function Footer({ setCurrentView }: FooterProps) {
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Explorar</h4>
             <ul className="space-y-3.5">
-              <li><a href="#inicio" onClick={(e) => handleNavClick(e, '#inicio')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Inicio</a></li>
-              <li><a href="#nosotros" onClick={(e) => handleNavClick(e, '#nosotros')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Nosotros</a></li>
-              <li><a href="#talleres" onClick={(e) => handleNavClick(e, '#talleres')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Cursos Presenciales</a></li>
-              <li><a href="#corporativo" onClick={(e) => handleNavClick(e, '#corporativo')} className="text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-semibold">Formación Corporativa</a></li>
-              <li><a href="#inscripciones" onClick={(e) => handleNavClick(e, '#inscripciones')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Inscripciones</a></li>
-              <li><a href="#faq" onClick={(e) => handleNavClick(e, '#faq')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Preguntas Frecuentes</a></li>
+              <li><a href="#inicio" onClick={(e) => handleNavClick(e, 'home')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Inicio</a></li>
+              <li><a href="#nosotros" onClick={(e) => handleNavClick(e, 'about')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Metodología</a></li>
+              <li><a href="#talleres" onClick={(e) => handleNavClick(e, 'workshops')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Cursos Presenciales</a></li>
+              <li><a href="#corporativo" onClick={(e) => handleNavClick(e, 'corporate')} className="text-indigo-300 hover:text-indigo-200 transition-colors text-sm font-semibold">Formación Corporativa</a></li>
+              <li><a href="#inscripciones" onClick={(e) => handleNavClick(e, 'registration')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Inscripciones</a></li>
+              <li><a href="#faq" onClick={(e) => handleNavClick(e, 'faq')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Preguntas Frecuentes</a></li>
               <li>
                 <button
                   type="button"
@@ -191,7 +182,7 @@ export default function Footer({ setCurrentView }: FooterProps) {
               <li className="pt-1">
                 <a 
                   href="#contacto"
-                  onClick={(e) => handleNavClick(e, '#contacto')}
+                  onClick={(e) => handleNavClick(e, 'contact')}
                   className="inline-flex items-center gap-2 text-xs font-bold text-indigo-300 hover:text-white bg-indigo-900/60 hover:bg-indigo-800 border border-indigo-700/60 px-3.5 py-2 rounded-lg transition-all"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
