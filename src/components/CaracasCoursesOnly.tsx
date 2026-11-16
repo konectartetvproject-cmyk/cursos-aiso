@@ -451,71 +451,14 @@ export default function CaracasCoursesOnly() {
             <div className="p-6 overflow-y-auto space-y-6 flex-grow bg-white dark:bg-slate-900">
               {modalTab === 'flyer' ? (
                 <div className="flex flex-col items-center">
-                  {activeModalCourse.id === 'caracas-oratoria' ? (
-                    <div className="w-full max-w-md rounded-2xl overflow-hidden border-2 border-blue-900 shadow-xl bg-white text-center select-none">
-                      <div className="bg-gradient-to-b from-sky-400 to-sky-500 pt-7 pb-6 px-6">
-                        <div className="text-3xl sm:text-4xl font-black uppercase text-white tracking-tight leading-none mb-2">
-                          Curso de
-                        </div>
-                        <div className="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 border-t-4 border-amber-400 py-3 px-6 rounded-xl shadow-lg inline-block w-full">
-                          <span className="text-4xl sm:text-5xl font-black uppercase text-white tracking-tight block leading-none">
-                            Oratoria
-                          </span>
-                        </div>
-                        <div className="bg-white text-slate-950 font-black text-3xl sm:text-4xl uppercase tracking-wide py-2 px-4 mt-2 rounded-b-xl shadow-xs">
-                          Caracas
-                        </div>
-                      </div>
-
-                      <div className="bg-white py-4 px-5 flex items-center justify-around border-b border-slate-200">
-                        <div className="text-2xl sm:text-3xl font-black text-blue-700 uppercase">
-                          3 Clases
-                        </div>
-                        <div className="text-left border-l-2 border-slate-200 pl-4">
-                          <span className="block text-base sm:text-lg font-black text-slate-950 uppercase leading-none">
-                            Los Sábados
-                          </span>
-                          <span className="block text-xs font-extrabold text-slate-700 uppercase mt-1">
-                            Inicia: <strong className="text-slate-950 text-sm">21 de Noviembre</strong>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="relative h-64 w-full bg-slate-900">
-                        <img
-                          src={activeModalCourse.image}
-                          alt={activeModalCourse.imageAlt}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 border-t-4 border-amber-400 py-4 px-5 text-white grid grid-cols-3 items-center gap-2">
-                        <div className="text-sm sm:text-base font-black uppercase tracking-wide">
-                          Matutino
-                        </div>
-                        <div className="bg-slate-950 py-2 px-2 rounded border border-amber-400/50">
-                          <span className="font-black text-lg text-white block leading-none">AiSO</span>
-                          <span className="text-[9px] text-amber-300 uppercase tracking-widest block mt-0.5">
-                            Social Oratory
-                          </span>
-                        </div>
-                        <div className="text-xs sm:text-sm font-black uppercase leading-tight font-mono tabular-nums">
-                          De 9:30 A.M
-                          <span className="block">A 1:00 P.M</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-3">
-                      <img
-                        src={activeModalCourse.image}
-                        alt={activeModalCourse.imageAlt}
-                        referrerPolicy="no-referrer"
-                        className="max-h-[70vh] w-auto object-contain rounded-xl shadow-md"
-                      />
-                    </div>
-                  )}
+                  <div className="w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-3">
+                    <img
+                      src={activeModalCourse.image}
+                      alt={activeModalCourse.imageAlt}
+                      referrerPolicy="no-referrer"
+                      className="max-h-[70vh] w-auto object-contain rounded-xl shadow-md"
+                    />
+                  </div>
 
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">
                     Flyer oficial del programa en Caracas · Haz clic en la pestaña <strong>Pensum y Requisitos</strong> para ver el desglose completo por clase.

@@ -14,6 +14,7 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     { name: 'Metodología', view: 'about', href: '#nosotros' },
     { name: 'Cursos', view: 'workshops', href: '#talleres' },
     { name: 'Cursos Caracas', view: 'caracas-only', href: '#caracas' },
+    { name: 'Curso IA', view: 'ia-only', href: '#curso-ia' },
     { name: 'Corporativo', view: 'corporate', href: '#corporativo' },
     { name: 'Preguntas', view: 'faq', href: '#faq' },
     { name: 'Testimonios', view: 'testimonials', href: '#testimonios' },
@@ -23,8 +24,9 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
   const isOratoryPortal = currentView === 'students';
   const isIAPortal = currentView === 'students-ia';
   const isCaracasOnly = currentView === 'caracas-only';
+  const isIAOnly = currentView === 'ia-only';
   const isStudentPortal = isOratoryPortal || isIAPortal;
-  const isIsolatedView = isStudentPortal || isCaracasOnly;
+  const isIsolatedView = isStudentPortal || isCaracasOnly || isIAOnly;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,10 +75,10 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
         >
           <div
             className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm ${
-              isIAPortal ? 'bg-sky-600' : 'bg-indigo-600'
+              isIAPortal || isIAOnly ? 'bg-sky-600' : 'bg-indigo-600'
             }`}
           >
-            {isIAPortal ? <Cpu className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isIAPortal || isIAOnly ? <Cpu className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
@@ -84,12 +86,14 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
             </span>
             <span
               className={`text-[11px] font-semibold mt-1 uppercase tracking-wider ${
-                isIAPortal
+                isIAPortal || isIAOnly
                   ? 'text-sky-600 dark:text-sky-400'
                   : 'text-indigo-600 dark:text-indigo-400'
               }`}
             >
-              {isCaracasOnly
+              {isIAOnly
+                ? 'Curso Práctico: Inteligencia Artificial Aplicada · Caracas'
+                : isCaracasOnly
                 ? 'Sede Caracas · C.C. Millennium Mall'
                 : isIAPortal
                 ? 'Portal Estudiantes · Curso de IA'
