@@ -117,7 +117,7 @@ export default function StudentPortal() {
   }
 
   return (
-    <section className="pt-32 pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
+    <section className="pt-28 pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="mb-12 border-b border-slate-200 dark:border-slate-800 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -131,9 +131,15 @@ export default function StudentPortal() {
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-2">
               Bienvenido/a al <span className="text-indigo-600 dark:text-indigo-400">Campus AISO</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-lg">Aquí tienes acceso a tu material educativo y recursos de AISO.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">
+              Explora todos los módulos, guías visuales, presentaciones y recursos audiovisuales de tu formación en oratoria.
+            </p>
           </motion.div>
-          <button onClick={handleLogout} className="text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors bg-white dark:bg-slate-900 px-4 py-2 border border-slate-200 dark:border-slate-800 rounded shadow-sm cursor-pointer">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors bg-white dark:bg-slate-900 px-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm cursor-pointer shrink-0 self-start md:self-auto"
+          >
             Cerrar Sesión
           </button>
         </div>
@@ -153,133 +159,134 @@ export default function StudentPortal() {
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Haz clic en cualquier sección para ir directamente a su contenido</p>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              { id: 'nav-infographic', label: 'Infografía AISO', icon: <FileText className="w-4 h-4" /> },
-              { id: 'nav-slide-content', label: 'Inicio y Conclusión', icon: <PlayCircle className="w-4 h-4" /> },
-              { id: 'nav-eleven-steps', label: 'Los 11 Pasos', icon: <ListOrdered className="w-4 h-4" /> },
-              { id: 'nav-course-modules', label: 'Módulos', icon: <BookOpen className="w-4 h-4" /> },
-              { id: 'nav-rhetorical-figures', label: 'Figuras Retóricas', icon: <Brain className="w-4 h-4" /> },
-              { id: 'nav-trabalenguas', label: 'Trabalenguas AISO', icon: <Mic2 className="w-4 h-4" /> },
-              { id: 'nav-presentation', label: 'Diapositivas', icon: <FileText className="w-4 h-4" /> },
-              { id: 'nav-videos', label: 'Videoteca', icon: <PlayCircle className="w-4 h-4" /> }
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  const el = document.getElementById(item.id);
-                  if (el) {
-                    const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                  }
-                }}
-                className="flex items-center gap-3 p-4 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-slate-700 dark:text-slate-300 text-sm font-bold group shadow-sm"
-              >
-                <span className="text-slate-400 group-hover:text-indigo-500 transition-colors bg-white dark:bg-slate-800 p-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 group-hover:border-indigo-200">{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { id: 'nav-infographic', label: 'Infografía AISO', icon: <FileText className="w-4 h-4" /> },
+                  { id: 'nav-slide-content', label: 'Inicio y Conclusión', icon: <PlayCircle className="w-4 h-4" /> },
+                  { id: 'nav-eleven-steps', label: 'Los 11 Pasos', icon: <ListOrdered className="w-4 h-4" /> },
+                  { id: 'nav-course-modules', label: 'Módulos', icon: <BookOpen className="w-4 h-4" /> },
+                  { id: 'nav-rhetorical-figures', label: 'Figuras Retóricas', icon: <Brain className="w-4 h-4" /> },
+                  { id: 'nav-trabalenguas', label: 'Trabalenguas AISO', icon: <Mic2 className="w-4 h-4" /> },
+                  { id: 'nav-presentation', label: 'Diapositivas', icon: <FileText className="w-4 h-4" /> },
+                  { id: 'nav-videos', label: 'Videoteca', icon: <PlayCircle className="w-4 h-4" /> }
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById(item.id);
+                      if (el) {
+                        const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                      }
+                    }}
+                    className="flex items-center gap-3 p-4 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-slate-700 dark:text-slate-300 text-sm font-bold group shadow-sm cursor-pointer"
+                  >
+                    <span className="text-slate-400 group-hover:text-indigo-500 transition-colors bg-white dark:bg-slate-800 p-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 group-hover:border-indigo-200">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
 
-        <motion.div
-          id="nav-infographic"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="mb-12"
-        >
-          <Infographic />
-        </motion.div>
+            <motion.div
+              id="nav-infographic"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-12"
+            >
+              <Infographic />
+            </motion.div>
 
-        <div id="nav-slide-content"><SlideContent /></div>
-        <div id="nav-eleven-steps"><ElevenSteps /></div>
-        <div id="nav-course-modules"><CourseModules /></div>
-        <div id="nav-rhetorical-figures"><RhetoricalFigures /></div>
-        <div id="nav-trabalenguas"><TrabalenguasAISO /></div>
+            <div id="nav-slide-content"><SlideContent /></div>
+            <div id="nav-eleven-steps"><ElevenSteps /></div>
+            <div id="nav-course-modules"><CourseModules /></div>
+            <div id="nav-rhetorical-figures"><RhetoricalFigures /></div>
+            <div id="nav-trabalenguas"><TrabalenguasAISO /></div>
 
-        <div id="nav-presentation" className="mb-12">
-          <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" /> Presentación: El Sello del Orador Exitoso
-          </h3>
-          <PresentationViewer />
-        </div>
+            <div id="nav-presentation" className="mb-12">
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" /> Presentación: El Sello del Orador Exitoso
+              </h3>
+              <PresentationViewer />
+            </div>
 
-        <div className="mb-12">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Metodología de Estudio
-          </h3>
-          
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-950/30 rounded-bl-full -z-0"></div>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white mb-4 relative z-10 font-serif">Aprende Haciendo</h4>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10">
-              AISO se enfoca en la práctica deliberada. Utiliza los ejercicios de cada módulo anterior y las herramientas de evaluación para construir tu confianza paso a paso. La repetición es la clave para la excelencia en la oratoria.
-            </p>
-          </div>
-        </div>
+            <div className="mb-12">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Metodología de Estudio
+              </h3>
+              
+              <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-950/30 rounded-bl-full -z-0"></div>
+                <h4 className="text-2xl font-black text-slate-900 dark:text-white mb-4 relative z-10 font-serif">Aprende Haciendo</h4>
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed relative z-10">
+                  AISO se enfoca en la práctica deliberada. Utiliza los ejercicios de cada módulo anterior y las herramientas de evaluación para construir tu confianza paso a paso. La repetición es la clave para la excelencia en la oratoria.
+                </p>
+              </div>
+            </div>
 
-        <motion.div
-          id="nav-videos"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8"
-        >
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/jh_BBX0Rc9g" 
-              title="AISO Video 1" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/CEQNracD2M4" 
-              title="AISO Video 2" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/h0yD1X7KaZM" 
-              title="AISO Video 3" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/CcfkTNItI4I" 
-              title="AISO Video 4" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/CaCHhMToY9Y" 
-              title="AISO Video 5" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-          <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200">
-            <iframe 
-              src="https://www.youtube.com/embed/ENsLVV9rhzI" 
-              title="AISO Video 6" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
-            ></iframe>
-          </div>
-        </motion.div>
+            <motion.div
+              id="nav-videos"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8"
+            >
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/jh_BBX0Rc9g" 
+                  title="AISO Video 1" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/CEQNracD2M4" 
+                  title="AISO Video 2" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/h0yD1X7KaZM" 
+                  title="AISO Video 3" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/CcfkTNItI4I" 
+                  title="AISO Video 4" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/CaCHhMToY9Y" 
+                  title="AISO Video 5" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+              <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
+                <iframe 
+                  src="https://www.youtube.com/embed/ENsLVV9rhzI" 
+                  title="AISO Video 6" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                  className="w-full h-[300px] md:h-[250px] lg:h-[350px] object-cover"
+                ></iframe>
+              </div>
+            </motion.div>
       </div>
     </section>
   );

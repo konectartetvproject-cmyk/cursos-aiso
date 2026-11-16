@@ -263,7 +263,7 @@ export default function Contact() {
                   <div>
                     <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Modalidad</span>
                     <span className="text-sm font-bold text-slate-900 dark:text-white">100% Presencial</span>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sedes en Caracas, Valencia y Maracay</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sedes en Caracas, Valencia, Lechería, Barinas, Barquisimeto y Maracay</p>
                   </div>
                 </div>
               </div>
@@ -450,10 +450,14 @@ export default function Contact() {
                           className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
                         >
                           <option value="informacion-general">Información general de cursos</option>
+                          <option value="caracas-ia">Caracas · Curso Práctico: Inteligencia Artificial Aplicada</option>
                           <option value="caracas-oratoria">Caracas · Curso de Oratoria (Millennium Mall)</option>
-                          <option value="valencia-atencion">Valencia · Atención al Cliente (Auditorio AISO)</option>
-                          <option value="maracay-oratoria">Maracay · Curso de Oratoria (Maracay Plaza)</option>
-                          <option value="caracas-avanzada">Caracas · Oratoria Avanzada Máster</option>
+                          <option value="caracas-atencion">Caracas · Atención al Cliente (Millennium Mall)</option>
+                          <option value="valencia-oratoria">Valencia · Curso de Oratoria (Urb. La Viña)</option>
+                          <option value="valencia-atencion">Valencia · Atención al Cliente (Urb. La Viña)</option>
+                          <option value="sede-lecheria">Lechería · Información de Cursos Presenciales</option>
+                          <option value="sede-barinas">Barinas · Información de Cursos Presenciales</option>
+                          <option value="sede-barquisimeto">Barquisimeto · Información de Cursos Presenciales</option>
                           <option value="empresas">Capacitación In-Company para Empresas</option>
                           <option value="certificacion-pagos">Dudas de Pagos y Certificación</option>
                         </select>

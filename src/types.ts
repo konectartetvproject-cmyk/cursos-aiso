@@ -8,7 +8,7 @@ export interface Workshop {
   id: string;
   title: string;
   subtitle?: string;
-  city: 'Caracas' | 'Valencia' | 'Maracay' | 'Corporativo';
+  city: 'Caracas' | 'Valencia' | 'Maracay' | 'Lechería' | 'Barinas' | 'Barquisimeto' | 'Corporativo';
   venue: string;
   badgeText: string;
   badgeColor: string;
@@ -17,6 +17,8 @@ export interface Workshop {
   image: string;
   imageAlt: string;
   imagePosition?: string;
+  showFullFlyerInModal?: boolean;
+  highlightBanner?: string;
   startDate: string;
   dates: string;
   schedule: string;
@@ -25,9 +27,12 @@ export interface Workshop {
   priceStandard: string;
   priceCashOffer?: string;
   registrationFee?: string;
+  reservationNote?: string;
   creditOption?: string;
   description: string;
   features: string[];
+  requirements?: string[];
+  whatsappMessageText?: string;
   syllabus: CourseClass[];
 }
 

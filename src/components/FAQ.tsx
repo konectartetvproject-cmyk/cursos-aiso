@@ -41,7 +41,7 @@ const FAQS: FAQItem[] = [
   {
     category: 'horarios',
     question: '¿Dónde están ubicadas las sedes y cuáles son los horarios?',
-    answer: 'Tenemos programas presenciales en 3 ciudades: 1) Caracas: C.C. Millennium Mall, Nivel Rómulo Gallegos (Sábados de 9:30 AM a 1:00 PM); 2) Valencia: Urb. La Viña, Auditorio AISO (Miércoles Turno Noche de 6:00 PM a 9:00 PM); y 3) Maracay: C.C. Maracay Plaza, piso 1 local 53D enfrente a la fuente (Sábados de 2:00 PM a 6:00 PM).'
+    answer: 'Contamos con presencia y sedes presenciales en 6 ciudades del país: Caracas (C.C. Millennium Mall, Los Dos Caminos), Valencia (Urb. La Viña, Sede AISO), Maracay (C.C. Maracay Plaza), Lechería, Barinas y Barquisimeto. Puedes consultar las fechas activas en el catálogo de cursos o contactar a nuestro equipo de admisiones por WhatsApp para reservar tu cupo en tu ciudad.'
   },
 
   // Certificación

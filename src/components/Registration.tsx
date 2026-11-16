@@ -8,7 +8,7 @@ interface RegistrationProps {
   onCourseChange?: (id: string) => void;
 }
 
-export default function Registration({ selectedCourseId = 'caracas-oratoria', onCourseChange }: RegistrationProps) {
+export default function Registration({ selectedCourseId = 'caracas-ia', onCourseChange }: RegistrationProps) {
   const { user, getToken } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -71,6 +71,9 @@ export default function Registration({ selectedCourseId = 'caracas-oratoria', on
   };
 
   const getWhatsAppRegistrationUrl = () => {
+    if (activeCourseObj?.whatsappMessageText) {
+      return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(activeCourseObj.whatsappMessageText)}`;
+    }
     const courseTitle = activeCourseObj ? `${activeCourseObj.title} (${activeCourseObj.city})` : 'Cursos AISO';
     const msg = encodeURIComponent(`¡Hola Academia AISO! Deseo apartar mi cupo para el ${courseTitle}. ¿Me podrían indicar los datos bancarios para formalizar mi inscripción?`);
     return `https://wa.me/message/IIBLPHIKQJIIE1?text=${msg}`;
@@ -133,6 +136,11 @@ export default function Registration({ selectedCourseId = 'caracas-oratoria', on
               <div>
                 <strong className="font-semibold text-slate-700 dark:text-slate-300">Horario:</strong> {activeCourseObj.schedule}
               </div>
+              {activeCourseObj.reservationNote && (
+                <div className="sm:col-span-2 text-indigo-600 dark:text-indigo-400 font-semibold pt-1">
+                  {activeCourseObj.reservationNote}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -144,7 +152,7 @@ export default function Registration({ selectedCourseId = 'caracas-oratoria', on
             </span>
             <div>
               <h4 className="text-slate-900 dark:text-white font-bold text-sm">Selecciona tu ciudad y programa</h4>
-              <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Caracas (Millennium Mall), Valencia (Auditorio AISO) o Maracay (Maracay Plaza).</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Caracas, Valencia, Lechería, Barinas, Barquisimeto o Maracay.</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
@@ -247,7 +255,7 @@ export default function Registration({ selectedCourseId = 'caracas-oratoria', on
               </div>
 
               <div>
-                <label htmlFor="taller" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Curso o Capacitación de Interés</label>
+                <label htmlFor="taller" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Curso o Sede de Interés</label>
                 <select 
                   id="taller" 
                   value={currentCourse}
@@ -255,10 +263,14 @@ export default function Registration({ selectedCourseId = 'caracas-oratoria', on
                   required
                   className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
                 >
-                  <option value="caracas-oratoria">Caracas · Curso de Oratoria (Millennium Mall) - $120 / $100 ef.</option>
-                  <option value="valencia-atencion">Valencia · Atención al Cliente de Alto Impacto (La Viña) - $45</option>
-                  <option value="maracay-oratoria">Maracay · Curso de Oratoria 2026 (Maracay Plaza) - $120 / $100 ef.</option>
-                  <option value="caracas-avanzada">Caracas · Oratoria Avanzada Máster (Millennium Mall) - $120 / $100 ef.</option>
+                  <option value="caracas-ia">Caracas · Curso Práctico: Inteligencia Artificial Aplicada - $140 BCV / $120 ef. (Reserva $20)</option>
+                  <option value="caracas-oratoria">Caracas · Curso de Oratoria (Millennium Mall) - $125 BCV / $100 ef. (+ $5 insc.)</option>
+                  <option value="caracas-atencion">Caracas · Curso de Atención al Cliente (Millennium Mall) - $45 (Mañana o Noche)</option>
+                  <option value="valencia-oratoria">Valencia · Curso de Oratoria (Urb. La Viña) - $85 BCV / $60 ef. (+ $5 insc.)</option>
+                  <option value="valencia-atencion">Valencia · Curso de Atención al Cliente (La Viña) - $45</option>
+                  <option value="sede-lecheria">Lechería · Pre-inscripción Próxima Cohorte Presencial</option>
+                  <option value="sede-barinas">Barinas · Pre-inscripción Próxima Cohorte Presencial</option>
+                  <option value="sede-barquisimeto">Barquisimeto · Pre-inscripción Próxima Cohorte Presencial</option>
                   <option value="corporativo">Empresas · Formación Corporativa Integral (In-Company)</option>
                 </select>
               </div>

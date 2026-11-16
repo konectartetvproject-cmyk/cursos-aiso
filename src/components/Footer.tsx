@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, Instagram, Facebook, Linkedin, Mail, MapPin, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Mic, Instagram, Facebook, Linkedin, Mail, MapPin, Phone, MessageSquare, CheckCircle2, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface FooterProps {
@@ -10,6 +10,7 @@ export default function Footer({ setCurrentView }: FooterProps) {
   const { getToken } = useAuth();
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [portalLinksOpen, setPortalLinksOpen] = useState(false);
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,11 +140,35 @@ export default function Footer({ setCurrentView }: FooterProps) {
               <li>
                 <button
                   type="button"
-                  onClick={() => handleViewSwitch('students')}
-                  className="text-slate-400 hover:text-indigo-400 transition-colors text-sm text-left"
+                  aria-expanded={portalLinksOpen}
+                  onClick={() => setPortalLinksOpen((prev) => !prev)}
+                  className="text-slate-400 hover:text-indigo-400 transition-colors text-sm text-left inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  Portal de Estudiantes
+                  <span>Portal de Estudiantes</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      portalLinksOpen ? 'rotate-180' : ''
+                    }`}
+                  />
                 </button>
+                {portalLinksOpen && (
+                  <div className="mt-2 pl-3 border-l border-slate-800 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewSwitch('students')}
+                      className="block text-xs font-semibold text-indigo-300 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      Curso de Oratoria
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewSwitch('students-ia')}
+                      className="block text-xs font-semibold text-sky-300 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      Curso de IA
+                    </button>
+                  </div>
+                )}
               </li>
             </ul>
           </div>
@@ -155,8 +180,11 @@ export default function Footer({ setCurrentView }: FooterProps) {
                 <MapPin className="h-4 w-4 text-indigo-500 shrink-0 mt-1" />
                 <div className="text-slate-400 text-sm space-y-1.5 leading-snug">
                   <p><strong className="text-slate-200">Caracas:</strong> C.C. Millennium Mall, Nivel Rómulo Gallegos</p>
-                  <p><strong className="text-slate-200">Valencia:</strong> Urb. La Viña, Auditorio AISO</p>
-                  <p><strong className="text-slate-200">Maracay:</strong> C.C. Maracay Plaza, Piso 1, Local 53D</p>
+                  <p><strong className="text-slate-200">Valencia:</strong> Urb. La Viña, Sede AISO</p>
+                  <p><strong className="text-slate-200">Maracay:</strong> C.C. Maracay Plaza</p>
+                  <p><strong className="text-slate-200">Lechería:</strong> Sede AISO Anzoátegui</p>
+                  <p><strong className="text-slate-200">Barinas:</strong> Sede AISO Barinas</p>
+                  <p><strong className="text-slate-200">Barquisimeto:</strong> Sede AISO Lara</p>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -195,7 +223,7 @@ export default function Footer({ setCurrentView }: FooterProps) {
           <div>
             <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Boletín Académico</h4>
             <p className="text-slate-400 text-sm mb-4 leading-relaxed">
-              Recibe técnicas de elocuencia y fechas de nuevas cohortes presenciales en Caracas, Valencia y Maracay.
+              Recibe técnicas de elocuencia y fechas de nuevas cohortes presenciales en Caracas, Valencia, Maracay, Lechería, Barinas y Barquisimeto.
             </p>
             {subscribed ? (
               <div className="bg-emerald-950/50 border border-emerald-800/60 rounded-lg p-3.5 flex items-center gap-2.5 text-emerald-300 text-xs font-semibold">

@@ -64,10 +64,10 @@ export const corporateGeneralInfo = {
     },
     {
       title: "Instalaciones AISO",
-      badge: "Caracas y Valencia",
-      description: "Si prefiere un ambiente externo para sacar a su equipo de la rutina, ponemos a su disposición nuestras cómodas instalaciones ubicadas en Caracas (C.C. Millennium Mall) y Valencia (Auditorio AISO en Urb. La Viña)."
+      badge: "Sedes Nacionales",
+      description: "Si prefiere un ambiente externo para sacar a su equipo de la rutina, ponemos a su disposición nuestras cómodas instalaciones en Caracas, Valencia, Lechería, Barinas, Barquisimeto y Maracay."
     }
   ],
-  locations: "Sedes: Caracas y Valencia | Cobertura Nacional In-Company",
+  locations: "Sedes: Caracas, Valencia, Lechería, Barinas, Barquisimeto y Maracay | Cobertura Nacional In-Company",
   quoteNotice: "Contáctenos para solicitar una propuesta volumétrica o un plan de capacitación integral que agrupe varios programas para distintos departamentos de su empresa."
 };
