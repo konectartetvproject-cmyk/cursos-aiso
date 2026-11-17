@@ -1,4 +1,4 @@
-import { Mic, Menu, X, Sun, Moon, ShieldCheck, ChevronDown, Cpu } from 'lucide-react';
+import { Mic, Menu, X, Sun, Moon, ShieldCheck, ChevronDown, Cpu, Lock } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -245,6 +245,20 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                       </div>
                     </div>
                   </button>
+
+                  <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => handleTabClick(e, 'admin')}
+                    className="w-full text-left px-3 py-2 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Panel Privado (Admin)
+                    </span>
+                  </button>
                 </div>
               </div>
             )}
@@ -370,6 +384,14 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                   >
                     <Cpu className="w-3.5 h-3.5 shrink-0" />
                     Curso de IA
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleTabClick(e, 'admin')}
+                    className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    Panel Privado (Admin)
                   </button>
                 </div>
               )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Mic, Instagram, Facebook, Linkedin, Mail, MapPin, Phone, MessageSquare, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Mic, Instagram, Facebook, Linkedin, Mail, MapPin, Phone, MessageSquare, CheckCircle2, ChevronDown, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { recordLocalSubscriber } from '../lib/leadsStorage';
 
 interface FooterProps {
   setCurrentView?: (view: string) => void;
@@ -16,6 +17,7 @@ export default function Footer({ setCurrentView }: FooterProps) {
     e.preventDefault();
     if (newsletterEmail.trim()) {
       const emailToSave = newsletterEmail.trim();
+      recordLocalSubscriber(emailToSave);
       setSubscribed(true);
       setNewsletterEmail('');
       try {
@@ -255,20 +257,28 @@ export default function Footer({ setCurrentView }: FooterProps) {
           <p className="text-slate-500 text-sm">
             © {new Date().getFullYear()} AISO — Academia International Social Oratory. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-6 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
             <button
               type="button"
               onClick={() => handleViewSwitch('verification')}
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Verificar Certificado
             </button>
             <button
               type="button"
               onClick={() => handleViewSwitch('privacy')}
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Política de Privacidad
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewSwitch('admin')}
+              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer text-xs font-semibold"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Panel Privado Admin</span>
             </button>
           </div>
         </div>

@@ -387,29 +387,25 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                     </button>
                   </div>
 
-                  {/* Actions: Enroll and WhatsApp */}
+                  {/* Actions: WhatsApp FIRST, then Web Form */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleEnrollClick(course.id)}
-                      className={`w-full sm:flex-1 py-3.5 px-4 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-                        isAICourse
-                          ? 'bg-sky-600 hover:bg-sky-700'
-                          : 'bg-indigo-600 hover:bg-indigo-700'
-                      }`}
-                    >
-                      <GraduationCap className="w-4 h-4" />
-                      {isAICourse ? 'Reservar Cupo ($20)' : 'Inscribirme en este Curso'}
-                    </button>
                     <a
                       href={getWhatsAppMessage(course)}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full sm:w-auto py-3.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-500/60 hover:text-emerald-700 dark:hover:text-emerald-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
+                      className="w-full sm:flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5"
                     >
-                      <MessageCircle className="w-4 h-4 text-emerald-500" />
-                      Consultar WA
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>Inscribirme por WhatsApp</span>
                     </a>
+                    <button
+                      type="button"
+                      onClick={() => handleEnrollClick(course.id)}
+                      className="w-full sm:w-auto py-3.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
+                    >
+                      <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      {isAICourse ? 'Reservar en Web ($20)' : 'Pre-Inscripción Web'}
+                    </button>
                   </div>
 
                 </div>
@@ -462,32 +458,44 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                 </button>
               </div>
 
-              {/* Segmented Switcher: Flyer Original vs Pensum Detallado */}
-              <div className="inline-flex items-center gap-1 p-1 bg-slate-200/80 dark:bg-slate-900 border border-slate-300/60 dark:border-slate-800 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setModalTab('flyer')}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    modalTab === 'flyer'
-                      ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+              {/* Segmented Switcher: Flyer Original vs Pensum Detallado + Direct WhatsApp CTA */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-1 p-1 bg-slate-200/80 dark:bg-slate-900 border border-slate-300/60 dark:border-slate-800 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setModalTab('flyer')}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      modalTab === 'flyer'
+                        ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Flyer Original Completo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalTab('syllabus')}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      modalTab === 'syllabus'
+                        ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Pensum y Requisitos
+                  </button>
+                </div>
+
+                <a
+                  href={getWhatsAppMessage(activeModalCourse)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-2xs"
                 >
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  Flyer Original Completo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalTab('syllabus')}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    modalTab === 'syllabus'
-                      ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Pensum y Requisitos
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Escribir por WhatsApp
+                </a>
               </div>
             </div>
 
@@ -593,19 +601,21 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
               )}
             </div>
 
-            {/* Modal Footer */}
+            {/* Modal Footer: WhatsApp FIRST */}
             <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-slate-500 dark:text-slate-400">
                 Cupos limitados para garantizar atención personalizada en cada sesión.
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveModalCourse(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href={getWhatsAppMessage(activeModalCourse)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1.5"
                 >
-                  Cerrar
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Inscribirme por WhatsApp
+                </a>
                 <button
                   type="button"
                   onClick={() => {
@@ -613,9 +623,16 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                     setActiveModalCourse(null);
                     handleEnrollClick(id);
                   }}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
                 >
-                  Apartar Cupo en este Curso
+                  Pre-Inscripción Web
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCourse(null)}
+                  className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"
+                >
+                  Cerrar
                 </button>
               </div>
             </div>

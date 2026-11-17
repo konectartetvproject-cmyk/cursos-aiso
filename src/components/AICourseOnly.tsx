@@ -23,6 +23,7 @@ import {
 import { coursesData } from '../data/coursesData';
 import CourseCoverHeader from './CourseCoverHeader';
 import { useAuth } from '../context/AuthContext';
+import { recordCourseRegistration } from '../lib/leadsStorage';
 
 export default function AICourseOnly() {
   const { user, getToken } = useAuth();
@@ -55,24 +56,18 @@ export default function AICourseOnly() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const token = await getToken();
-      if (token) {
-        await fetch('/api/registrations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nombre,
-            telefono,
-            correo,
-            ciudad: 'Caracas',
-            taller: aiCourse.title,
-            modalidadPago,
-          }),
-        });
-      }
+      await recordCourseRegistration(
+        {
+          nombre,
+          telefono,
+          correo,
+          ciudad: 'Caracas',
+          taller: aiCourse.title,
+          modalidadPago,
+          origen: 'Acceso Exclusivo Curso IA',
+        },
+        getToken
+      );
     } catch (err) {
       console.error('AI course registration error:', err);
     } finally {
@@ -139,11 +134,21 @@ export default function AICourseOnly() {
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a
+              href={getWhatsAppMessage()}
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Escribir por WhatsApp · Reservar Cupo
+            </a>
+
+            <a
               href="#reserva-ia"
-              className="px-6 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
+              className="px-5 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
             >
               <GraduationCap className="w-4 h-4" />
-              Reservar mi Cupo por $20
+              Inscripción Directa ($20)
             </a>
 
             <button
@@ -180,15 +185,21 @@ export default function AICourseOnly() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-sky-300/90 dark:border-sky-500/50 shadow-sm overflow-hidden">
           <CourseCoverHeader course={aiCourse} onViewFlyer={() => setShowFlyerModal(true)} />
 
-          {/* Highlight Strip */}
+          {/* Highlight Strip with Direct WhatsApp Link First */}
           <div className="px-6 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200/70 dark:border-sky-800/60 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm font-bold text-sky-900 dark:text-sky-200">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
               <span>Reserva tu cupo hoy por $20 (Monto deducible del total del curso)</span>
             </div>
-            <span className="text-amber-700 dark:text-amber-300 uppercase tracking-wider text-xs">
-              Cupos Limitados en Sala
-            </span>
+            <a
+              href={getWhatsAppMessage()}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-colors shadow-2xs"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Escribir "IA" por WhatsApp
+            </a>
           </div>
 
           <div className="p-6 sm:p-10 grid lg:grid-cols-12 gap-8 items-start">
@@ -276,10 +287,10 @@ export default function AICourseOnly() {
                 </div>
               </div>
 
-              {/* Requirements & Equipment */}
+              {/* Requirements & Equipment + Mid-Page WhatsApp CTA */}
               {aiCourse.requirements && (
-                <div className="p-6 rounded-2xl bg-sky-50/60 dark:bg-sky-950/25 border border-sky-200/80 dark:border-sky-800/60">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <div className="p-6 rounded-2xl bg-sky-50/60 dark:bg-sky-950/25 border border-sky-200/80 dark:border-sky-800/60 space-y-4">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                     <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                     Requisitos y equipamiento
                   </h3>
@@ -294,13 +305,24 @@ export default function AICourseOnly() {
                       </li>
                     ))}
                   </ul>
+                  <div className="pt-2">
+                    <a
+                      href={getWhatsAppMessage()}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Consultar Requisitos o Apartar Cupo por WhatsApp
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Right 5 Cols: Pricing Box, Full Flyer Preview & Self-Contained Reservation Form */}
+            {/* Right 5 Cols: Pricing Box & Self-Contained Reservation Form */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Pricing Card */}
+              {/* Pricing Card with WhatsApp Button First */}
               <div className="p-6 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-amber-50/60 dark:from-slate-800 dark:via-slate-900 dark:to-sky-950/40 border-2 border-sky-300/80 dark:border-sky-700 shadow-xs">
                 <div className="inline-block px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-extrabold mb-3">
                   Inversión Total (Incluye Inscripción)
@@ -326,7 +348,7 @@ export default function AICourseOnly() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-sky-600 text-white text-center">
+                <div className="p-3.5 rounded-xl bg-sky-600 text-white text-center mb-3">
                   <span className="text-xs uppercase tracking-wider font-bold block opacity-90">
                     Aparta tu lugar hoy con solo:
                   </span>
@@ -334,9 +356,19 @@ export default function AICourseOnly() {
                     $20 (Deducibles del total)
                   </span>
                 </div>
+
+                <a
+                  href={getWhatsAppMessage()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Escribe "IA" en WhatsApp y Reserva tu Cupo
+                </a>
               </div>
 
-              {/* Self-Contained Reservation Form */}
+              {/* Self-Contained Reservation Form (WhatsApp First!) */}
               <div
                 id="reserva-ia"
                 className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm scroll-mt-24"
@@ -378,6 +410,22 @@ export default function AICourseOnly() {
                       <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
                         Reserva tu Cupo en el Curso de IA
                       </h3>
+                    </div>
+
+                    {/* Primary Direct WhatsApp Button Placed FIRST */}
+                    <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                      <a
+                        href={getWhatsAppMessage()}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
+                      >
+                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <span>Inscripción Directa por WhatsApp (Escribe "IA")</span>
+                      </a>
+                      <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                        O registra tus datos en el formulario:
+                      </span>
                     </div>
 
                     <div>
@@ -454,16 +502,6 @@ export default function AICourseOnly() {
                       {isSubmitting ? 'Procesando...' : 'Apartar Mi Cupo Ahora'}
                       <Send className="w-4 h-4" />
                     </button>
-
-                    <a
-                      href={getWhatsAppMessage()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-3 px-4 rounded-xl border border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/70 text-xs font-bold transition-colors flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      Escribe "IA" por WhatsApp y Reserva tu Cupo
-                    </a>
                   </form>
                 )}
               </div>
@@ -518,6 +556,27 @@ export default function AICourseOnly() {
                   </ul>
                 </div>
               ))}
+            </div>
+
+            {/* Bottom Stage WhatsApp Direct Bar */}
+            <div className="mt-8 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  ¿Listo para dominar la Inteligencia Artificial en 3 sábados?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+                  Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $20 deducibles del total.
+                </p>
+              </div>
+              <a
+                href={getWhatsAppMessage()}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Escribir por WhatsApp Ahora
+              </a>
             </div>
           </div>
         </div>

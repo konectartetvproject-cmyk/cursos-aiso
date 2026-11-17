@@ -126,7 +126,7 @@ export default function Hero() {
                   />
                 </div>
                 <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                  <strong className="font-bold text-slate-900 dark:text-white tabular-nums">+1,200 graduados</strong> certificados en Venezuela
+                  <strong className="font-bold text-slate-900 dark:text-white tabular-nums">+8,000 graduados</strong> certificados en Venezuela
                 </div>
               </div>
 

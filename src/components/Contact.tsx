@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { recordContactInquiry } from '../lib/leadsStorage';
 
 interface InquiryFormState {
   fullName: string;
@@ -150,23 +151,17 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      const token = await getToken();
-      if (token) {
-        await fetch('/api/inquiries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: form.fullName,
-            email: form.email,
-            phone: form.phone,
-            subject: form.inquiryType,
-            message: form.message,
-          }),
-        });
-      }
+      await recordContactInquiry(
+        {
+          name: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          subject: form.inquiryType,
+          preferredContact: form.preferredContact,
+          message: form.message,
+        },
+        getToken
+      );
     } catch (err) {
       console.error('Inquiry submission error:', err);
     } finally {

@@ -23,6 +23,7 @@ import { coursesData } from '../data/coursesData';
 import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
 import { useAuth } from '../context/AuthContext';
+import { recordCourseRegistration } from '../lib/leadsStorage';
 
 export default function CaracasCoursesOnly() {
   const { user, getToken } = useAuth();
@@ -84,24 +85,18 @@ export default function CaracasCoursesOnly() {
     if (!enrollCourse) return;
     setIsSubmitting(true);
     try {
-      const token = await getToken();
-      if (token) {
-        await fetch('/api/registrations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nombre,
-            telefono,
-            correo,
-            ciudad: 'Caracas',
-            taller: enrollCourse.title,
-            modalidadPago: enrollCourse.priceStandard,
-          }),
-        });
-      }
+      await recordCourseRegistration(
+        {
+          nombre,
+          telefono,
+          correo,
+          ciudad: 'Caracas',
+          taller: enrollCourse.title,
+          modalidadPago: enrollCourse.priceStandard,
+          origen: 'Sección Exclusiva Caracas',
+        },
+        getToken
+      );
     } catch (err) {
       console.error('Caracas registration error:', err);
     } finally {
@@ -348,29 +343,25 @@ export default function CaracasCoursesOnly() {
                     </button>
                   </div>
 
-                  {/* Self-Contained Caracas Actions: Enroll Modal + WhatsApp */}
+                  {/* Self-Contained Caracas Actions: WhatsApp FIRST, then Enroll Modal */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEnroll(course)}
-                      className={`w-full sm:flex-1 py-3.5 px-4 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-                        isAICourse
-                          ? 'bg-sky-600 hover:bg-sky-700'
-                          : 'bg-indigo-600 hover:bg-indigo-700'
-                      }`}
-                    >
-                      <GraduationCap className="w-4 h-4" />
-                      {isAICourse ? 'Reservar Cupo ($20)' : 'Reservar Cupo en Caracas'}
-                    </button>
                     <a
                       href={getWhatsAppMessage(course)}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full sm:w-auto py-3.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-500/60 hover:text-emerald-700 dark:hover:text-emerald-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
+                      className="w-full sm:flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5"
                     >
-                      <MessageCircle className="w-4 h-4 text-emerald-500" />
-                      Inscribirme por WhatsApp
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>Inscribirme por WhatsApp</span>
                     </a>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEnroll(course)}
+                      className="w-full sm:w-auto py-3.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
+                    >
+                      <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      {isAICourse ? 'Reservar en Web ($20)' : 'Pre-Inscripción Web'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -420,31 +411,43 @@ export default function CaracasCoursesOnly() {
                 </button>
               </div>
 
-              <div className="inline-flex items-center gap-1 p-1 bg-slate-200/80 dark:bg-slate-900 border border-slate-300/60 dark:border-slate-800 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setModalTab('flyer')}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    modalTab === 'flyer'
-                      ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-1 p-1 bg-slate-200/80 dark:bg-slate-900 border border-slate-300/60 dark:border-slate-800 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setModalTab('flyer')}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      modalTab === 'flyer'
+                        ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Flyer Original Completo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalTab('syllabus')}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      modalTab === 'syllabus'
+                        ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Pensum y Requisitos
+                  </button>
+                </div>
+
+                <a
+                  href={getWhatsAppMessage(activeModalCourse)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-2xs"
                 >
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  Flyer Original Completo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalTab('syllabus')}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    modalTab === 'syllabus'
-                      ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Pensum y Requisitos
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Escribir por WhatsApp
+                </a>
               </div>
             </div>
 
@@ -548,14 +551,16 @@ export default function CaracasCoursesOnly() {
               <div className="text-xs text-slate-500 dark:text-slate-400">
                 Sede Caracas · C.C. Millennium Mall · Cupos limitados.
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveModalCourse(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href={getWhatsAppMessage(activeModalCourse)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1.5"
                 >
-                  Cerrar
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Inscribirme por WhatsApp
+                </a>
                 <button
                   type="button"
                   onClick={() => {
@@ -563,9 +568,16 @@ export default function CaracasCoursesOnly() {
                     setActiveModalCourse(null);
                     handleOpenEnroll(courseToEnroll);
                   }}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
                 >
-                  Reservar Cupo en este Curso
+                  Pre-Inscripción Web
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCourse(null)}
+                  className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"
+                >
+                  Cerrar
                 </button>
               </div>
             </div>
@@ -586,7 +598,7 @@ export default function CaracasCoursesOnly() {
             <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-start justify-between gap-4">
               <div>
                 <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block mb-1">
-                  Reserva de Cupo · Sede Caracas
+                  Inscripción Directa · Sede Caracas
                 </span>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                   {enrollCourse.title}
@@ -638,6 +650,22 @@ export default function CaracasCoursesOnly() {
                 </div>
               ) : (
                 <form onSubmit={handleEnrollSubmit} className="space-y-4">
+                  {/* WhatsApp Button Placed FIRST */}
+                  <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <a
+                      href={getWhatsAppMessage(enrollCourse)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
+                    >
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>Inscripción Directa por WhatsApp Ahora</span>
+                    </a>
+                    <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                      O registra tus datos en el formulario:
+                    </span>
+                  </div>
+
                   <div className="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/60 text-xs flex items-center justify-between">
                     <span className="font-semibold text-slate-700 dark:text-slate-200">
                       Inversión: <strong>{enrollCourse.priceStandard} BCV</strong>

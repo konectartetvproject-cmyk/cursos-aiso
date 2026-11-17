@@ -10,6 +10,11 @@ import {
   createInquiry,
   getCertificateByCode,
   subscribeNewsletter,
+  getAllRegistrations,
+  getAllInquiries,
+  getAllNewsletterSubscribers,
+  deleteRegistrationById,
+  deleteInquiryById,
 } from './src/db/users.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -124,6 +129,49 @@ async function startServer() {
     } catch (error: any) {
       console.error('Failed to subscribe newsletter:', error);
       res.status(500).json({ error: error.message || 'Failed to subscribe newsletter' });
+    }
+  });
+
+  // Admin overview endpoint (all registrations, inquiries, newsletter subscribers)
+  app.get('/api/admin/overview', requireAuth, async (_req: AuthRequest, res) => {
+    try {
+      const [registrationsList, inquiriesList, subscribersList] = await Promise.all([
+        getAllRegistrations(),
+        getAllInquiries(),
+        getAllNewsletterSubscribers(),
+      ]);
+      res.json({
+        registrations: registrationsList,
+        inquiries: inquiriesList,
+        subscribers: subscribersList,
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch admin overview:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch admin overview' });
+    }
+  });
+
+  app.delete('/api/admin/registrations/:id', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!id) return res.status(400).json({ error: 'Invalid ID' });
+      await deleteRegistrationById(id);
+      res.json({ deleted: true });
+    } catch (error: any) {
+      console.error('Failed to delete registration:', error);
+      res.status(500).json({ error: error.message || 'Failed to delete registration' });
+    }
+  });
+
+  app.delete('/api/admin/inquiries/:id', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!id) return res.status(400).json({ error: 'Invalid ID' });
+      await deleteInquiryById(id);
+      res.json({ deleted: true });
+    } catch (error: any) {
+      console.error('Failed to delete inquiry:', error);
+      res.status(500).json({ error: error.message || 'Failed to delete inquiry' });
     }
   });
 

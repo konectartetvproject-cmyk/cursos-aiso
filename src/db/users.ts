@@ -149,3 +149,60 @@ export async function subscribeNewsletter(email: string) {
     throw new Error('Could not subscribe to newsletter.', { cause: error });
   }
 }
+
+export async function getAllRegistrations() {
+  try {
+    return await db
+      .select()
+      .from(registrations)
+      .orderBy(desc(registrations.createdAt));
+  } catch (error) {
+    console.error('Database query failed in getAllRegistrations:', error);
+    throw new Error('Could not retrieve all registrations.', { cause: error });
+  }
+}
+
+export async function getAllInquiries() {
+  try {
+    return await db
+      .select()
+      .from(inquiries)
+      .orderBy(desc(inquiries.createdAt));
+  } catch (error) {
+    console.error('Database query failed in getAllInquiries:', error);
+    throw new Error('Could not retrieve all inquiries.', { cause: error });
+  }
+}
+
+export async function getAllNewsletterSubscribers() {
+  try {
+    return await db
+      .select()
+      .from(newsletterSubscribers)
+      .orderBy(desc(newsletterSubscribers.createdAt));
+  } catch (error) {
+    console.error('Database query failed in getAllNewsletterSubscribers:', error);
+    throw new Error('Could not retrieve newsletter subscribers.', { cause: error });
+  }
+}
+
+export async function deleteRegistrationById(id: number) {
+  try {
+    await db.delete(registrations).where(eq(registrations.id, id));
+    return { deleted: true };
+  } catch (error) {
+    console.error('Database query failed in deleteRegistrationById:', error);
+    throw new Error('Could not delete registration.', { cause: error });
+  }
+}
+
+export async function deleteInquiryById(id: number) {
+  try {
+    await db.delete(inquiries).where(eq(inquiries.id, id));
+    return { deleted: true };
+  } catch (error) {
+    console.error('Database query failed in deleteInquiryById:', error);
+    throw new Error('Could not delete inquiry.', { cause: error });
+  }
+}
+

@@ -20,6 +20,7 @@ import StudentPortal from './components/StudentPortal';
 import AIStudentPortal from './components/AIStudentPortal';
 import CaracasCoursesOnly from './components/CaracasCoursesOnly';
 import AICourseOnly from './components/AICourseOnly';
+import AdminPanel from './components/AdminPanel';
 import CertificateVerification from './components/CertificateVerification';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import WhatsAppButton from './components/WhatsAppButton';
@@ -30,6 +31,7 @@ const HASH_TO_VIEW: Record<string, string> = {
   '#talleres': 'workshops',
   '#caracas': 'caracas-only',
   '#curso-ia': 'ia-only',
+  '#admin': 'admin',
   '#corporativo': 'corporate',
   '#testimonios': 'testimonials',
   '#inscripciones': 'registration',
@@ -43,6 +45,7 @@ const VIEW_TO_HASH: Record<string, string> = {
   workshops: '#talleres',
   'caracas-only': '#caracas',
   'ia-only': '#curso-ia',
+  admin: '#admin',
   corporate: '#corporativo',
   testimonials: '#testimonios',
   registration: '#inscripciones',
@@ -66,6 +69,8 @@ export default function App() {
       window.history.pushState({}, '', '?sede=caracas');
     } else if (view === 'ia-only') {
       window.history.pushState({}, '', '?curso=ia');
+    } else if (view === 'admin') {
+      window.history.pushState({}, '', '?admin=aiso');
     } else if (view === 'privacy') {
       window.history.pushState({}, '', '?privacy=true');
     } else if (VIEW_TO_HASH[view]) {
@@ -83,8 +88,11 @@ export default function App() {
       const portalParam = params.get('portal');
       const sedeParam = params.get('sede')?.toLowerCase();
       const cursoParam = params.get('curso')?.toLowerCase();
+      const adminParam = params.get('admin');
 
-      if (params.get('verify')) {
+      if (adminParam) {
+        setCurrentViewState('admin');
+      } else if (params.get('verify')) {
         setCurrentViewState('verification');
       } else if (cursoParam === 'ia') {
         setCurrentViewState('ia-only');
@@ -140,6 +148,7 @@ export default function App() {
             {currentView === 'workshops' && <Workshops onSelectCourse={handleSelectCourse} />}
             {currentView === 'caracas-only' && <CaracasCoursesOnly />}
             {currentView === 'ia-only' && <AICourseOnly />}
+            {currentView === 'admin' && <AdminPanel />}
             {currentView === 'corporate' && <CorporateTraining />}
             {currentView === 'testimonials' && <Testimonials />}
             {currentView === 'registration' && (

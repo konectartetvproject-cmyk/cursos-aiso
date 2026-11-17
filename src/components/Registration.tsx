@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Send, CheckCircle2, MessageCircle } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
+import { recordCourseRegistration } from '../lib/leadsStorage';
 
 interface RegistrationProps {
   selectedCourseId?: string;
@@ -44,24 +45,34 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const token = await getToken();
-      if (token) {
-        await fetch('/api/registrations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nombre,
-            telefono,
-            correo,
-            ciudad: activeCourseObj?.city || 'Caracas',
-            taller: activeCourseObj?.title || currentCourse,
-            modalidadPago: activeCourseObj?.priceStandard || 'BCV',
-          }),
-        });
-      }
+      const sedeMapping: Record<string, string> = {
+        'sede-lecheria': 'Lechería',
+        'sede-barinas': 'Barinas',
+        'sede-barquisimeto': 'Barquisimeto',
+        'sede-maracay': 'Maracay',
+      };
+      const resolvedCity =
+        activeCourseObj?.city || sedeMapping[currentCourse] || 'Caracas';
+      const resolvedTitle =
+        activeCourseObj?.title ||
+        (sedeMapping[currentCourse]
+          ? `Pre-Registro Sede ${sedeMapping[currentCourse]}`
+          : currentCourse === 'corporativo'
+          ? 'Formación Corporativa In-Company'
+          : currentCourse);
+
+      await recordCourseRegistration(
+        {
+          nombre,
+          telefono,
+          correo,
+          ciudad: resolvedCity,
+          taller: resolvedTitle,
+          modalidadPago: activeCourseObj?.priceStandard || 'Por definir',
+          origen: 'Inscripción General Web',
+        },
+        getToken
+      );
     } catch (err) {
       console.error('Registration submission error:', err);
     } finally {
@@ -142,6 +153,17 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
                 </div>
               )}
             </div>
+            <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-700/70">
+              <a
+                href={getWhatsAppRegistrationUrl()}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-2xs"
+              >
+                <MessageCircle className="w-4 h-4 shrink-0" />
+                Inscribirme en este Curso por WhatsApp
+              </a>
+            </div>
           </div>
         )}
         
@@ -160,7 +182,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
               02.
             </span>
             <div>
-              <h4 className="text-slate-900 dark:text-white font-bold text-sm">Completa tus datos de contacto</h4>
+              <h4 className="text-slate-900 dark:text-white font-bold text-sm">Escribe directo por WhatsApp o completa tus datos</h4>
               <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Te enviaremos los datos de pago oficial (tasa BCV, pago móvil o efectivo).</p>
             </div>
           </div>
@@ -209,8 +231,27 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="mb-2">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Formulario de Pre-Inscripción</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Reserva tu plaza sin costo inicial y recibe atención inmediata.</p>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block mb-0.5">
+                  Inscripción Directa · Cupos Limitados
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Reserva tu Plaza Ahora</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Atención inmediata por WhatsApp o mediante el formulario.</p>
+              </div>
+
+              {/* Primary WhatsApp Button Placed FIRST */}
+              <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                <a
+                  href={getWhatsAppRegistrationUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <span>Inscripción Directa por WhatsApp</span>
+                </a>
+                <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                  O completa tus datos de pre-inscripción:
+                </span>
               </div>
 
               <div>

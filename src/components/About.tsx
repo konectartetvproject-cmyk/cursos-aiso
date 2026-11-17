@@ -4,7 +4,7 @@ export default function About() {
   const stats = [
     {
       icon: <GraduationCap className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />,
-      value: "+1,200",
+      value: "+8,000",
       label: "Estudiantes Graduados",
       sublabel: "Alumnos certificados en oratoria de alto impacto"
     },
