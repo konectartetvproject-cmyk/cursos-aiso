@@ -66,11 +66,8 @@ export default function CaracasCoursesOnly() {
     setSubmitted(false);
   };
 
-  const getWhatsAppMessage = (course: Workshop) => {
-    const rawText =
-      course.whatsappMessageText ||
-      `¡Hola Academia AISO! Estoy interesado en el ${course.title} en Caracas (${course.venue}). Quisiera más información para reservar mi cupo.`;
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(rawText)}`;
+  const getWhatsAppMessage = (_course?: Workshop) => {
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   };
 
   const handleCopyDirectLink = () => {

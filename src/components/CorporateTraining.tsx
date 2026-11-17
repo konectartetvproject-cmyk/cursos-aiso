@@ -72,20 +72,7 @@ export default function CorporateTraining() {
   const totals = calculateTotal();
 
   const handleWhatsAppQuote = () => {
-    const chosenTitles = selectedPrograms
-      .map(id => corporatePrograms.find(p => p.id === id)?.title)
-      .filter(Boolean)
-      .join(', ');
-
-    const msg = encodeURIComponent(
-      `¡Hola Academia AISO! Quisiera solicitar una cotización formal de Formación Corporativa para mi empresa.\n\n` +
-      `Empresa: ${formData.companyName || 'Por definir'}\n` +
-      `Participantes estimados: ${participantsCount}\n` +
-      `Programas de interés: ${chosenTitles}\n` +
-      `Modalidad: ${formData.modality === 'in-company' ? 'In-Company (Nuestras instalaciones)' : 'Instalaciones AISO (Caracas / Valencia)'}\n` +
-      `Estimado calculado: $${totals.finalTotal} USD.`
-    );
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${msg}`;
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {

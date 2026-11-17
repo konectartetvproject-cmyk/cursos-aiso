@@ -39,10 +39,7 @@ export default function AICourseOnly() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const getWhatsAppMessage = () => {
-    const rawText =
-      aiCourse.whatsappMessageText ||
-      '¡Hola Academia AISO! Escribo "IA" para solicitar inscribirme en el Curso Práctico: Inteligencia Artificial Aplicada en Caracas (inicio sábado 21 de noviembre). Por favor envíenme las opciones de pago para apartar mi lugar.';
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(rawText)}`;
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   };
 
   const handleCopyDirectLink = () => {
@@ -134,13 +131,13 @@ export default function AICourseOnly() {
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a
-              href={getWhatsAppMessage()}
+              href="https://wa.me/message/IIBLPHIKQJIIE1"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
             >
               <MessageCircle className="w-4 h-4" />
-              Escribir por WhatsApp · Reservar Cupo
+              Inscribirme por WhatsApp
             </a>
 
             <a
@@ -192,13 +189,13 @@ export default function AICourseOnly() {
               <span>Reserva tu cupo hoy por $20 (Monto deducible del total del curso)</span>
             </div>
             <a
-              href={getWhatsAppMessage()}
+              href="https://wa.me/message/IIBLPHIKQJIIE1"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-colors shadow-2xs"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              Escribir "IA" por WhatsApp
+              Escribir por WhatsApp
             </a>
           </div>
 
@@ -307,13 +304,13 @@ export default function AICourseOnly() {
                   </ul>
                   <div className="pt-2">
                     <a
-                      href={getWhatsAppMessage()}
+                      href="https://wa.me/message/IIBLPHIKQJIIE1"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      Consultar Requisitos o Apartar Cupo por WhatsApp
+                      Consultar o Apartar Cupo por WhatsApp
                     </a>
                   </div>
                 </div>
@@ -358,13 +355,13 @@ export default function AICourseOnly() {
                 </div>
 
                 <a
-                  href={getWhatsAppMessage()}
+                  href="https://wa.me/message/IIBLPHIKQJIIE1"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-xs"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Escribe "IA" en WhatsApp y Reserva tu Cupo
+                  Reservar mi Cupo por WhatsApp
                 </a>
               </div>
 
@@ -382,16 +379,16 @@ export default function AICourseOnly() {
                       ¡Reserva Registrada!
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">
-                      Hemos recibido tus datos para el <strong>Curso Práctico: Inteligencia Artificial Aplicada</strong> en Caracas. Haz clic abajo para enviar la palabra <strong>"IA"</strong> en nuestro WhatsApp oficial y formalizar tu reserva de $20.
+                      Hemos recibido tus datos para el <strong>Curso Práctico: Inteligencia Artificial Aplicada</strong> en Caracas. Haz clic abajo para comunicarte a nuestro WhatsApp oficial y formalizar tu reserva.
                     </p>
                     <a
-                      href={getWhatsAppMessage()}
+                      href="https://wa.me/message/IIBLPHIKQJIIE1"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      Enviar "IA" por WhatsApp Ahora
+                      Confirmar mi Reserva por WhatsApp
                     </a>
                     <button
                       type="button"
@@ -415,13 +412,13 @@ export default function AICourseOnly() {
                     {/* Primary Direct WhatsApp Button Placed FIRST */}
                     <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
                       <a
-                        href={getWhatsAppMessage()}
+                        href="https://wa.me/message/IIBLPHIKQJIIE1"
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
                       >
                         <MessageCircle className="w-4 h-4 shrink-0" />
-                        <span>Inscripción Directa por WhatsApp (Escribe "IA")</span>
+                        <span>Inscripción Directa por WhatsApp</span>
                       </a>
                       <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
                         O registra tus datos en el formulario:
@@ -569,13 +566,13 @@ export default function AICourseOnly() {
                 </p>
               </div>
               <a
-                href={getWhatsAppMessage()}
+                href="https://wa.me/message/IIBLPHIKQJIIE1"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
               >
                 <MessageCircle className="w-4 h-4" />
-                Escribir por WhatsApp Ahora
+                Inscribirme por WhatsApp Ahora
               </a>
             </div>
           </div>

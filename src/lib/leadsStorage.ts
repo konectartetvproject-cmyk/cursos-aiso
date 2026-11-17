@@ -280,7 +280,7 @@ export function buildStudentWhatsAppReplyUrl(phone: string, text: string): strin
     digits = '58' + digits;
   }
   if (!digits || digits.length < 8) {
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(text)}`;
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   }
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }

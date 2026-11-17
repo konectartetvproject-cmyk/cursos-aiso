@@ -40,7 +40,7 @@ export const coursesData: Workshop[] = [
       "Herramientas y suscripciones: Todo el curso se puede cursar y aprovechar al 100% con herramientas de libre acceso. Si además deseas activar funciones de nivel profesional o comercial (presupuesto estimado opcional de $20 a $100 en herramientas y modelos PRO), te enseñaremos a configurarlas e integrarlas.",
       "Método de pago internacional (opcional): Útil únicamente si decides activar licencias avanzadas; si no dispones de uno, te orientamos durante el taller con alternativas accesibles."
     ],
-    whatsappMessageText: "¡Hola Academia AISO! Escribo \"IA\" para solicitar inscribirme en el Curso Práctico: Inteligencia Artificial Aplicada en Caracas (inicio sábado 21 de noviembre). Por favor envíenme las opciones de pago para apartar mi lugar.",
+    whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso Práctico: Inteligencia Artificial Aplicada en Caracas (inicio sábado 21 de noviembre).",
     syllabus: [
       {
         title: "Sábado 1 (21 de Noviembre): Fundamentos de Google AI y Creación de Sitios Web Completos",
@@ -160,7 +160,7 @@ export const coursesData: Workshop[] = [
     priceStandard: "$45",
     registrationFee: "$5 (incluida en la inversión total de $45)",
     reservationNote: "Inversión total: $45 (incluida la inscripción de $5)",
-    whatsappMessageText: "¡Hola Academia AISO! Escribo \"CURSO\" para recibir información y reservar mi cupo en el Curso de Atención al Cliente de Alto Impacto en Caracas (inicia jueves 19 de noviembre).",
+    whatsappMessageText: "¡Hola Academia AISO! Deseo recibir información y reservar mi cupo en el Curso de Atención al Cliente de Alto Impacto en Caracas (inicia jueves 19 de noviembre).",
     description: "La forma en que escuchas, te expresas y respondes puede marcar la diferencia entre una compra ocasional y una relación duradera. En la Academia AISO te ofrecemos una formación práctica de 3 clases para fortalecer tu comunicación, gestionar tus emociones y brindar un servicio que destaque por su empatía, claridad y profesionalismo.",
     features: [
       "Gestiona tus emociones al atender: mantén la calma bajo presión y escucha con empatía",
@@ -285,7 +285,7 @@ export const coursesData: Workshop[] = [
     priceStandard: "$45",
     registrationFee: "$5 (incluida en la inversión total de $45)",
     reservationNote: "Inversión total: $45 (incluida la inscripción de $5)",
-    whatsappMessageText: "¡Hola Academia AISO! Escribo \"CURSO\" para recibir información y reservar mi cupo en el Curso de Atención al Cliente de Alto Impacto en Valencia (inicia sábado 28 de noviembre).",
+    whatsappMessageText: "¡Hola Academia AISO! Deseo recibir información y reservar mi cupo en el Curso de Atención al Cliente de Alto Impacto en Valencia (inicia sábado 28 de noviembre).",
     description: "La forma en que escuchas, te expresas y respondes puede marcar la diferencia entre una compra ocasional y una relación duradera. En la Academia AISO te ofrecemos una formación práctica de 3 clases para fortalecer tu comunicación, gestionar tus emociones y brindar un servicio que destaque por su empatía, claridad y profesionalismo.",
     features: [
       "Gestiona tus emociones al atender: mantén la calma bajo presión y escucha con empatía",

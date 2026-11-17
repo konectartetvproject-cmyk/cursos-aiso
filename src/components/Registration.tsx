@@ -82,12 +82,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
   };
 
   const getWhatsAppRegistrationUrl = () => {
-    if (activeCourseObj?.whatsappMessageText) {
-      return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(activeCourseObj.whatsappMessageText)}`;
-    }
-    const courseTitle = activeCourseObj ? `${activeCourseObj.title} (${activeCourseObj.city})` : 'Cursos AISO';
-    const msg = encodeURIComponent(`¡Hola Academia AISO! Deseo apartar mi cupo para el ${courseTitle}. ¿Me podrían indicar los datos bancarios para formalizar mi inscripción?`);
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${msg}`;
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   };
 
   return (

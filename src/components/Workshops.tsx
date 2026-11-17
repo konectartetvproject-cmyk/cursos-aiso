@@ -67,11 +67,8 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
     }
   };
 
-  const getWhatsAppMessage = (course: Workshop) => {
-    const rawText =
-      course.whatsappMessageText ||
-      `¡Hola! Estoy interesado en el ${course.title} en ${course.city} (${course.venue}). Quisiera más información sobre la inscripción y cupos disponibles.`;
-    return `https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(rawText)}`;
+  const getWhatsAppMessage = (_course?: Workshop) => {
+    return 'https://wa.me/message/IIBLPHIKQJIIE1';
   };
 
   return (
@@ -192,9 +189,9 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href={`https://wa.me/message/IIBLPHIKQJIIE1?text=${encodeURIComponent(`¡Hola Academia AISO! Deseo recibir información y fechas de la próxima cohorte presencial en la sede de ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}.`)}`}
+                href="https://wa.me/message/IIBLPHIKQJIIE1"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs"
               >
                 <MessageCircle className="w-4 h-4" />
