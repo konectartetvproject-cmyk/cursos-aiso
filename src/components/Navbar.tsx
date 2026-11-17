@@ -74,13 +74,11 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
           className="flex items-center gap-3.5 cursor-pointer select-none group"
           onClick={handleLogoClick}
         >
-          <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm ${
-              isIAPortal || isIAOnly ? 'bg-sky-600' : 'bg-indigo-600'
-            }`}
-          >
-            {isIAPortal || isIAOnly ? <Cpu className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </div>
+          <img
+            src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
+            alt="Logo Academia AISO"
+            className="w-11 h-11 rounded-xl object-contain bg-black p-0.5 shadow-sm border border-slate-200/60 dark:border-slate-700"
+          />
           <div className="flex flex-col">
             <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
               Academia AISO
@@ -131,9 +129,11 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
         className="flex items-center gap-3.5 cursor-pointer select-none group" 
         onClick={handleLogoClick}
       >
-        <div className="w-10 h-10 bg-slate-900 dark:bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:bg-indigo-600 transition-colors">
-          <Mic className="h-5 w-5" />
-        </div>
+        <img
+          src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
+          alt="Logo Academia AISO"
+          className="w-11 h-11 rounded-xl object-contain bg-black p-0.5 shadow-sm border border-slate-200/60 dark:border-slate-700"
+        />
         <div className="flex flex-col">
           <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
             Academia AISO

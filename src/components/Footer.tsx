@@ -83,9 +83,11 @@ export default function Footer({ setCurrentView }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-indigo-600 rounded flex items-center justify-center text-white font-bold text-xl">
-                <Mic className="h-5 w-5" />
-              </div>
+              <img
+                src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
+                alt="Logo Academia AISO"
+                className="w-12 h-12 rounded-xl object-contain bg-black p-0.5 border border-slate-700 shadow-sm"
+              />
               <div className="flex flex-col">
                 <span className="font-bold text-xl tracking-tight text-white uppercase leading-none">AISO</span>
                 <span className="text-[0.6rem] text-indigo-400 font-semibold tracking-widest uppercase mt-1">Academia de Oratoria</span>

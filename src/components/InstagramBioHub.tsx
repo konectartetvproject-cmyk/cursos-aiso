@@ -163,9 +163,11 @@ export default function InstagramBioHub({ onGoToCourses }: InstagramBioHubProps)
               )}
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-500 text-white flex items-center justify-center mx-auto mb-3.5 shadow-md ring-4 ring-white dark:ring-slate-800">
-              <Mic className="w-8 h-8" />
-            </div>
+            <img
+              src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
+              alt="Logo Oficial Academia AISO"
+              className="w-20 h-20 rounded-2xl object-contain bg-black p-1 mx-auto mb-3.5 shadow-md ring-4 ring-white dark:ring-slate-800"
+            />
 
             <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-1">
               <Instagram className="w-3.5 h-3.5" />
