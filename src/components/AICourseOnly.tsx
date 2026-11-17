@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   CheckCircle2,
   Clock,
   Calendar,
   MapPin,
   BookOpen,
-  X,
   MessageCircle,
-  GraduationCap,
   Laptop,
   Sparkles,
-  Image as ImageIcon,
   Cpu,
   Send,
   Share2,
@@ -18,35 +16,93 @@ import {
   Globe,
   Code2,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight,
+  Award,
+  Layers,
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
-import CourseCoverHeader from './CourseCoverHeader';
 import { useAuth } from '../context/AuthContext';
 import { recordCourseRegistration } from '../lib/leadsStorage';
+
+const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
+
+const PROFILE_OUTCOMES = [
+  {
+    id: 'emprendedor',
+    label: 'Emprendedor y Dueño de Negocio',
+    headline: 'Digitaliza tu propuesta comercial y lanza tu sitio web en tiempo récord',
+    points: [
+      'Saldrás con la página web de tu negocio publicada y conectada a tu WhatsApp.',
+      'Crearás catálogos interactivos o cotizadores propios sin depender de terceros.',
+      'Tendrás tu estructura de contenidos y guiones de venta listos para ejecutar.',
+    ],
+  },
+  {
+    id: 'profesional',
+    label: 'Ejecutivo y Profesional',
+    headline: 'Multiplica tu capacidad ejecutiva con herramientas de vanguardia',
+    points: [
+      'Automatiza la redacción de informes, propuestas corporativas y presentaciones.',
+      'Construye paneles interactivos y portafolios profesionales de alto estándar.',
+      'Domina los entornos de Google AI que están transformando el sector empresarial.',
+    ],
+  },
+  {
+    id: 'creador',
+    label: 'Creador y Consultor',
+    headline: 'Incorpora soluciones digitales de alto valor a tu portafolio de servicios',
+    points: [
+      'Diseña páginas de aterrizaje y prototipos funcionales para tus propios proyectos o clientes.',
+      'Acelera la producción de guiones, copys persuasivos y calendarios editoriales.',
+      'Integra herramientas de libre acceso y modelos avanzados en tu flujo de trabajo.',
+    ],
+  },
+  {
+    id: 'estudiante',
+    label: 'Estudiante Universitario',
+    headline: 'Destaca en el mercado laboral con proyectos reales funcionando en tu laptop',
+    points: [
+      'Estructura investigaciones, presentaciones y proyectos académicos de alto nivel.',
+      'Desarrolla tus primeras aplicaciones y sitios web sin barreras de programación.',
+      'Obtén el Certificado Oficial de la Academia AISO que respalda tus competencias.',
+    ],
+  },
+];
 
 export default function AICourseOnly() {
   const { user, getToken } = useAuth();
   const aiCourse = coursesData.find((c) => c.id === 'caracas-ia') || coursesData[0];
 
-  const [showFlyerModal, setShowFlyerModal] = useState(false);
   const [nombre, setNombre] = useState(user?.displayName || '');
   const [telefono, setTelefono] = useState('');
   const [correo, setCorreo] = useState(user?.email || '');
-  const [modalidadPago, setModalidadPago] = useState('Reserva $20 (Efectivo Promo $120)');
+  const [selectedPlan, setSelectedPlan] = useState<'efectivo' | 'bcv'>('efectivo');
+  const [modalidadPago, setModalidadPago] = useState('Reserva $20 (Promo Efectivo $120)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const getWhatsAppMessage = () => {
-    return 'https://wa.me/message/IIBLPHIKQJIIE1';
-  };
+  const [activeSaturday, setActiveSaturday] = useState<number>(0);
+  const [activeProfile, setActiveProfile] = useState<string>('emprendedor');
+
+  const currentProfileObj =
+    PROFILE_OUTCOMES.find((p) => p.id === activeProfile) || PROFILE_OUTCOMES[0];
 
   const handleCopyDirectLink = () => {
     const url = `${window.location.origin}/?curso=ia`;
     navigator.clipboard?.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
+  };
+
+  const handleSelectPlan = (plan: 'efectivo' | 'bcv') => {
+    setSelectedPlan(plan);
+    if (plan === 'efectivo') {
+      setModalidadPago('Reserva $20 (Promo Efectivo $120)');
+    } else {
+      setModalidadPago('Reserva $20 (Tasa BCV $140)');
+    }
   };
 
   const handleEnrollSubmit = async (e: React.FormEvent) => {
@@ -73,77 +129,148 @@ export default function AICourseOnly() {
     }
   };
 
-  const learningPillars = [
+  const bentoPillars = [
     {
+      number: '01',
       icon: Globe,
-      title: 'Sitios web completos',
-      desc: 'Diseña y publica páginas funcionales para mostrar tus servicios, portafolio, proyectos o emprendimiento.',
+      title: 'Sitios web completos y funcionales',
+      desc: 'Diseña, personaliza y publica páginas profesionales desde cero para presentar tus servicios, portafolio, proyectos o emprendimiento con acabado comercial.',
+      outcome: 'Saldrás con tu propio sitio web publicado en vivo',
+      span: 'lg:col-span-7',
+      featured: true,
     },
     {
+      number: '02',
       icon: Code2,
-      title: 'Aplicaciones interactivas',
-      desc: 'Transforma ideas en prototipos y apps funcionales guiado paso a paso por inteligencia artificial.',
+      title: 'Aplicaciones interactivas a medida',
+      desc: 'Transforma tus ideas de negocio o trabajo en prototipos y aplicaciones operativas guiado paso a paso por inteligencia artificial, sin conocimientos previos de código.',
+      outcome: 'Herramientas interactivas creadas en tu laptop',
+      span: 'lg:col-span-5',
+      featured: false,
     },
     {
+      number: '03',
       icon: Sparkles,
-      title: 'Estrategias y contenidos para redes',
-      desc: 'Genera guiones, copys y piezas de comunicación de alto impacto en minutos.',
+      title: 'Estrategias y contenido para redes',
+      desc: 'Estructura guiones persuasivos, copys comerciales y piezas de comunicación de alto impacto en una fracción del tiempo habitual.',
+      outcome: 'Comunicación digital estratégica',
+      span: 'lg:col-span-4',
+      featured: false,
     },
     {
+      number: '04',
       icon: Cpu,
-      title: 'Dominio de Google AI',
-      desc: 'Descubre cómo usar los entornos profesionales de IA que utilizan desarrolladores en todo el mundo.',
+      title: 'Dominio profesional de Google AI',
+      desc: 'Aprende a configurar y utilizar los entornos de inteligencia artificial de nivel profesional que emplean los equipos tecnológicos líderes en el mundo.',
+      outcome: 'Entornos profesionales Google AI',
+      span: 'lg:col-span-4',
+      featured: false,
     },
     {
+      number: '05',
       icon: Zap,
-      title: 'Productividad y automatización',
-      desc: 'Organiza tus proyectos, redacta documentos complejos y ahorra horas de trabajo repetitivo.',
+      title: 'Productividad y automatización ejecutiva',
+      desc: 'Organiza proyectos, sintetiza información compleja y redacta documentos corporativos ahorrando horas de trabajo operativo cada semana.',
+      outcome: 'Flujos de trabajo optimizados',
+      span: 'lg:col-span-4',
+      featured: false,
     },
   ];
 
+  const marqueeItems = [
+    'Creación de Sitios Web Profesionales',
+    'Desarrollo de Aplicaciones Interactivas',
+    'Dominio Práctico de Google AI',
+    'Estrategias y Guiones para Redes Sociales',
+    'Automatización y Productividad Ejecutiva',
+    'Sede Exclusiva C.C. Millennium Mall Caracas',
+    'Certificado Oficial Academia AISO',
+  ];
+
   return (
-    <section className="relative min-h-[calc(100vh-5rem)] py-10 sm:py-16 bg-gradient-to-b from-sky-50/70 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-200 overflow-hidden">
-      {/* Subtle Light Backdrop */}
+    <section className="relative min-h-[calc(100vh-5rem)] py-12 sm:py-20 bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 overflow-hidden">
+      {/* Refined Architectural Background & Soft Moving Light */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.10),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(14,165,233,0.12),transparent_70%)]"
+      />
+      <motion.div
+        aria-hidden="true"
+        animate={{
+          x: [0, 24, -18, 0],
+          y: [0, -18, 12, 0],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        className="pointer-events-none absolute top-12 left-1/4 w-[32rem] h-[32rem] rounded-full bg-sky-200/25 dark:bg-sky-500/10 blur-3xl"
+      />
+      <motion.div
+        aria-hidden="true"
+        animate={{
+          x: [0, -28, 18, 0],
+          y: [0, 16, -16, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        className="pointer-events-none absolute top-64 right-1/4 w-[28rem] h-[28rem] rounded-full bg-amber-200/20 dark:bg-amber-500/10 blur-3xl"
       />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Top Exclusive Header & Share Link */}
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-sky-100/80 dark:bg-sky-950/70 border border-sky-300/80 dark:border-sky-800 text-xs font-extrabold text-sky-800 dark:text-sky-300 mb-4">
-            <Cpu className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span>FORMACIÓN 100% INTERACTIVA · CARACAS · C.C. MILLENNIUM MALL</span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20">
+        {/* 1. EDITORIAL LUXURY HERO */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="text-center max-w-4xl mx-auto"
+        >
+          <div className="inline-flex flex-wrap items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 tracking-wide mb-5">
+            <span className="font-bold text-sky-700 dark:text-sky-400">Academia AISO</span>
+            <span aria-hidden="true">·</span>
+            <span>Caracas, C.C. Millennium Mall</span>
+            <span aria-hidden="true">·</span>
+            <span className="font-semibold text-amber-700 dark:text-amber-400">
+              3 Sábados Presenciales (12 Horas Prácticas)
+            </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight mb-4">
-            Curso Práctico: <span className="text-sky-600 dark:text-sky-400">Inteligencia Artificial Aplicada</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-[4rem] font-extrabold text-slate-900 dark:text-white leading-[1.06] tracking-tight mb-3">
+            Curso Práctico:{' '}
+            <span className="font-serif italic font-semibold bg-gradient-to-r from-sky-700 via-indigo-700 to-amber-600 dark:from-sky-400 dark:via-indigo-300 dark:to-amber-300 bg-clip-text text-transparent">
+              Inteligencia Artificial Aplicada
+            </span>
           </h1>
 
-          <p className="text-base sm:text-xl font-semibold text-slate-700 dark:text-slate-200 mb-3">
-            Crea webs, aplicaciones y contenido para redes sociales con el poder de IA
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400 mb-6">
+            Conviértete en IA Expert by AISO
           </p>
 
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+          <p className="text-lg sm:text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4 max-w-3xl mx-auto leading-snug">
+            Crea sitios web, aplicaciones interactivas y estrategias de contenido con el poder de la IA.
+          </p>
+
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto mb-9">
             {aiCourse.description}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="https://wa.me/message/IIBLPHIKQJIIE1"
+          {/* Exact 2 Hero Action Buttons Requested */}
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <motion.a
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              href={WHATSAPP_OFFICIAL_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
+              className="px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold shadow-lg shadow-emerald-600/20 transition-all inline-flex items-center gap-2.5 cursor-pointer"
             >
-              <MessageCircle className="w-4 h-4" />
-              Inscribirme por WhatsApp
-            </a>
+              <MessageCircle className="w-5 h-5" />
+              <span>Inscribirme por WhatsApp</span>
+              <ArrowRight className="w-4 h-4" />
+            </motion.a>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleCopyDirectLink}
-              className="px-4 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700 text-xs sm:text-sm font-bold shadow-2xs transition-all inline-flex items-center gap-2 cursor-pointer"
               title="Copiar enlace"
             >
               {copiedLink ? (
@@ -157,34 +284,58 @@ export default function AICourseOnly() {
                   <span>Compartir Enlace</span>
                 </>
               )}
-            </button>
+            </motion.button>
           </div>
+        </motion.div>
+
+        {/* 2. REFINED MOVING EDITORIAL RIBBON */}
+        <div className="relative overflow-hidden rounded-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 py-4 shadow-2xs">
+          <motion.div
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+            className="flex items-center gap-10 whitespace-nowrap w-max px-6"
+          >
+            {[...marqueeItems, ...marqueeItems].map((item, idx) => (
+              <div
+                key={idx}
+                className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>{item}</span>
+                <span className="text-slate-300 dark:text-slate-700 pl-6">·</span>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Main Showcase Card: Full Normal-Size Flyer + Key Info & Registration */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-sky-300/90 dark:border-sky-500/50 shadow-sm overflow-hidden">
-          {/* Highlight Strip with Direct WhatsApp Link First */}
-          <div className="px-6 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200/70 dark:border-sky-800/60 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm font-bold text-sky-900 dark:text-sky-200">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-              <span>Reserva tu cupo hoy por $20 (Monto deducible del total del curso)</span>
-            </div>
-            <a
-              href="https://wa.me/message/IIBLPHIKQJIIE1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-colors shadow-2xs"
+        {/* 3. EXECUTIVE SHOWCASE: FULL OFFICIAL FLYER + INVESTMENT & DIRECT REGISTRATION */}
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* Left 7 Cols: Full-Size Official Flyer + Key Schedule Cards + Requirements */}
+          <div className="lg:col-span-7 space-y-8">
+            {/* Full-Size Official Flyer in Architectural Frame */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-3xl bg-white dark:bg-slate-900 p-3 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/5"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
-              Escribir por WhatsApp
-            </a>
-          </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-3.5 mb-3.5 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+                  <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Reserva tu cupo con $20 (Monto deducible de la inversión total)</span>
+                </div>
+                <a
+                  href={WHATSAPP_OFFICIAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Escribir por WhatsApp
+                </a>
+              </div>
 
-          <div className="p-6 sm:p-10 grid lg:grid-cols-12 gap-8 items-start">
-            {/* Left 7 Cols: Normal-Size Full Official Flyer + Schedule + Learning Pillars & Requirements */}
-            <div className="lg:col-span-7 space-y-8">
-              {/* Official Flyer displayed at full normal readable size without needing to open a modal */}
-              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 shadow-md">
+              <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/60 dark:border-slate-800">
                 <img
                   src={aiCourse.image}
                   alt={aiCourse.imageAlt}
@@ -192,424 +343,585 @@ export default function AICourseOnly() {
                   className="w-full h-auto object-contain block mx-auto"
                 />
               </div>
+            </motion.div>
 
-              {/* Dates, Time & Location Grid */}
-              <div className="grid sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                      Inicio y Fechas (3 Sábados)
-                    </span>
-                    <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
-                      Sábado 21 de noviembre
-                    </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300">
-                      21 nov, 5 y 12 de diciembre
-                    </span>
-                  </div>
+            {/* 3 Architectural Schedule & Location Cards */}
+            <div className="grid sm:grid-cols-3 gap-4">
+              <motion.div
+                whileHover={{ y: -3 }}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
+              >
+                <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-400 flex items-center justify-center mb-3">
+                  <Calendar className="w-4 h-4" />
                 </div>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
+                  Fechas Presenciales
+                </span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white block mt-0.5">
+                  Inicia 21 de Nov
+                </span>
+                <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
+                  Sábados 21 nov, 5 y 12 dic
+                </span>
+              </motion.div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                      Horario Presencial
-                    </span>
-                    <span className="text-sm font-extrabold text-slate-900 dark:text-white block font-mono tabular-nums">
-                      De 2:00 p.m. a 6:00 p.m.
-                    </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300">
-                      12 horas prácticas en vivo
-                    </span>
-                  </div>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
+              >
+                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-3">
+                  <Clock className="w-4 h-4" />
                 </div>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
+                  Horario e Intensidad
+                </span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white block mt-0.5 font-mono tabular-nums">
+                  2:00 a 6:00 p.m.
+                </span>
+                <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
+                  12 horas prácticas en sala
+                </span>
+              </motion.div>
 
-                <div className="sm:col-span-2 pt-3 border-t border-slate-200/70 dark:border-slate-700/60 flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                      Lugar en Caracas
-                    </span>
-                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      Caracas, C.C. Millennium Mall, Los Dos Caminos · Sede AISO
-                    </span>
-                  </div>
+              <motion.div
+                whileHover={{ y: -3 }}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
+              >
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-3">
+                  <MapPin className="w-4 h-4" />
                 </div>
-              </div>
-
-              {/* 5 Learning Pillars */}
-              <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Cpu className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                  ¿Qué aprenderás a construir durante las clases?
-                </h2>
-                <div className="space-y-3">
-                  {learningPillars.map((pillar, idx) => {
-                    const Icon = pillar.icon;
-                    return (
-                      <div
-                        key={idx}
-                        className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5"
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                            {pillar.title}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
-                            {pillar.desc}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Requirements & Equipment + Mid-Page WhatsApp CTA */}
-              {aiCourse.requirements && (
-                <div className="p-6 rounded-2xl bg-sky-50/60 dark:bg-sky-950/25 border border-sky-200/80 dark:border-sky-800/60 space-y-4">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                    Requisitos y equipamiento
-                  </h3>
-                  <ul className="space-y-2.5">
-                    {aiCourse.requirements.map((req, idx) => (
-                      <li
-                        key={idx}
-                        className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2.5 leading-relaxed"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="pt-2">
-                    <a
-                      href="https://wa.me/message/IIBLPHIKQJIIE1"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Consultar o Apartar Cupo por WhatsApp
-                    </a>
-                  </div>
-                </div>
-              )}
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
+                  Ubicación en Caracas
+                </span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white block mt-0.5">
+                  C.C. Millennium Mall
+                </span>
+                <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
+                  Los Dos Caminos · Sede AISO
+                </span>
+              </motion.div>
             </div>
 
-            {/* Right 5 Cols: Pricing Box & Self-Contained Reservation Form */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* Pricing Card with WhatsApp Button First */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-amber-50/60 dark:from-slate-800 dark:via-slate-900 dark:to-sky-950/40 border-2 border-sky-300/80 dark:border-sky-700 shadow-xs">
-                <div className="inline-block px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-extrabold mb-3">
-                  Inversión Total (Incluye Inscripción)
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
-                      Tasa Oficial BCV
+            {/* Requirements & Equipment */}
+            {aiCourse.requirements && (
+              <div className="p-7 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-sky-700 dark:text-sky-400 block mb-0.5">
+                      Preparación para las sesiones prácticas
                     </span>
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
-                      $140
-                    </span>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-700">
-                    <span className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300 block">
-                      Promo en Efectivo
-                    </span>
-                    <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300 font-mono tabular-nums">
-                      $120
-                    </span>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                      Requisitos y equipamiento en sala
+                    </h3>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-sky-600 text-white text-center mb-3">
-                  <span className="text-xs uppercase tracking-wider font-bold block opacity-90">
-                    Aparta tu lugar hoy con solo:
-                  </span>
-                  <span className="text-xl sm:text-2xl font-black font-mono tabular-nums">
-                    $20 (Deducibles del total)
-                  </span>
-                </div>
+                <ul className="space-y-3">
+                  {aiCourse.requirements.map((req, idx) => (
+                    <li
+                      key={idx}
+                      className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-start gap-3 leading-relaxed"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
 
+                <div className="pt-2">
+                  <a
+                    href={WHATSAPP_OFFICIAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors shadow-xs"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Consultar o Apartar Cupo por WhatsApp
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right 5 Cols: Executive Investment Card + Self-Contained Registration */}
+          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+            {/* Executive Pricing Card */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/5">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                  Inversión Total · Inscripción Incluida
+                </span>
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  Cupos Limitados
+                </span>
+              </div>
+
+              {/* Interactive Modality Switch */}
+              <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 mb-6">
+                <button
+                  type="button"
+                  onClick={() => handleSelectPlan('efectivo')}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-center whitespace-nowrap ${
+                    selectedPlan === 'efectivo'
+                      ? 'bg-slate-900 dark:bg-sky-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                  }`}
+                >
+                  Promo Efectivo ($120)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectPlan('bcv')}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-center whitespace-nowrap ${
+                    selectedPlan === 'bcv'
+                      ? 'bg-slate-900 dark:bg-sky-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                  }`}
+                >
+                  Tasa Oficial BCV ($140)
+                </button>
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedPlan}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18 }}
+                  className="p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 mb-6 space-y-4"
+                >
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                        {selectedPlan === 'efectivo'
+                          ? 'Promoción Especial en Efectivo'
+                          : 'Inversión Estándar a Tasa BCV'}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Incluye las 3 clases y certificado oficial
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      {selectedPlan === 'efectivo' && (
+                        <span className="text-sm line-through text-slate-400 font-mono tabular-nums">
+                          $140
+                        </span>
+                      )}
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
+                        {selectedPlan === 'efectivo' ? '$120' : '$140'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-200/80 dark:bg-slate-700" />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                        Reserva hoy con:
+                      </span>
+                      <span className="text-xl font-black text-sky-700 dark:text-sky-400 font-mono tabular-nums">
+                        $20
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                        Deducibles del total
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                        Restante al iniciar:
+                      </span>
+                      <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 font-mono tabular-nums">
+                        {selectedPlan === 'efectivo' ? '$100' : '$120'}
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                        {selectedPlan === 'efectivo' ? 'Ahorras $20 en efectivo' : 'Pago Móvil / BCV'}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              <motion.a
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                href={WHATSAPP_OFFICIAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-4 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Reservar mi Cupo por WhatsApp
+              </motion.a>
+            </div>
+
+            {/* Direct Registration Form Card */}
+            <div
+              id="reserva-ia"
+              className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/5 scroll-mt-24"
+            >
+              {submitted ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-6"
+                >
+                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="h-7 w-7" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                    ¡Reserva Registrada!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">
+                    Hemos recibido tus datos para el <strong>Curso Práctico: Inteligencia Artificial Aplicada</strong> en Caracas. Haz clic abajo para comunicarte a nuestro WhatsApp oficial y formalizar tu reserva.
+                  </p>
+                  <a
+                    href={WHATSAPP_OFFICIAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Confirmar mi Reserva por WhatsApp
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setSubmitted(false)}
+                    className="mt-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    Registrar otro participante
+                  </button>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleEnrollSubmit} className="space-y-4">
+                  <div>
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400 block mb-0.5">
+                      Inscripción Directa · Cupos Limitados
+                    </span>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                      Reserva tu Cupo en el Curso de IA
+                    </h3>
+                  </div>
+
+                  {/* Primary Direct WhatsApp Button Placed FIRST */}
+                  <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                    <a
+                      href={WHATSAPP_OFFICIAL_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
+                    >
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>Inscripción Directa por WhatsApp</span>
+                    </a>
+                    <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                      O registra tus datos en el formulario:
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Nombre y Apellido
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                      placeholder="Ej. Carlos Rodríguez"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Teléfono / WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      placeholder="+58 412 000 0000"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Correo Electrónico
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={correo}
+                      onChange={(e) => setCorreo(e.target.value)}
+                      placeholder="tu@correo.com"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Modalidad Preferida
+                    </label>
+                    <select
+                      value={modalidadPago}
+                      onChange={(e) => setModalidadPago(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
+                    >
+                      <option value="Reserva $20 (Promo Efectivo $120)">
+                        Reservar con $20 · Promo en Efectivo ($120 total)
+                      </option>
+                      <option value="Reserva $20 (Tasa BCV $140)">
+                        Reservar con $20 · Tasa Oficial BCV ($140 total)
+                      </option>
+                      <option value="Pago Completo Promo Efectivo $120">
+                        Pago Completo Promo Efectivo ($120)
+                      </option>
+                      <option value="Pago Completo Tasa BCV $140">
+                        Pago Completo Tasa BCV ($140)
+                      </option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold rounded-xl text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isSubmitting ? 'Procesando...' : 'Apartar Mi Cupo Ahora'}
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 4. ASYMMETRIC BENTO GRID: 5 COMPETENCIAS REALES */}
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400 block mb-1">
+                Resultados Tangibles · Metodología 100% Práctica
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Cinco capacidades reales que dominarás en sala
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+              Cada estudiante trabaja directamente en su computadora acompañado paso a paso por nuestros instructores.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {bentoPillars.map((pillar) => {
+              const Icon = pillar.icon;
+              return (
+                <motion.div
+                  key={pillar.number}
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.18 }}
+                  className={`${pillar.span} p-7 sm:p-8 rounded-3xl border transition-all flex flex-col justify-between ${
+                    pillar.featured
+                      ? 'bg-gradient-to-br from-sky-50/90 via-white to-amber-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 border-sky-300/90 dark:border-sky-800 shadow-md'
+                      : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-sky-300 dark:hover:border-sky-800'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-3 mb-5">
+                      <span className="text-xs font-mono font-extrabold text-sky-700 dark:text-sky-400">
+                        {pillar.number}. COMPETENCIA PRÁCTICA
+                      </span>
+                      <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950 border border-sky-200/80 dark:border-sky-800 text-sky-700 dark:text-sky-400 flex items-center justify-center">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mb-2.5 leading-snug">
+                      {pillar.title}
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {pillar.desc}
+                    </p>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                    <span>{pillar.outcome}</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. INTERACTIVE PROFILE SELECTOR */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-7 sm:p-10 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+            <div className="max-w-xl">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block mb-1">
+                Enfoque Personalizado según tu Área
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Selecciona tu perfil y conoce el impacto directo del programa
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {PROFILE_OUTCOMES.map((prof) => (
+                <button
+                  key={prof.id}
+                  type="button"
+                  onClick={() => setActiveProfile(prof.id)}
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                    activeProfile === prof.id
+                      ? 'bg-slate-900 dark:bg-sky-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                  }`}
+                >
+                  {prof.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentProfileObj.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="p-6 sm:p-8 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+            >
+              <div className="space-y-3 max-w-2xl">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                  {currentProfileObj.headline}
+                </h3>
+                <ul className="space-y-2.5">
+                  {currentProfileObj.points.map((pt, idx) => (
+                    <li
+                      key={idx}
+                      className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2.5"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="shrink-0">
                 <a
-                  href="https://wa.me/message/IIBLPHIKQJIIE1"
+                  href={WHATSAPP_OFFICIAL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-xs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition-all"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Reservar mi Cupo por WhatsApp
                 </a>
               </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-              {/* Self-Contained Reservation Form (WhatsApp First!) */}
-              <div
-                id="reserva-ia"
-                className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm scroll-mt-24"
-              >
-                {submitted ? (
-                  <div className="text-center py-6">
-                    <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle2 className="h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                      ¡Reserva Registrada!
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">
-                      Hemos recibido tus datos para el <strong>Curso Práctico: Inteligencia Artificial Aplicada</strong> en Caracas. Haz clic abajo para comunicarte a nuestro WhatsApp oficial y formalizar tu reserva.
-                    </p>
-                    <a
-                      href="https://wa.me/message/IIBLPHIKQJIIE1"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Confirmar mi Reserva por WhatsApp
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => setSubmitted(false)}
-                      className="mt-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                    >
-                      Registrar otro participante
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleEnrollSubmit} className="space-y-4">
-                    <div>
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400 block mb-0.5">
-                        Inscripción Directa · Cupos Limitados
-                      </span>
-                      <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                        Reserva tu Cupo en el Curso de IA
-                      </h3>
-                    </div>
+        {/* 6. 3-SATURDAY ARCHITECTURAL SYLLABUS */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-7 sm:p-10 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400 block mb-1">
+                Programa Académico · 3 Sábados Intensivos
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+                <BookOpen className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                Cronograma de las 3 Sesiones Presenciales
+              </h2>
+            </div>
 
-                    {/* Primary Direct WhatsApp Button Placed FIRST */}
-                    <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
-                      <a
-                        href="https://wa.me/message/IIBLPHIKQJIIE1"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
-                      >
-                        <MessageCircle className="w-4 h-4 shrink-0" />
-                        <span>Inscripción Directa por WhatsApp</span>
-                      </a>
-                      <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
-                        O registra tus datos en el formulario:
-                      </span>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Nombre y Apellido
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={nombre}
-                        onChange={(e) => setNombre(e.target.value)}
-                        placeholder="Ej. Carlos Rodríguez"
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Teléfono / WhatsApp
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={telefono}
-                        onChange={(e) => setTelefono(e.target.value)}
-                        placeholder="+58 412 000 0000"
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Correo Electrónico
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={correo}
-                        onChange={(e) => setCorreo(e.target.value)}
-                        placeholder="tu@correo.com"
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Modalidad Preferida
-                      </label>
-                      <select
-                        value={modalidadPago}
-                        onChange={(e) => setModalidadPago(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
-                      >
-                        <option value="Reserva $20 (Promo Efectivo $120)">
-                          Reservar con $20 · Promo en Efectivo ($120 total)
-                        </option>
-                        <option value="Reserva $20 (Tasa BCV $140)">
-                          Reservar con $20 · Tasa Oficial BCV ($140 total)
-                        </option>
-                        <option value="Pago Completo Promo Efectivo $120">
-                          Pago Completo Promo Efectivo ($120)
-                        </option>
-                        <option value="Pago Completo Tasa BCV $140">
-                          Pago Completo Tasa BCV ($140)
-                        </option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {isSubmitting ? 'Procesando...' : 'Apartar Mi Cupo Ahora'}
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
-                )}
-              </div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              Certificado Oficial Academia AISO Incluido
             </div>
           </div>
 
-          {/* Complete 3-Saturday Syllabus Breakdown inside the Page */}
-          <div className="p-6 sm:p-10 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/50">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400 block mb-1">
-                  Cronograma de las 3 Sesiones Presenciales
-                </span>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                  Pensum Práctico Paso a Paso
-                </h2>
-              </div>
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Certificado Oficial Academia AISO Incluido
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {aiCourse.syllabus.map((cls, idx) => (
-                <div
+          <div className="grid md:grid-cols-3 gap-6">
+            {aiCourse.syllabus.map((cls, idx) => {
+              const isSelected = activeSaturday === idx;
+              return (
+                <motion.div
                   key={idx}
-                  className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex flex-col"
+                  whileHover={{ y: -4 }}
+                  onClick={() => setActiveSaturday(idx)}
+                  className={`p-6 sm:p-7 rounded-2xl border transition-all cursor-pointer flex flex-col ${
+                    isSelected
+                      ? 'bg-gradient-to-b from-sky-50/70 to-white dark:from-sky-950/40 dark:to-slate-900 border-sky-400 dark:border-sky-500 shadow-md'
+                      : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/90 dark:border-slate-800 hover:border-sky-300'
+                  }`}
                 >
-                  <span className="text-xs font-mono font-extrabold text-sky-600 dark:text-sky-400 mb-1">
-                    SESIÓN 0{idx + 1}
-                  </span>
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-mono font-extrabold text-sky-700 dark:text-sky-400">
+                      0{idx + 1}. SESIÓN PRESENCIAL
+                    </span>
+                    <Layers className={`w-4 h-4 ${isSelected ? 'text-sky-600' : 'text-slate-400'}`} />
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mb-1.5 leading-snug">
                     {cls.title}
                   </h3>
+
                   {cls.subtitle && (
-                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-4">
+                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-4">
                       {cls.subtitle}
                     </p>
                   )}
-                  <ul className="space-y-2 flex-grow">
+
+                  <ul className="space-y-2.5 flex-grow">
                     {cls.points.map((pt, pIdx) => (
                       <li
                         key={pIdx}
-                        className="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2 leading-relaxed"
+                        className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2.5 leading-relaxed"
                       >
-                        <span className="text-sky-600 font-bold">·</span>
+                        <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
                         <span>{pt}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
-              ))}
-            </div>
+                </motion.div>
+              );
+            })}
+          </div>
 
-            {/* Bottom Stage WhatsApp Direct Bar */}
-            <div className="mt-8 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  ¿Listo para dominar la Inteligencia Artificial en 3 sábados?
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
-                  Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $20 deducibles del total.
-                </p>
-              </div>
-              <a
-                href="https://wa.me/message/IIBLPHIKQJIIE1"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Inscribirme por WhatsApp Ahora
-              </a>
+          {/* Bottom Stage WhatsApp Direct Bar */}
+          <div className="mt-8 p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                ¿Listo para dominar la Inteligencia Artificial en 3 sábados?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+                Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $20 deducibles del total.
+              </p>
             </div>
+            <motion.a
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              href={WHATSAPP_OFFICIAL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Inscribirme por WhatsApp Ahora
+            </motion.a>
           </div>
         </div>
       </div>
-
-      {/* Full Original Flyer Modal */}
-      {showFlyerModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setShowFlyerModal(false)}
-        >
-          <div
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-sky-600 dark:text-sky-400 block">
-                  Flyer Oficial Completo
-                </span>
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-                  {aiCourse.title}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowFlyerModal(false)}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Cerrar flyer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 overflow-y-auto flex items-center justify-center bg-slate-100 dark:bg-slate-950">
-              <img
-                src={aiCourse.image}
-                alt={aiCourse.imageAlt}
-                referrerPolicy="no-referrer"
-                className="max-h-[75vh] w-auto object-contain rounded-xl shadow-md"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

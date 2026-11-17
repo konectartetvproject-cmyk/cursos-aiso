@@ -274,6 +274,13 @@ export default function Footer({ setCurrentView }: FooterProps) {
             </button>
             <button
               type="button"
+              onClick={() => handleViewSwitch('instagram-bio')}
+              className="hover:text-white transition-colors cursor-pointer text-xs font-semibold text-indigo-400"
+            >
+              Enlace Perfil Instagram
+            </button>
+            <button
+              type="button"
               onClick={() => handleViewSwitch('admin')}
               className="inline-flex items-center gap-1.5 text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer text-xs font-semibold"
             >

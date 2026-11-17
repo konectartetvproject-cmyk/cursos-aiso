@@ -25,8 +25,9 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
   const isIAPortal = currentView === 'students-ia';
   const isCaracasOnly = currentView === 'caracas-only';
   const isIAOnly = currentView === 'ia-only';
+  const isInstagramBio = currentView === 'instagram-bio';
   const isStudentPortal = isOratoryPortal || isIAPortal;
-  const isIsolatedView = isStudentPortal || isCaracasOnly || isIAOnly;
+  const isIsolatedView = isStudentPortal || isCaracasOnly || isIAOnly || isInstagramBio;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,7 +92,9 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                   : 'text-indigo-600 dark:text-indigo-400'
               }`}
             >
-              {isIAOnly
+              {isInstagramBio
+                ? 'Acceso Directo · @oratoria_aiso'
+                : isIAOnly
                 ? 'Curso Práctico: Inteligencia Artificial Aplicada · Caracas'
                 : isCaracasOnly
                 ? 'Sede Caracas · C.C. Millennium Mall'
@@ -247,6 +250,17 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                   </button>
 
                   <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => handleTabClick(e, 'instagram-bio')}
+                    className="w-full text-left px-3 py-2 rounded-lg border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40 transition-colors flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                      Enlace Perfil Instagram (@oratoria_aiso)
+                    </span>
+                  </button>
 
                   <button
                     type="button"

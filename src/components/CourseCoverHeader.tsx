@@ -78,7 +78,11 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               </span>
             </div>
 
-            <p className="text-xs sm:text-sm italic text-slate-600 dark:text-slate-300 mt-2 mb-4">
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400 mt-1.5">
+              Conviértete en IA Expert by AISO
+            </div>
+
+            <p className="text-xs sm:text-sm italic text-slate-600 dark:text-slate-300 mt-1.5 mb-4">
               Convierte la tecnología en{' '}
               <span className="font-bold not-italic text-sky-700 dark:text-amber-400">
                 tu mejor aliada.
