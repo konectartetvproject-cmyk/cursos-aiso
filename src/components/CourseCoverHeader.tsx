@@ -65,9 +65,9 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
           </button>
         </div>
 
-        {/* Main Adapted Split: Flyer Typography & 4 Gold/Sky Icons + Framed Flyer Portrait */}
+        {/* Main Adapted Split: Flyer Typography & 4 Gold/Sky Icons + Normal-Size Flyer */}
         <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
-          <div className="sm:col-span-8">
+          <div className="sm:col-span-7">
             <div className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-400 mb-1">
               — Curso de —
             </div>
@@ -86,7 +86,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
             </p>
 
             {/* 4 Feature Badges Adapted from Original Flyer */}
-            <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800">
               {[
                 { icon: Globe, label: 'Crea sitios web' },
                 { icon: Code2, label: 'Desarrolla apps' },
@@ -111,26 +111,20 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
             </div>
           </div>
 
-          {/* Right Framed Original Flyer Thumbnail */}
-          <div className="sm:col-span-4 flex justify-center">
-            <button
-              type="button"
+          {/* Right Normal-Size Original Flyer */}
+          <div className="sm:col-span-5 flex justify-center">
+            <div
               onClick={() => onViewFlyer(course)}
-              title="Haz clic para ver el flyer original completo"
-              className="relative group/flyer w-32 sm:w-full max-w-[148px] aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
+              title="Flyer oficial del curso"
+              className="relative group/flyer w-full max-w-[280px] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
             >
               <img
                 src={course.image}
                 alt={course.imageAlt}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-top group-hover/flyer:scale-105 transition-transform duration-500"
+                className="w-full h-auto object-contain block"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-2 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
-                  <Maximize2 className="w-3 h-3" /> Flyer Original
-                </span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -196,7 +190,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
 
         {/* Center Adapted Ribbon & Photo Preview */}
         <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
-          <div className="sm:col-span-8">
+          <div className="sm:col-span-7">
             <div className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-sky-400 mb-1">
               Curso de
             </div>
@@ -227,26 +221,20 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
             </div>
           </div>
 
-          {/* Right Framed Original Flyer Thumbnail */}
-          <div className="sm:col-span-4 flex justify-center">
-            <button
-              type="button"
+          {/* Right Normal-Size Original Flyer */}
+          <div className="sm:col-span-5 flex justify-center">
+            <div
               onClick={() => onViewFlyer(course)}
-              title={`Ver flyer completo del ${course.title}`}
-              className="relative group/flyer w-32 sm:w-full max-w-[148px] aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-blue-300 dark:ring-amber-400/60 shadow-md bg-slate-900 cursor-pointer"
+              title={`Flyer del ${course.title}`}
+              className="relative group/flyer w-full max-w-[280px] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-blue-300 dark:ring-amber-400/60 shadow-md bg-slate-900 cursor-pointer"
             >
               <img
                 src={course.image}
                 alt={course.imageAlt}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-top group-hover/flyer:scale-105 transition-transform duration-500"
+                className="w-full h-auto object-contain block"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-950/90 via-blue-950/35 to-transparent p-2 text-center">
-                <span className="text-[10px] font-bold text-white flex items-center justify-center gap-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-amber-300" /> Flyer Original
-                </span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -285,7 +273,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
 
         {/* Main Adapted Split */}
         <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
-          <div className="sm:col-span-8">
+          <div className="sm:col-span-7">
             <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-700 dark:text-amber-300">
               Atiende con
             </div>
@@ -334,26 +322,20 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
             </div>
           </div>
 
-          {/* Right Framed Original Flyer Thumbnail */}
-          <div className="sm:col-span-4 flex justify-center">
-            <button
-              type="button"
+          {/* Right Normal-Size Original Flyer */}
+          <div className="sm:col-span-5 flex justify-center">
+            <div
               onClick={() => onViewFlyer(course)}
-              title="Haz clic para ver el flyer original completo"
-              className="relative group/flyer w-32 sm:w-full max-w-[148px] aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
+              title="Flyer oficial del curso"
+              className="relative group/flyer w-full max-w-[280px] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
             >
               <img
                 src={course.image}
                 alt={course.imageAlt}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-top group-hover/flyer:scale-105 transition-transform duration-500"
+                className="w-full h-auto object-contain block"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent p-2 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
-                  <Maximize2 className="w-3 h-3" /> Flyer Original
-                </span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -382,7 +364,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
 
         {/* Main Adapted Split */}
         <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
-          <div className="sm:col-span-8">
+          <div className="sm:col-span-7">
             <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-700 dark:text-sky-400">
               Curso de
             </div>
@@ -426,26 +408,20 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
             </div>
           </div>
 
-          {/* Right Framed Original Flyer Thumbnail */}
-          <div className="sm:col-span-4 flex justify-center">
-            <button
-              type="button"
+          {/* Right Normal-Size Original Flyer */}
+          <div className="sm:col-span-5 flex justify-center">
+            <div
               onClick={() => onViewFlyer(course)}
-              title="Haz clic para ver el flyer original completo"
-              className="relative group/flyer w-32 sm:w-full max-w-[148px] aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
+              title="Flyer oficial del curso"
+              className="relative group/flyer w-full max-w-[280px] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-slate-950 cursor-pointer"
             >
               <img
                 src={course.image}
                 alt={course.imageAlt}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-top group-hover/flyer:scale-105 transition-transform duration-500"
+                className="w-full h-auto object-contain block"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent p-2 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
-                  <Maximize2 className="w-3 h-3" /> Flyer Original
-                </span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
       </div>

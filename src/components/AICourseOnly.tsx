@@ -140,28 +140,11 @@ export default function AICourseOnly() {
               Inscribirme por WhatsApp
             </a>
 
-            <a
-              href="#reserva-ia"
-              className="px-5 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-xs transition-all inline-flex items-center gap-2"
-            >
-              <GraduationCap className="w-4 h-4" />
-              Inscripción Directa ($20)
-            </a>
-
-            <button
-              type="button"
-              onClick={() => setShowFlyerModal(true)}
-              className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 text-sm font-bold shadow-2xs transition-all inline-flex items-center gap-2 cursor-pointer"
-            >
-              <ImageIcon className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-              Ver Flyer Oficial Completo
-            </button>
-
             <button
               type="button"
               onClick={handleCopyDirectLink}
               className="px-4 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer"
-              title="Copiar enlace directo exclusivo del Curso de IA"
+              title="Copiar enlace"
             >
               {copiedLink ? (
                 <>
@@ -171,17 +154,15 @@ export default function AICourseOnly() {
               ) : (
                 <>
                   <Share2 className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                  <span>Compartir Enlace Directo IA</span>
+                  <span>Compartir Enlace</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Main Showcase Card: Adapted Cover + Key Info + Flyer Preview */}
+        {/* Main Showcase Card: Full Normal-Size Flyer + Key Info & Registration */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-sky-300/90 dark:border-sky-500/50 shadow-sm overflow-hidden">
-          <CourseCoverHeader course={aiCourse} onViewFlyer={() => setShowFlyerModal(true)} />
-
           {/* Highlight Strip with Direct WhatsApp Link First */}
           <div className="px-6 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200/70 dark:border-sky-800/60 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm font-bold text-sky-900 dark:text-sky-200">
             <div className="flex items-center gap-2">
@@ -200,8 +181,18 @@ export default function AICourseOnly() {
           </div>
 
           <div className="p-6 sm:p-10 grid lg:grid-cols-12 gap-8 items-start">
-            {/* Left 7 Cols: Schedule, Learning Pillars & Requirements */}
+            {/* Left 7 Cols: Normal-Size Full Official Flyer + Schedule + Learning Pillars & Requirements */}
             <div className="lg:col-span-7 space-y-8">
+              {/* Official Flyer displayed at full normal readable size without needing to open a modal */}
+              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 shadow-md">
+                <img
+                  src={aiCourse.image}
+                  alt={aiCourse.imageAlt}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-auto object-contain block mx-auto"
+                />
+              </div>
+
               {/* Dates, Time & Location Grid */}
               <div className="grid sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
                 <div className="flex items-start gap-3">
