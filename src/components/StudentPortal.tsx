@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, FileText, Lock, Mail, Key, PlayCircle, CheckCircle2, ListOrdered, Brain, Mic2, Compass } from 'lucide-react';
+import { BookOpen, FileText, Lock, Mail, Key, PlayCircle, CheckCircle2, ListOrdered, Brain, Mic2, Compass, Wand2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Infographic from './Infographic';
 import SlideContent from './SlideContent';
@@ -8,6 +8,7 @@ import RhetoricalFigures from './RhetoricalFigures';
 import TrabalenguasAISO from './TrabalenguasAISO';
 import ElevenSteps from './ElevenSteps';
 import PresentationViewer from './PresentationViewer';
+import OratoriaAICoach from './OratoriaAICoach';
 
 const ALLOWED_EMAIL = 'academyaiso@icloud.com';
 const ALLOWED_KEY = 'IRO';
@@ -132,7 +133,7 @@ export default function StudentPortal() {
               Bienvenido/a al <span className="text-indigo-600 dark:text-indigo-400">Campus AISO</span>
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-lg">
-              Explora todos los módulos, guías visuales, presentaciones y recursos audiovisuales de tu formación en oratoria.
+              Explora tu Entrenador de Oratoria con IA, el esquema de los 11 pasos, módulos, guías visuales y recursos audiovisuales.
             </p>
           </motion.div>
           <button
@@ -160,11 +161,12 @@ export default function StudentPortal() {
             </div>
           </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[
+                  { id: 'nav-ai-oratoria', label: 'Aprender Oratoria con IA (11 Pasos)', icon: <Wand2 className="w-4 h-4" /> },
                   { id: 'nav-infographic', label: 'Infografía AISO', icon: <FileText className="w-4 h-4" /> },
                   { id: 'nav-slide-content', label: 'Inicio y Conclusión', icon: <PlayCircle className="w-4 h-4" /> },
-                  { id: 'nav-eleven-steps', label: 'Los 11 Pasos', icon: <ListOrdered className="w-4 h-4" /> },
+                  { id: 'nav-eleven-steps', label: 'Teoría de Los 11 Pasos', icon: <ListOrdered className="w-4 h-4" /> },
                   { id: 'nav-course-modules', label: 'Módulos', icon: <BookOpen className="w-4 h-4" /> },
                   { id: 'nav-rhetorical-figures', label: 'Figuras Retóricas', icon: <Brain className="w-4 h-4" /> },
                   { id: 'nav-trabalenguas', label: 'Trabalenguas AISO', icon: <Mic2 className="w-4 h-4" /> },
@@ -189,6 +191,11 @@ export default function StudentPortal() {
                 ))}
               </div>
             </motion.div>
+
+            {/* Sección Principal: Aprender Oratoria con IA + Esquema Dinámico de los 11 Pasos */}
+            <div id="nav-ai-oratoria">
+              <OratoriaAICoach />
+            </div>
 
             <motion.div
               id="nav-infographic"

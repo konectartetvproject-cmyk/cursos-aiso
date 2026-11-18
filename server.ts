@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
+import { GoogleGenAI, Type } from '@google/genai';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
 import {
   getOrCreateUser,
@@ -780,6 +781,230 @@ async function startServer() {
     } catch (error: any) {
       console.error('Failed to delete inquiry:', error);
       res.status(500).json({ error: error.message || 'Failed to delete inquiry' });
+    }
+  });
+
+  // AI Oratory Coach + 11 Steps Dynamic Speech Generator
+  app.post('/api/oratoria-ai/chat', async (req, res) => {
+    const {
+      message = '',
+      speakerName = 'Estudiante AISO',
+      tone = 'Inspirador y Seguro',
+      duration = '5 minutos (Estándar)',
+      history = [],
+      currentSteps = [],
+    } = req.body || {};
+
+    const cleanSpeaker = String(speakerName || 'Estudiante AISO').trim() || 'Estudiante AISO';
+    const cleanPrompt = String(message || 'Quiero preparar un discurso impactante').trim();
+
+    const buildFallbackSpeech = (topicText: string) => {
+      const displayTopic =
+        topicText.length > 75 ? `${topicText.slice(0, 72).trim()}...` : topicText;
+      return {
+        reply: `¡Excelente iniciativa, ${cleanSpeaker}! He estructurado y actualizado tu esquema de **Los 11 Pasos para Hablar en Público** adaptado a tu solicitud: *"${displayTopic}"* con un tono **${tone}** y una duración aproximada de **${duration}**.\n\nRevisa el esquema debajo de este chat: puedes editar libremente cada uno de los 11 pasos, copiar el guion o pedirme aquí mismo que cambie la técnica de inicio (por ejemplo, a una pregunta retórica, una cita o una historia personal), que profundice el desarrollo o que ajuste el cierre.`,
+        speechTitle: `Discurso AISO: ${displayTopic}`,
+        topicSummary: `Tono: ${tone} · Duración: ${duration} · Orador: ${cleanSpeaker}`,
+        steps: [
+          {
+            id: 1,
+            title: 'Entrar al Escenario',
+            content: `Camina con paso firme hacia el centro del escenario para presentar "${displayTopic}". Mantén los hombros relajados hacia atrás, el mentón paralelo al piso y proyecta serenidad antes de pronunciar la primera palabra.`,
+            coachingTip: 'No empieces a hablar mientras caminas. Llega a tu punto de anclaje primero.',
+          },
+          {
+            id: 2,
+            title: 'Mirar al Público',
+            content: `Haz una pausa de 3 segundos en silencio. Recorre con la mirada tres zonas del auditorio (izquierda, centro y derecha) conectando visualmente con rostros específicos para capturar la atención total.`,
+            coachingTip: 'El silencio inicial demuestra dominio escénico y despierta expectativa.',
+          },
+          {
+            id: 3,
+            title: 'Saludar',
+            content: `"Muy buenos días / tardes a todos los presentes. Es un verdadero honor compartir este espacio con ustedes."`,
+            coachingTip: 'Usa una sonrisa genuina y proyecta la voz desde el diafragma.',
+          },
+          {
+            id: 4,
+            title: 'Técnica de Inicio',
+            content: `"¿Alguna vez se han detenido a pensar cómo cambia nuestra realidad cuando dominamos verdaderamente ${displayTopic}? Hace poco descubrí que una sola decisión consciente en este ámbito puede transformar por completo nuestros resultados..."`,
+            coachingTip: 'Combina una pregunta retórica con una breve pausa de reflexión de 2 segundos.',
+          },
+          {
+            id: 5,
+            title: 'Nombre del Orador',
+            content: `"Mi nombre es ${cleanSpeaker}..."`,
+            coachingTip: 'Pronuncia tu nombre y apellido con claridad, haciendo una micropausa entre ambos.',
+          },
+          {
+            id: 6,
+            title: 'Nombre del Tema',
+            content: `"...y hoy quiero compartir con ustedes: '${displayTopic}', con un enfoque ${tone.toLowerCase()}."`,
+            coachingTip: 'Enfatiza las palabras clave del título con una ligera elevación en la modulación.',
+          },
+          {
+            id: 7,
+            title: 'Desarrollo del Discurso',
+            content: `1. CREDIBILIDAD (Ethos): Compartir la experiencia o el motivo real por el que "${displayTopic}" es urgente y valioso hoy.\n2. EMOCIÓN (Pathos): Conectar con el desafío humano que vive la audiencia y mostrar una historia de transformación real.\n3. LÓGICA Y ACCIÓN (Logos): Presentar 3 pilares prácticos y aplicables hoy mismo para dominar este tema con resultados medibles.`,
+            coachingTip: 'Acompaña la enumeración de los 3 pilares con ademanes abiertos a la altura del pecho.',
+          },
+          {
+            id: 8,
+            title: 'Anunciar Conclusión',
+            content: `"Y para ir cerrando esta intervención, quiero que se queden con una idea fundamental..."`,
+            coachingTip: 'Da medio paso hacia adelante y baja ligeramente la velocidad para recuperar la atención máxima.',
+          },
+          {
+            id: 9,
+            title: 'Técnica de Conclusión',
+            content: `"El momento de aplicar lo aprendido sobre ${displayTopic} no es mañana, es hoy. Atrévanse a dar ese primer paso con determinación, propósito y excelencia."`,
+            coachingTip: 'Termina con una llamada a la acción firme y una cadencia ascendente e inspiradora.',
+          },
+          {
+            id: 10,
+            title: 'Decir Gracias',
+            content: `"Muchas gracias."`,
+            coachingTip: 'Dilo con firmeza y calidez. Nunca digas "eso fue todo" ni pidas disculpas al cerrar.',
+          },
+          {
+            id: 11,
+            title: 'Recibir Aplausos',
+            content: `Mantén tu postura erguida en el centro del escenario durante 3 segundos mientras recibes los aplausos, asiente con gratitud mirando al público y retírate con la misma seguridad con la que entraste.`,
+            coachingTip: 'Disfruta el reconocimiento de tu audiencia sin huir apresuradamente del escenario.',
+          },
+        ],
+      };
+    };
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.json(buildFallbackSpeech(cleanPrompt));
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+
+      const historyContext = Array.isArray(history)
+        ? history
+            .slice(-6)
+            .map((m: any) => `${m.role === 'user' ? 'Estudiante' : 'Coach AISO'}: ${m.text}`)
+            .join('\n')
+        : '';
+
+      const currentStepsContext =
+        Array.isArray(currentSteps) && currentSteps.length === 11
+          ? JSON.stringify(
+              currentSteps.map((s: any) => ({
+                id: s.id,
+                title: s.title,
+                content: s.content,
+              }))
+            )
+          : 'Sin esquema previo todavía.';
+
+      const systemInstruction = `Eres el Entrenador Oficial de Oratoria con Inteligencia Artificial de la Academia AISO (Academia International Social Oratory), experto en el método "El Sello del Orador Exitoso" y en "Los 11 Pasos para Hablar en Público".
+Tu objetivo es doble en cada mensaje:
+1. Responder en el chat ('reply') como un mentor cercano, motivador y experto en oratoria, dando consejos prácticos de voz, lenguaje corporal, figuras retóricas o estructura según lo que pida el estudiante.
+2. Actualizar SIEMPRE el esquema completo de los 11 pasos ('steps') adaptado específicamente al discurso, tema o modificación que el estudiante acaba de pedir en el chat.
+
+Los 11 pasos EXACTOS de Academia AISO son (respeta siempre este orden y estos títulos exactos del 1 al 11):
+1. Entrar al Escenario (Indicación escénica y postural adaptada al tono del discurso)
+2. Mirar al Público (Indicación de pausa y contacto visual inicial)
+3. Saludar (Guion exacto del saludo adaptado al público y ocasión)
+4. Técnica de Inicio (Guion exacto de apertura usando pregunta retórica, anécdota, dato impactante o cita célebre sobre el tema pedido)
+5. Nombre del Orador (Guion exacto donde el orador "${cleanSpeaker}" se presenta con autoridad y cercanía)
+6. Nombre del Tema (Guion exacto donde introduce el título atractivo del discurso)
+7. Desarrollo del Discurso (Guion estructurado aplicando Ethos [credibilidad], Pathos [emoción/historia] y Logos [argumentos/datos] sobre el tema solicitado)
+8. Anunciar Conclusión (Guion exacto de la frase puente que avisa a la audiencia que se acerca el cierre)
+9. Técnica de Conclusión (Guion exacto del cierre memorable: llamada a la acción, resumen poderoso o frase célebre final)
+10. Decir Gracias (Guion exacto del agradecimiento final con seguridad)
+11. Recibir Aplausos (Indicación escénica para sostener la mirada, agradecer con el gesto y salir con elegancia)
+
+En los pasos verbales (3, 4, 5, 6, 7, 8, 9, 10), escribe el TEXTO REAL entre comillas que el estudiante debe pronunciar en su discurso sobre el tema pedido. En los pasos no verbales (1, 2, 11), escribe la indicación escénica precisa adaptada al contexto del discurso.`;
+
+      const userPrompt = `Configuración actual del estudiante:
+- Nombre del Orador: ${cleanSpeaker}
+- Tono seleccionado: ${tone}
+- Duración deseada: ${duration}
+
+Historial reciente de la conversación:
+${historyContext || 'Inicio de conversación'}
+
+Esquema actual de los 11 pasos:
+${currentStepsContext}
+
+Nuevo mensaje / solicitud del estudiante:
+"${cleanPrompt}"
+
+Responde en español con el JSON estructurado que incluye tu respuesta en el chat ('reply'), el título del discurso ('speechTitle'), el resumen ('topicSummary') y los 11 pasos actualizados ('steps').`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: userPrompt,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              reply: {
+                type: Type.STRING,
+                description:
+                  'Respuesta conversacional del Coach de Oratoria AISO explicando los consejos y mejoras aplicadas al discurso.',
+              },
+              speechTitle: {
+                type: Type.STRING,
+                description: 'Título atractivo para el discurso del estudiante.',
+              },
+              topicSummary: {
+                type: Type.STRING,
+                description: 'Resumen breve en una línea del enfoque, tono y duración del discurso.',
+              },
+              steps: {
+                type: Type.ARRAY,
+                description: 'Los 11 pasos para hablar en público adaptados al discurso solicitado.',
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.INTEGER },
+                    title: { type: Type.STRING },
+                    content: {
+                      type: Type.STRING,
+                      description:
+                        'Guion exacto a decir o indicación escénica personalizada para este discurso.',
+                    },
+                    coachingTip: {
+                      type: Type.STRING,
+                      description:
+                        'Consejo breve de lenguaje corporal, pausa o modulación de voz para este paso.',
+                    },
+                  },
+                  required: ['id', 'title', 'content', 'coachingTip'],
+                },
+              },
+            },
+            required: ['reply', 'speechTitle', 'topicSummary', 'steps'],
+          },
+        },
+      });
+
+      const rawText = response.text;
+      if (!rawText) {
+        return res.json(buildFallbackSpeech(cleanPrompt));
+      }
+
+      const parsed = JSON.parse(rawText);
+      if (!Array.isArray(parsed.steps) || parsed.steps.length < 11) {
+        return res.json(buildFallbackSpeech(cleanPrompt));
+      }
+
+      return res.json(parsed);
+    } catch (error: any) {
+      console.error('AI Oratory Coach fallback activated:', error?.message || error);
+      return res.json(buildFallbackSpeech(cleanPrompt));
     }
   });
 
