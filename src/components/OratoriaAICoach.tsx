@@ -446,7 +446,7 @@ export default function OratoriaAICoach() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-2">
-                Laboratorio Interactivo AISO · Método IRO
+                Laboratorio Interactivo · Método AISO
               </p>
               <h3 className="text-2xl md:text-3xl font-black text-white font-serif">
                 Aprender Oratoria con Inteligencia Artificial

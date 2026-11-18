@@ -14,8 +14,10 @@ import {
 import { motion } from 'motion/react';
 import AICoursePortal, { aiModulesData, AIWorkspaceView } from './AICoursePortal';
 
-const ALLOWED_EMAIL = 'academyaiso@icloud.com';
-const ALLOWED_KEY = 'IRO';
+const ALLOWED_CREDENTIALS = [
+  { email: 'academyaiso@icloud.com', key: 'IRO' },
+  { email: 'konectartetvproject@gmail.com', key: '0727' },
+];
 const PROGRESS_STORAGE_KEY = 'aiso_ia_completed_lessons_v1';
 
 const totalLessonsCount = aiModulesData.reduce((acc, mod) => acc + mod.topics.length, 0);
@@ -50,11 +52,15 @@ export default function AIStudentPortal() {
     const enteredEmail = formData.correo.trim().toLowerCase();
     const enteredKey = formData.codigo.trim();
 
-    if (enteredEmail === ALLOWED_EMAIL && enteredKey === ALLOWED_KEY) {
+    const isValid = ALLOWED_CREDENTIALS.some(
+      (cred) => cred.email.toLowerCase() === enteredEmail && cred.key === enteredKey
+    );
+
+    if (isValid) {
       setIsAuthenticated(true);
       setError('');
     } else {
-      setError('Credenciales inválidas. Verifica el correo institucional y la clave de acceso.');
+      setError('Credenciales inválidas. Verifica el correo autorizado y la clave de acceso.');
     }
   };
 

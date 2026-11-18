@@ -10,8 +10,10 @@ import ElevenSteps from './ElevenSteps';
 import PresentationViewer from './PresentationViewer';
 import OratoriaAICoach from './OratoriaAICoach';
 
-const ALLOWED_EMAIL = 'academyaiso@icloud.com';
-const ALLOWED_KEY = 'IRO';
+const ALLOWED_CREDENTIALS = [
+  { email: 'academyaiso@icloud.com', key: 'IRO' },
+  { email: 'konectartetvproject@gmail.com', key: '0727' },
+];
 
 export default function StudentPortal() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,11 +29,15 @@ export default function StudentPortal() {
     const enteredEmail = formData.correo.trim().toLowerCase();
     const enteredKey = formData.codigo.trim();
 
-    if (enteredEmail === ALLOWED_EMAIL && enteredKey === ALLOWED_KEY) {
+    const isValid = ALLOWED_CREDENTIALS.some(
+      (cred) => cred.email.toLowerCase() === enteredEmail && cred.key === enteredKey
+    );
+
+    if (isValid) {
       setIsAuthenticated(true);
       setError('');
     } else {
-      setError('Credenciales inválidas. Verifica el correo institucional y la clave de acceso.');
+      setError('Credenciales inválidas. Verifica el correo autorizado y la clave de acceso.');
     }
   };
 
