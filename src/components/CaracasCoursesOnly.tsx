@@ -215,31 +215,53 @@ export default function CaracasCoursesOnly() {
 
                 {/* Card Body */}
                 <div className="p-6 sm:p-8 flex flex-col flex-grow bg-white dark:bg-slate-900">
-                  {/* Key Metadata Clean Light Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 mb-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 text-xs">
-                    <div className="flex items-start gap-2.5 text-slate-700 dark:text-slate-200">
-                      <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                  {/* Key Metadata Clean Light Grid with Upgraded Executive Typography */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 mb-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100/80 dark:bg-indigo-950/80 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <Calendar className="w-4 h-4" />
+                      </div>
                       <div>
-                        <span className="font-bold block text-slate-900 dark:text-white">Inicio y Fechas</span>
-                        <span className="text-slate-700 dark:text-slate-200 font-medium block">{course.startDate}</span>
-                        <span className="text-slate-500 dark:text-slate-400 text-[11px]">{course.dates}</span>
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400 block">
+                          Inicio y Fechas
+                        </span>
+                        <span className="font-display text-base sm:text-[17px] font-black tracking-tight text-slate-900 dark:text-white block mt-0.5 leading-snug">
+                          {course.startDate}
+                        </span>
+                        <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 block mt-0.5 leading-snug">
+                          {course.dates}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5 text-slate-700 dark:text-slate-200">
-                      <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-100/80 dark:bg-amber-950/80 border border-amber-200/80 dark:border-amber-800 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <Clock className="w-4 h-4" />
+                      </div>
                       <div>
-                        <span className="font-bold block text-slate-900 dark:text-white">Horario y Duración</span>
-                        <span className="text-slate-700 dark:text-slate-200 font-medium block">{course.schedule}</span>
-                        <span className="text-slate-500 dark:text-slate-400 text-[11px]">{course.duration}</span>
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400 block">
+                          Horario y Duración
+                        </span>
+                        <span className="font-display text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white block mt-0.5 leading-snug">
+                          {course.schedule}
+                        </span>
+                        <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 block mt-0.5">
+                          {course.duration}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5 text-slate-700 dark:text-slate-200 sm:col-span-2 pt-2.5 border-t border-slate-200/70 dark:border-slate-700/60">
-                      <MapPin className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-bold text-slate-900 dark:text-white mr-1.5">Ubicación:</span>
-                        <span className="text-slate-600 dark:text-slate-300">{course.venue}</span>
+                    <div className="flex items-center gap-3 sm:col-span-2 pt-3 border-t border-slate-200/80 dark:border-slate-700/60">
+                      <div className="w-8 h-8 rounded-lg bg-sky-100/80 dark:bg-sky-950/80 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div className="text-xs sm:text-sm">
+                        <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400 mr-2">
+                          Ubicación:
+                        </span>
+                        <span className="font-display font-extrabold text-slate-900 dark:text-white">
+                          {course.venue}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -249,42 +271,47 @@ export default function CaracasCoursesOnly() {
                     {course.description}
                   </p>
 
-                  {/* Pricing and Offers Highlight Box */}
-                  <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 dark:from-slate-800/80 dark:via-slate-900 dark:to-indigo-950/30 border border-slate-200/90 dark:border-slate-800">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                        Inversión del programa
-                      </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+                  {/* Pricing and Offers Highlight Box with Upgraded Display Typography */}
+                  <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-indigo-50/50 dark:from-slate-800/90 dark:via-slate-900 dark:to-indigo-950/30 border border-slate-200/90 dark:border-slate-800 shadow-2xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-400 block">
+                          Inversión del Programa
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          Certificado Oficial AISO Incluido
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
                           {course.priceStandard}
                         </span>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          (tasa BCV)
+                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          Tasa BCV
                         </span>
                       </div>
                     </div>
 
                     {course.priceCashOffer && (
-                      <div className="flex items-center justify-between text-xs pt-2.5 mt-2.5 border-t border-slate-200/70 dark:border-slate-700/70">
-                        <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-200/80 dark:border-slate-700/70">
+                        <span className="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
                           Oferta especial en efectivo
                         </span>
-                        <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono tabular-nums text-sm">
+                        <span className="font-display font-black text-emerald-700 dark:text-emerald-300 tabular-nums text-base sm:text-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/70 px-3 py-1 rounded-xl">
                           {course.priceCashOffer} en efectivo
                         </span>
                       </div>
                     )}
 
                     {course.reservationNote && (
-                      <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300 pt-2 mt-1">
+                      <div className="text-xs sm:text-[13px] font-extrabold text-indigo-700 dark:text-indigo-300 pt-2.5 mt-1">
                         {course.reservationNote}
                       </div>
                     )}
 
                     {course.registrationFee && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
-                        Inscripción: {course.registrationFee}
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 pt-1.5">
+                        Inscripción: <strong className="text-slate-900 dark:text-white">{course.registrationFee}</strong>
                       </div>
                     )}
                   </div>
