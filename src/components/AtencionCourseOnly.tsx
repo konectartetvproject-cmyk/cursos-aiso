@@ -90,7 +90,7 @@ export default function AtencionCourseOnly() {
   const [telefono, setTelefono] = useState('');
   const [correo, setCorreo] = useState(user?.email || '');
   const [modalidadPago, setModalidadPago] = useState(
-    'Caracas · Turno Mañana (9:30 a 12:00) · Inversión $45'
+    'Caracas · Turno Mañana (9:30 a 1:00) · Inversión $45'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -115,7 +115,7 @@ export default function AtencionCourseOnly() {
     if (city === 'caracas') {
       setModalidadPago(
         selectedShift === 'manana'
-          ? 'Caracas · Turno Mañana (9:30 a 12:00) · Inversión $45'
+          ? 'Caracas · Turno Mañana (9:30 a 1:00) · Inversión $45'
           : 'Caracas · Turno Noche (6:00 a 8:30) · Inversión $45'
       );
     } else {
@@ -127,7 +127,7 @@ export default function AtencionCourseOnly() {
     setSelectedShift(shift);
     setModalidadPago(
       shift === 'manana'
-        ? 'Caracas · Turno Mañana (9:30 a 12:00) · Inversión $45'
+        ? 'Caracas · Turno Mañana (9:30 a 1:00) · Inversión $45'
         : 'Caracas · Turno Noche (6:00 a 8:30) · Inversión $45'
     );
   };
@@ -550,7 +550,7 @@ export default function AtencionCourseOnly() {
                     }`}
                   >
                     <Sun className="w-3.5 h-3.5 text-amber-400" />
-                    Mañana (9:30 a 12:00)
+                    Mañana (9:30 a 1:00)
                   </button>
                   <button
                     type="button"
@@ -576,7 +576,7 @@ export default function AtencionCourseOnly() {
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       {selectedCity === 'caracas'
                         ? selectedShift === 'manana'
-                          ? 'Turno Matutino: 9:30 a.m. a 12:00 p.m.'
+                          ? 'Turno Matutino: 9:30 a.m. a 1:00 p.m.'
                           : 'Turno Nocturno: 6:00 p.m. a 8:30 p.m.'
                         : 'Turno Vespertino: 3:30 p.m. a 6:00 p.m.'}
                     </span>
@@ -766,8 +766,8 @@ export default function AtencionCourseOnly() {
                       onChange={(e) => setModalidadPago(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-600"
                     >
-                      <option value="Caracas · Turno Mañana (9:30 a 12:00) · Inversión $45">
-                        Caracas · Turno Mañana (9:30 a 12:00 p.m.) · $45
+                      <option value="Caracas · Turno Mañana (9:30 a 1:00) · Inversión $45">
+                        Caracas · Turno Mañana (9:30 a 1:00 p.m.) · $45
                       </option>
                       <option value="Caracas · Turno Noche (6:00 a 8:30) · Inversión $45">
                         Caracas · Turno Noche (6:00 a 8:30 p.m.) · $45
@@ -1032,7 +1032,7 @@ export default function AtencionCourseOnly() {
         extraLabel={
           selectedCity === 'caracas'
             ? selectedShift === 'manana'
-              ? 'Turno Mañana (9:30 a 12:00)'
+              ? 'Turno Mañana (9:30 a 1:00)'
               : 'Turno Noche (6:00 a 8:30)'
             : 'Turno Vespertino (3:30 a 6:00)'
         }

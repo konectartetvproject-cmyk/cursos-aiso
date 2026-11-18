@@ -279,19 +279,19 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
         <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
           <div className="sm:col-span-7">
             <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-700 dark:text-amber-300">
-              Atiende con
+              Curso de
             </div>
-            <div className="inline-block bg-gradient-to-r from-blue-900 via-blue-800 to-blue-950 border-t-2 border-b-2 border-amber-400 px-4 py-1 rounded-xl shadow-xs my-1">
-              <span className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white block leading-none">
-                Excelencia
+            <div className="inline-block bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-950 border-t-2 border-b-2 border-amber-400 px-4 py-1.5 rounded-xl shadow-xs my-1">
+              <span className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white block leading-none">
+                Atención <span className="text-amber-300">Al Cliente</span>
               </span>
             </div>
-            <div className="text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5">
-              Curso de Atención al Cliente · Caracas
+            <div className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mt-0.5 mb-1.5">
+              Caracas
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mb-3">
-              Fortalece tus habilidades de atención, comunicación y servicio al cliente.
+              Convierte cada conversación en una <strong className="text-slate-900 dark:text-white">oportunidad</strong>.
             </p>
 
             {/* Schedule Stack Adapted from Original Flyer */}
@@ -313,7 +313,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
                 <div className="flex items-center gap-1.5 text-[10px]">
                   <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span className="font-bold text-slate-800 dark:text-slate-200 font-mono tabular-nums">
-                    9:30 a 12:00 p.m.
+                    9:30 a 1:00 p.m.
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px]">

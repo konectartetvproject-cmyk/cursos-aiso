@@ -140,21 +140,21 @@ export const coursesData: Workshop[] = [
   {
     id: "caracas-atencion",
     title: "Curso de Atención al Cliente de Alto Impacto (Caracas)",
-    subtitle: "Atiende con Excelencia · Fortalece tus habilidades de atención, comunicación y servicio",
+    subtitle: "Convierte cada conversación en una oportunidad · Fortalece tus habilidades de atención, comunicación y servicio",
     city: "Caracas",
     venue: "Academia AISO, Centro Comercial Millennium Mall, Caracas",
     badgeText: "CARACAS · MAÑANA O NOCHE",
     badgeColor: "bg-emerald-600 text-white",
     level: "3 Clases Prácticas",
     levelColor: "text-emerald-600 dark:text-emerald-400",
-    image: "/assets/aistudio/WhatsApp_Image_2026-11-16_at_11.35.23_AM__1__5114a17f.jpeg",
-    imageAlt: "Flyer oficial Curso de Atención al Cliente Atiende con Excelencia en Caracas",
+    image: "/assets/aistudio/Dise_o_sin_t_tulo__5__982c2d7c.png",
+    imageAlt: "Flyer oficial Curso de Atención al Cliente en Caracas",
     imagePosition: "object-top",
     showFullFlyerInModal: true,
-    highlightBanner: "3 Clases (9 horas) · Inicia Jueves 19 de Noviembre · Turno Mañana (9:30 a.m.) o Noche (6:00 p.m.)",
+    highlightBanner: "3 Clases (9 horas) · Inicia Jueves 19 de Noviembre · Turno Mañana (9:30 a.m. a 1:00 p.m.) o Noche (6:00 p.m. a 8:30 p.m.)",
     startDate: "Jueves 19 de Noviembre",
     dates: "Jueves 19, 26 de noviembre y 3 de diciembre",
-    schedule: "Matutino: 9:30 a.m. a 12:00 p.m. | Nocturno: 6:00 p.m. a 8:30 p.m.",
+    schedule: "Matutino: 9:30 a.m. a 1:00 p.m. | Nocturno: 6:00 p.m. a 8:30 p.m.",
     duration: "3 Clases | 9 horas de formación",
     academicHours: "9 horas de formación práctica",
     priceStandard: "$45",
@@ -168,12 +168,12 @@ export const coursesData: Workshop[] = [
       "Comunica con claridad trabajando tono, volumen, pausas y pronunciación",
       "Persuade con argumentos y empatía para ayudar al cliente a tomar decisiones informadas",
       "Responde con criterio y profesionalismo ante quejas, conversaciones tensas y clientes exigentes",
-      "Dos horarios a elegir: Matutino (9:30 a.m. a 12:00 p.m.) o Nocturno (6:00 p.m. a 8:30 p.m.)"
+      "Dos horarios a elegir: Matutino (9:30 a.m. a 1:00 p.m.) o Nocturno (6:00 p.m. a 8:30 p.m.)"
     ],
     syllabus: [
       {
         title: "Clase 1: Inteligencia Emocional y Lenguaje Corporal",
-        subtitle: "Jueves 19 de Noviembre | 9:30 a.m. a 12:00 p.m. o 6:00 p.m. a 8:30 p.m.",
+        subtitle: "Jueves 19 de Noviembre | 9:30 a.m. a 1:00 p.m. o 6:00 p.m. a 8:30 p.m.",
         points: [
           "Gestiona tus emociones al atender: Aprende a reconocer tus reacciones, mantener la calma bajo presión y escuchar con empatía para comprender mejor las necesidades de tus clientes.",
           "Proyecta confianza y disposición: Descubre cómo tu postura, tus gestos y tu expresión influyen en la atención. Aprende a transmitir seguridad, cercanía y profesionalismo desde el primer contacto."
@@ -181,7 +181,7 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Clase 2: Voz, Dicción y Persuasión",
-        subtitle: "Jueves 26 de Noviembre | 9:30 a.m. a 12:00 p.m. o 6:00 p.m. a 8:30 p.m.",
+        subtitle: "Jueves 26 de Noviembre | 9:30 a.m. a 1:00 p.m. o 6:00 p.m. a 8:30 p.m.",
         points: [
           "Comunica con claridad: Trabaja el tono, el volumen, las pausas y la pronunciación para explicar tus ideas con seguridad y hacer que tu mensaje se comprenda mejor.",
           "Persuade con argumentos y empatía: Aprende a identificar necesidades, presentar los beneficios de tu producto o servicio y orientar la conversación para ayudar al cliente a tomar una decisión informada."
@@ -189,7 +189,7 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Clase 3: Manejo de Situaciones Difíciles",
-        subtitle: "Jueves 3 de Diciembre | 9:30 a.m. a 12:00 p.m. o 6:00 p.m. a 8:30 p.m.",
+        subtitle: "Jueves 3 de Diciembre | 9:30 a.m. a 1:00 p.m. o 6:00 p.m. a 8:30 p.m.",
         points: [
           "Responde con criterio y profesionalismo: Desarrolla herramientas para atender quejas, manejar conversaciones tensas y responder de forma asertiva ante clientes molestos o exigentes.",
           "Límites y soluciones: Aprende a establecer límites con respeto, evitar confrontaciones innecesarias y orientar la conversación hacia soluciones, cuidando tanto la relación con el cliente como tu equilibrio emocional."
