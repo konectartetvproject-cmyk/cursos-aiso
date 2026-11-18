@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -19,12 +20,87 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ANALYTICS_FILE = path.join(__dirname, '.analytics-events.json');
+
+interface StoredAnalyticsEvent {
+  id: string;
+  type: 'section_view' | 'whatsapp_click';
+  section: string;
+  sectionLabel: string;
+  buttonLabel?: string;
+  createdAt: string;
+}
+
+function readServerAnalytics(): StoredAnalyticsEvent[] {
+  try {
+    if (!fs.existsSync(ANALYTICS_FILE)) return [];
+    const raw = fs.readFileSync(ANALYTICS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeServerAnalytics(events: StoredAnalyticsEvent[]) {
+  try {
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(events.slice(0, 2000)), 'utf-8');
+  } catch (err) {
+    console.error('Failed to persist analytics file:', err);
+  }
+}
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Public lightweight analytics endpoints (tracks section visits & WhatsApp clicks)
+  app.post('/api/analytics/event', (req, res) => {
+    try {
+      const body = req.body;
+      if (!body || !body.id || !body.type || !body.section) {
+        return res.status(400).json({ error: 'Invalid event payload' });
+      }
+      const events = readServerAnalytics();
+      if (!events.some((e) => e.id === body.id)) {
+        const newEvent: StoredAnalyticsEvent = {
+          id: String(body.id),
+          type: body.type === 'whatsapp_click' ? 'whatsapp_click' : 'section_view',
+          section: String(body.section),
+          sectionLabel: String(body.sectionLabel || body.section),
+          buttonLabel: body.buttonLabel ? String(body.buttonLabel) : undefined,
+          createdAt: body.createdAt || new Date().toISOString(),
+        };
+        writeServerAnalytics([newEvent, ...events]);
+      }
+      res.status(201).json({ recorded: true });
+    } catch (err) {
+      console.error('Analytics event error:', err);
+      res.status(500).json({ error: 'Failed to record event' });
+    }
+  });
+
+  app.get('/api/analytics/summary', (_req, res) => {
+    try {
+      const events = readServerAnalytics();
+      res.json({ events });
+    } catch (err) {
+      console.error('Analytics summary error:', err);
+      res.status(500).json({ events: [] });
+    }
+  });
+
+  app.delete('/api/analytics/reset', (_req, res) => {
+    try {
+      writeServerAnalytics([]);
+      res.json({ reset: true });
+    } catch (err) {
+      console.error('Analytics reset error:', err);
+      res.status(500).json({ error: 'Failed to reset analytics' });
+    }
+  });
 
   // Sync authenticated Firebase user with Cloud SQL users table
   app.post('/api/auth/sync', requireAuth, async (req: AuthRequest, res) => {

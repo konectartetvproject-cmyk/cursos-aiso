@@ -35,10 +35,52 @@ export interface AdminSubscriberRecord {
   createdAt: string;
 }
 
+export interface AnalyticsEvent {
+  id: string;
+  type: 'section_view' | 'whatsapp_click';
+  section: string;
+  sectionLabel: string;
+  buttonLabel?: string;
+  createdAt: string;
+}
+
+export interface AnalyticsSummary {
+  totalWhatsAppClicks: number;
+  totalSectionViews: number;
+  sectionViewsByKey: Record<string, number>;
+  whatsappClicksBySection: Record<string, number>;
+  recentEvents: AnalyticsEvent[];
+}
+
+export const SECTION_LABELS: Record<string, string> = {
+  home: 'Inicio / Portada Principal',
+  'ia-only': 'Curso Exclusivo: Inteligencia Artificial (?curso=ia)',
+  'oratoria-only': 'Curso Exclusivo: Oratoria (?curso=oratoria)',
+  'atencion-only': 'Curso Exclusivo: Atención al Cliente (?curso=atencion)',
+  'caracas-only': 'Cursos Exclusivos: Sede Caracas (?sede=caracas)',
+  'instagram-bio': 'Enlace Perfil de Instagram (?ig=aiso)',
+  workshops: 'Catálogo General de Cursos (#talleres)',
+  registration: 'Formulario de Inscripciones (#inscripciones)',
+  corporate: 'Formación Corporativa Empresas (#corporativo)',
+  about: 'Metodología AISO (#nosotros)',
+  contact: 'Contacto y Sedes (#contacto)',
+  faq: 'Preguntas Frecuentes (#faq)',
+  testimonials: 'Testimonios (#testimonios)',
+  students: 'Portal de Estudiantes: Oratoria',
+  'students-ia': 'Portal de Estudiantes: Curso IA',
+  verification: 'Validación de Certificados',
+  privacy: 'Política de Privacidad',
+};
+
+export function getSectionLabel(sectionKey: string): string {
+  return SECTION_LABELS[sectionKey] || sectionKey;
+}
+
 const REG_STORAGE_KEY = 'aiso_admin_registrations_v1';
 const INQ_STORAGE_KEY = 'aiso_admin_inquiries_v1';
 const SUB_STORAGE_KEY = 'aiso_admin_subscribers_v1';
 const STATUS_MAP_KEY = 'aiso_admin_status_overrides_v1';
+const ANALYTICS_EVENTS_KEY = 'aiso_admin_analytics_events_v1';
 
 function safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
@@ -46,6 +88,124 @@ function safeParse<T>(raw: string | null, fallback: T): T {
     return JSON.parse(raw) as T;
   } catch {
     return fallback;
+  }
+}
+
+export function getLocalAnalyticsEvents(): AnalyticsEvent[] {
+  if (typeof window === 'undefined') return [];
+  return safeParse<AnalyticsEvent[]>(localStorage.getItem(ANALYTICS_EVENTS_KEY), []);
+}
+
+function saveLocalAnalyticsEvent(event: AnalyticsEvent) {
+  if (typeof window === 'undefined') return;
+  const existing = getLocalAnalyticsEvents();
+  const updated = [event, ...existing].slice(0, 1500);
+  localStorage.setItem(ANALYTICS_EVENTS_KEY, JSON.stringify(updated));
+}
+
+export function recordSectionVisit(sectionKey: string) {
+  if (!sectionKey || sectionKey === 'admin') return;
+  const event: AnalyticsEvent = {
+    id: `evt_view_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    type: 'section_view',
+    section: sectionKey,
+    sectionLabel: getSectionLabel(sectionKey),
+    createdAt: new Date().toISOString(),
+  };
+  saveLocalAnalyticsEvent(event);
+
+  fetch('/api/analytics/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event),
+  }).catch(() => {
+    // Non-blocking fallback
+  });
+}
+
+export function recordWhatsAppClick(sectionKey: string, buttonLabel?: string) {
+  if (sectionKey === 'admin') return;
+  const cleanSection = sectionKey || 'home';
+  const event: AnalyticsEvent = {
+    id: `evt_wa_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    type: 'whatsapp_click',
+    section: cleanSection,
+    sectionLabel: getSectionLabel(cleanSection),
+    buttonLabel: (buttonLabel || 'Escribir por WhatsApp').trim().slice(0, 80),
+    createdAt: new Date().toISOString(),
+  };
+  saveLocalAnalyticsEvent(event);
+
+  fetch('/api/analytics/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event),
+  }).catch(() => {
+    // Non-blocking fallback
+  });
+}
+
+export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const localEvents = getLocalAnalyticsEvents();
+  let serverEvents: AnalyticsEvent[] = [];
+
+  try {
+    const res = await fetch('/api/analytics/summary');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.events)) {
+        serverEvents = data.events;
+      }
+    }
+  } catch {
+    // Fallback to local events
+  }
+
+  // Merge by unique event ID
+  const map = new Map<string, AnalyticsEvent>();
+  for (const ev of [...serverEvents, ...localEvents]) {
+    if (ev && ev.id && !map.has(ev.id)) {
+      map.set(ev.id, ev);
+    }
+  }
+
+  const allEvents = Array.from(map.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const sectionViewsByKey: Record<string, number> = {};
+  const whatsappClicksBySection: Record<string, number> = {};
+  let totalWhatsAppClicks = 0;
+  let totalSectionViews = 0;
+
+  for (const ev of allEvents) {
+    if (ev.type === 'section_view') {
+      totalSectionViews += 1;
+      sectionViewsByKey[ev.section] = (sectionViewsByKey[ev.section] || 0) + 1;
+    } else if (ev.type === 'whatsapp_click') {
+      totalWhatsAppClicks += 1;
+      whatsappClicksBySection[ev.section] =
+        (whatsappClicksBySection[ev.section] || 0) + 1;
+    }
+  }
+
+  return {
+    totalWhatsAppClicks,
+    totalSectionViews,
+    sectionViewsByKey,
+    whatsappClicksBySection,
+    recentEvents: allEvents.slice(0, 80),
+  };
+}
+
+export async function resetAnalyticsStats(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(ANALYTICS_EVENTS_KEY);
+  }
+  try {
+    await fetch('/api/analytics/reset', { method: 'DELETE' });
+  } catch {
+    // Ignore
   }
 }
 
@@ -274,7 +434,6 @@ export function deleteLocalInquiry(id: string) {
 export function buildStudentWhatsAppReplyUrl(phone: string, text: string): string {
   let digits = phone.replace(/\D/g, '');
   if (digits.startsWith('0') && digits.length === 11) {
-    // e.g. 04141234567 -> 584141234567
     digits = '58' + digits.slice(1);
   } else if (digits.length === 10 && /^(412|414|424|416|426)/.test(digits)) {
     digits = '58' + digits;

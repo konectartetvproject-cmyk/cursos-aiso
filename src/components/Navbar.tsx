@@ -14,6 +14,8 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     { name: 'Metodología', view: 'about', href: '#nosotros' },
     { name: 'Cursos', view: 'workshops', href: '#talleres' },
     { name: 'Cursos Caracas', view: 'caracas-only', href: '#caracas' },
+    { name: 'Curso Oratoria', view: 'oratoria-only', href: '#curso-oratoria' },
+    { name: 'Curso Atención', view: 'atencion-only', href: '#curso-atencion' },
     { name: 'Curso IA', view: 'ia-only', href: '#curso-ia' },
     { name: 'Corporativo', view: 'corporate', href: '#corporativo' },
     { name: 'Preguntas', view: 'faq', href: '#faq' },
@@ -25,9 +27,17 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
   const isIAPortal = currentView === 'students-ia';
   const isCaracasOnly = currentView === 'caracas-only';
   const isIAOnly = currentView === 'ia-only';
+  const isOratoriaOnly = currentView === 'oratoria-only';
+  const isAtencionOnly = currentView === 'atencion-only';
   const isInstagramBio = currentView === 'instagram-bio';
   const isStudentPortal = isOratoryPortal || isIAPortal;
-  const isIsolatedView = isStudentPortal || isCaracasOnly || isIAOnly || isInstagramBio;
+  const isIsolatedView =
+    isStudentPortal ||
+    isCaracasOnly ||
+    isIAOnly ||
+    isOratoriaOnly ||
+    isAtencionOnly ||
+    isInstagramBio;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,6 +97,8 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
               className={`text-[11px] font-semibold mt-1 uppercase tracking-wider ${
                 isIAPortal || isIAOnly
                   ? 'text-sky-600 dark:text-sky-400'
+                  : isAtencionOnly
+                  ? 'text-emerald-600 dark:text-emerald-400'
                   : 'text-indigo-600 dark:text-indigo-400'
               }`}
             >
@@ -94,6 +106,10 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                 ? 'Acceso Directo · @oratoria_aiso'
                 : isIAOnly
                 ? 'Curso Práctico: Inteligencia Artificial Aplicada · Caracas'
+                : isOratoriaOnly
+                ? 'Curso Práctico: Oratoria de Alto Impacto · Caracas y Valencia'
+                : isAtencionOnly
+                ? 'Curso Práctico: Atención al Cliente de Alto Impacto · Caracas y Valencia'
                 : isCaracasOnly
                 ? 'Sede Caracas · C.C. Millennium Mall'
                 : isIAPortal

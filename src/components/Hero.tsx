@@ -58,10 +58,10 @@ export default function Hero() {
               </a>
             </div>
 
-            {/* 3 Quick Program Pillars (Clickable to #talleres) */}
+            {/* 3 Quick Program Pillars (Direct Access to Exclusive Course Sections) */}
             <div className="pt-4 grid sm:grid-cols-3 gap-3 max-w-2xl">
               <a
-                href="#talleres"
+                href="#curso-ia"
                 className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-sky-400 transition-all shadow-2xs group"
               >
                 <div className="flex items-center gap-2 text-xs font-extrabold text-sky-700 dark:text-sky-400 mb-1">
@@ -74,7 +74,7 @@ export default function Hero() {
               </a>
 
               <a
-                href="#talleres"
+                href="#curso-oratoria"
                 className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-400 transition-all shadow-2xs group"
               >
                 <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-700 dark:text-indigo-400 mb-1">
@@ -82,12 +82,12 @@ export default function Hero() {
                   <span>Oratoria AISO</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                  Sedes a nivel nacional · Inicia Sábado 21 Nov
+                  Sedes en Caracas y Valencia · Inicia Sábado 21 Nov
                 </p>
               </a>
 
               <a
-                href="#talleres"
+                href="#curso-atencion"
                 className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-400 transition-all shadow-2xs group"
               >
                 <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-700 dark:text-emerald-400 mb-1">

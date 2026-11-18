@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -20,11 +20,14 @@ import StudentPortal from './components/StudentPortal';
 import AIStudentPortal from './components/AIStudentPortal';
 import CaracasCoursesOnly from './components/CaracasCoursesOnly';
 import AICourseOnly from './components/AICourseOnly';
+import OratoriaCourseOnly from './components/OratoriaCourseOnly';
+import AtencionCourseOnly from './components/AtencionCourseOnly';
 import InstagramBioHub from './components/InstagramBioHub';
 import AdminPanel from './components/AdminPanel';
 import CertificateVerification from './components/CertificateVerification';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import WhatsAppButton from './components/WhatsAppButton';
+import { recordSectionVisit, recordWhatsAppClick } from './lib/leadsStorage';
 
 const HASH_TO_VIEW: Record<string, string> = {
   '#inicio': 'home',
@@ -32,6 +35,8 @@ const HASH_TO_VIEW: Record<string, string> = {
   '#talleres': 'workshops',
   '#caracas': 'caracas-only',
   '#curso-ia': 'ia-only',
+  '#curso-oratoria': 'oratoria-only',
+  '#curso-atencion': 'atencion-only',
   '#instagram': 'instagram-bio',
   '#bio': 'instagram-bio',
   '#admin': 'admin',
@@ -48,6 +53,8 @@ const VIEW_TO_HASH: Record<string, string> = {
   workshops: '#talleres',
   'caracas-only': '#caracas',
   'ia-only': '#curso-ia',
+  'oratoria-only': '#curso-oratoria',
+  'atencion-only': '#curso-atencion',
   'instagram-bio': '#instagram',
   admin: '#admin',
   corporate: '#corporativo',
@@ -57,9 +64,34 @@ const VIEW_TO_HASH: Record<string, string> = {
   contact: '#contacto',
 };
 
+function resolveViewFromLocation(): string {
+  if (typeof window === 'undefined') return 'home';
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.toLowerCase();
+  const portalParam = params.get('portal');
+  const sedeParam = params.get('sede')?.toLowerCase();
+  const cursoParam = params.get('curso')?.toLowerCase();
+  const igParam = params.get('ig') || params.get('bio');
+  const adminParam = params.get('admin');
+
+  if (adminParam) return 'admin';
+  if (igParam) return 'instagram-bio';
+  if (params.get('verify')) return 'verification';
+  if (cursoParam === 'ia') return 'ia-only';
+  if (cursoParam === 'oratoria') return 'oratoria-only';
+  if (cursoParam === 'atencion' || cursoParam === 'atencion-al-cliente') return 'atencion-only';
+  if (sedeParam === 'caracas') return 'caracas-only';
+  if (portalParam === 'ia') return 'students-ia';
+  if (portalParam) return 'students';
+  if (params.get('privacy')) return 'privacy';
+  if (hash && HASH_TO_VIEW[hash]) return HASH_TO_VIEW[hash];
+  return 'home';
+}
+
 export default function App() {
-  const [currentView, setCurrentViewState] = useState<string>('home');
+  const [currentView, setCurrentViewState] = useState<string>(() => resolveViewFromLocation());
   const [selectedCourseId, setSelectedCourseId] = useState<string>('caracas-ia');
+  const lastTrackedViewRef = useRef<string | null>(null);
 
   const setCurrentView = useCallback((view: string) => {
     setCurrentViewState(view);
@@ -73,6 +105,10 @@ export default function App() {
       window.history.pushState({}, '', '?sede=caracas');
     } else if (view === 'ia-only') {
       window.history.pushState({}, '', '?curso=ia');
+    } else if (view === 'oratoria-only') {
+      window.history.pushState({}, '', '?curso=oratoria');
+    } else if (view === 'atencion-only') {
+      window.history.pushState({}, '', '?curso=atencion');
     } else if (view === 'instagram-bio') {
       window.history.pushState({}, '', '?ig=aiso');
     } else if (view === 'admin') {
@@ -89,36 +125,9 @@ export default function App() {
 
   useEffect(() => {
     const syncFromUrl = () => {
-      const params = new URLSearchParams(window.location.search);
-      const hash = window.location.hash.toLowerCase();
-      const portalParam = params.get('portal');
-      const sedeParam = params.get('sede')?.toLowerCase();
-      const cursoParam = params.get('curso')?.toLowerCase();
-      const igParam = params.get('ig') || params.get('bio');
-      const adminParam = params.get('admin');
-
-      if (adminParam) {
-        setCurrentViewState('admin');
-      } else if (igParam) {
-        setCurrentViewState('instagram-bio');
-      } else if (params.get('verify')) {
-        setCurrentViewState('verification');
-      } else if (cursoParam === 'ia') {
-        setCurrentViewState('ia-only');
-      } else if (sedeParam === 'caracas') {
-        setCurrentViewState('caracas-only');
-      } else if (portalParam === 'ia') {
-        setCurrentViewState('students-ia');
-      } else if (portalParam) {
-        setCurrentViewState('students');
-      } else if (params.get('privacy')) {
-        setCurrentViewState('privacy');
-      } else if (hash && HASH_TO_VIEW[hash]) {
-        setCurrentViewState(HASH_TO_VIEW[hash]);
-      }
+      setCurrentViewState(resolveViewFromLocation());
     };
 
-    syncFromUrl();
     window.addEventListener('popstate', syncFromUrl);
     window.addEventListener('hashchange', syncFromUrl);
     return () => {
@@ -127,12 +136,36 @@ export default function App() {
     };
   }, []);
 
-  // Intercept any internal anchor click (#corporativo, #talleres, #inscripciones, etc.)
+  // Automatically record section visits when user enters or switches a section
+  useEffect(() => {
+    if (currentView && currentView !== 'admin' && lastTrackedViewRef.current !== currentView) {
+      lastTrackedViewRef.current = currentView;
+      recordSectionVisit(currentView);
+    }
+  }, [currentView]);
+
+  // Intercept internal anchor clicks AND track all WhatsApp button clicks across the site
   const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = (e.target as HTMLElement).closest('a');
     if (!target) return;
     const href = target.getAttribute('href');
-    if (href && HASH_TO_VIEW[href.toLowerCase()]) {
+    if (!href) return;
+
+    // 1. Track clicks on any WhatsApp link (excluding Admin Panel replies)
+    if (
+      currentView !== 'admin' &&
+      (href.includes('wa.me') || href.includes('whatsapp.com'))
+    ) {
+      const rawText =
+        target.textContent?.trim() ||
+        target.getAttribute('aria-label') ||
+        target.getAttribute('title') ||
+        'Escribir por WhatsApp';
+      recordWhatsAppClick(currentView, rawText);
+    }
+
+    // 2. Intercept internal hash navigation
+    if (HASH_TO_VIEW[href.toLowerCase()]) {
       e.preventDefault();
       setCurrentView(HASH_TO_VIEW[href.toLowerCase()]);
     }
@@ -157,6 +190,8 @@ export default function App() {
             {currentView === 'workshops' && <Workshops onSelectCourse={handleSelectCourse} />}
             {currentView === 'caracas-only' && <CaracasCoursesOnly />}
             {currentView === 'ia-only' && <AICourseOnly />}
+            {currentView === 'oratoria-only' && <OratoriaCourseOnly />}
+            {currentView === 'atencion-only' && <AtencionCourseOnly />}
             {currentView === 'instagram-bio' && (
               <InstagramBioHub onGoToCourses={() => setCurrentView('workshops')} />
             )}
@@ -177,6 +212,8 @@ export default function App() {
           currentView === 'students-ia' ||
           currentView === 'caracas-only' ||
           currentView === 'ia-only' ||
+          currentView === 'oratoria-only' ||
+          currentView === 'atencion-only' ||
           currentView === 'instagram-bio' ? (
             <footer className="bg-slate-900 dark:bg-slate-950 py-8 border-t border-slate-800 text-center">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -185,6 +222,10 @@ export default function App() {
                     ? `© ${new Date().getFullYear()} AISO — Academia International Social Oratory · @oratoria_aiso.`
                     : currentView === 'ia-only'
                     ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Inteligencia Artificial Aplicada · C.C. Millennium Mall, Caracas. Todos los derechos reservados.`
+                    : currentView === 'oratoria-only'
+                    ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Oratoria de Alto Impacto · Caracas y Valencia. Todos los derechos reservados.`
+                    : currentView === 'atencion-only'
+                    ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Atención al Cliente de Alto Impacto · Caracas y Valencia. Todos los derechos reservados.`
                     : currentView === 'caracas-only'
                     ? `© ${new Date().getFullYear()} AISO — Sede Caracas · C.C. Millennium Mall, Los Dos Caminos. Todos los derechos reservados.`
                     : `© ${new Date().getFullYear()} AISO — Portal Exclusivo de Estudiantes. Todos los derechos reservados.`}
