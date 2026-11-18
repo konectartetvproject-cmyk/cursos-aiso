@@ -26,10 +26,8 @@ import {
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration } from '../lib/leadsStorage';
+import { recordCourseRegistration, buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 import WebCheckoutModal from './WebCheckoutModal';
-
-const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
 
 const PROFILE_OUTCOMES = [
   {
@@ -85,6 +83,10 @@ export default function AtencionCourseOnly() {
     coursesData.find((c) => c.id === 'valencia-atencion') || coursesData[4];
 
   const activeCourse = selectedCity === 'caracas' ? caracasCourse : valenciaCourse;
+  const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(
+    activeCourse.title,
+    selectedCity === 'caracas' ? 'Caracas' : 'Valencia'
+  );
 
   const [nombre, setNombre] = useState(user?.displayName || '');
   const [telefono, setTelefono] = useState('');

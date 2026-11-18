@@ -1,12 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 
-export default function WhatsAppButton() {
+const VIEW_COURSE_NAMES: Record<string, { title?: string; city?: string }> = {
+  'ia-only': {
+    title: 'Curso Práctico: Inteligencia Artificial Aplicada',
+    city: 'Caracas',
+  },
+  'oratoria-caracas': {
+    title: 'Curso de Oratoria en Caracas',
+    city: 'Caracas',
+  },
+  'oratoria-valencia': {
+    title: 'Curso de Oratoria en Valencia',
+    city: 'Valencia',
+  },
+  'atencion-only': {
+    title: 'Curso de Atención al Cliente de Alto Impacto',
+    city: 'Caracas / Valencia',
+  },
+  'caracas-only': {
+    title: 'Cursos Presenciales en Sede Caracas (C.C. Millennium Mall)',
+    city: 'Caracas',
+  },
+  corporate: {
+    title: 'Formación Corporativa para Empresas',
+  },
+};
+
+export default function WhatsAppButton({ currentView = 'home' }: { currentView?: string }) {
   const [isVisible, setIsVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipDismissed, setTooltipDismissed] = useState(false);
 
-  const whatsappUrl = 'https://wa.me/message/IIBLPHIKQJIIE1';
+  const viewInfo = VIEW_COURSE_NAMES[currentView] || {};
+  const whatsappUrl = buildAisoWhatsAppUrl(viewInfo.title, viewInfo.city);
 
   useEffect(() => {
     // Show button after subtle initial delay

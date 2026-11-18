@@ -13,6 +13,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { corporatePrograms, corporateGeneralInfo } from '../data/corporateData';
+import { buildAisoWhatsAppUrl, recordCourseRegistration } from '../lib/leadsStorage';
 
 export default function CorporateTraining() {
   // Interactive Calculator State
@@ -72,11 +73,39 @@ export default function CorporateTraining() {
   const totals = calculateTotal();
 
   const handleWhatsAppQuote = () => {
-    return 'https://wa.me/message/IIBLPHIKQJIIE1';
+    const selectedCourseNames = corporatePrograms
+      .filter((c) => selectedPrograms.includes(c.id))
+      .map((c) => c.title)
+      .join(', ');
+    return buildAisoWhatsAppUrl(
+      `Formación Corporativa In-Company (${selectedCourseNames || 'Programas AISO'})`,
+      formData.location || 'Caracas / Valencia',
+      `Grupo estimado: ${participantsCount} participantes.`
+    );
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedCourseNames = corporatePrograms
+      .filter((c) => selectedPrograms.includes(c.id))
+      .map((c) => c.title)
+      .join(', ');
+    try {
+      await recordCourseRegistration({
+        nombre: `${formData.contactName} (${formData.companyName})`,
+        telefono: formData.phone,
+        correo: formData.email,
+        ciudad: formData.location,
+        taller: `Formación Corporativa: ${selectedCourseNames}`,
+        sede: formData.modality,
+        duracion: `${participantsCount} participantes`,
+        modalidadPago: `Total Estimado $${totals.finalTotal} USD (${totals.discountPercent}% desc. corporativo)`,
+        origen: 'Cotizador Corporativo Web',
+        notas: formData.notes,
+      });
+    } catch {
+      // Non-blocking
+    }
     setFormSubmitted(true);
     setTimeout(() => {
       setFormSubmitted(false);

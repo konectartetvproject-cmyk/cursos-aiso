@@ -24,10 +24,13 @@ import {
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration } from '../lib/leadsStorage';
+import { recordCourseRegistration, buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 import WebCheckoutModal from './WebCheckoutModal';
 
-const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
+const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(
+  'Curso Práctico: Inteligencia Artificial Aplicada',
+  'Caracas'
+);
 
 const PROFILE_OUTCOMES = [
   {

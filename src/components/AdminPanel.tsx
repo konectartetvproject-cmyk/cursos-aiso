@@ -48,8 +48,11 @@ import {
   updateLocalInquiryStatus,
   deleteLocalInquiry,
   buildStudentWhatsAppReplyUrl,
+  buildAcademyEmailMailtoUrl,
+  ACADEMY_NOTIFICATION_EMAIL,
   fetchCombinedAnalyticsSummary,
   resetAnalyticsStats,
+  recordWhatsAppClick,
   fetchBcvRateInfo,
   saveBcvRateConfig,
   formatBsAmount,
@@ -82,10 +85,13 @@ export default function AdminPanel() {
     uniqueVisitorsLast7Days: 0,
     uniqueWhatsAppClickers: 0,
     totalWhatsAppClicks: 0,
+    totalCheckoutClicks: 0,
     totalSectionViews: 0,
+    totalAllInteractions: 0,
     sectionViewsByKey: {},
     uniqueVisitorsBySection: {},
     whatsappClicksBySection: {},
+    checkoutClicksBySection: {},
     recentEvents: [],
     visitorDirectory: [],
   });
@@ -238,6 +244,54 @@ export default function AdminPanel() {
       console.error('Admin cloud fetch notice:', err);
     }
 
+    // Also fetch server-persisted automatic email notifications (captures all public registrations even without Google Auth)
+    try {
+      const notifRes = await fetch(`/api/notifications/history?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
+      if (notifRes.ok) {
+        const notifData = await notifRes.json();
+        const serverNotifs = Array.isArray(notifData.notifications)
+          ? notifData.notifications
+          : [];
+        for (const n of serverNotifs) {
+          const isDupInCloud = cloudRegs.some(
+            (c) =>
+              c.id === n.id ||
+              (c.correo.toLowerCase() === (n.correo || '').toLowerCase() &&
+                c.telefono === n.telefono &&
+                c.taller === n.taller)
+          );
+          if (!isDupInCloud) {
+            cloudRegs.push({
+              id: n.id,
+              nombre: n.nombre || 'Estudiante',
+              cedula: n.cedula || '',
+              correo: n.correo || '',
+              telefono: n.telefono || '',
+              ciudad: n.ciudad || 'Caracas',
+              taller: n.taller || '',
+              sede: n.sede,
+              duracion: n.duracion,
+              fechaInicio: n.fechaInicio,
+              horario: n.horario,
+              modalidadPago: n.modalidadPago || 'Estándar BCV',
+              precioEfectivo: n.precioEfectivo,
+              notaReserva: n.notaReserva,
+              origen: n.origen || 'Inscripción Web',
+              notas: n.notas || '',
+              emailNotifiedTo: n.to || ACADEMY_NOTIFICATION_EMAIL,
+              estado: (overrides[n.id] as any) || 'nuevo',
+              createdAt: n.createdAt || new Date().toISOString(),
+              syncedToCloud: true,
+            });
+          }
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+
     // Merge local and cloud records without duplicates (matching dbId or email+phone+taller)
     const seenRegDbIds = new Set(cloudRegs.map((r) => r.dbId).filter(Boolean));
     const mergedRegs: AdminRegistrationRecord[] = [...cloudRegs];
@@ -246,9 +300,10 @@ export default function AdminPanel() {
       if (loc.dbId && seenRegDbIds.has(loc.dbId)) continue;
       const isDuplicate = cloudRegs.some(
         (c) =>
-          c.correo.toLowerCase() === loc.correo.toLowerCase() &&
-          c.telefono === loc.telefono &&
-          c.taller === loc.taller
+          c.id === loc.id ||
+          (c.correo.toLowerCase() === loc.correo.toLowerCase() &&
+            c.telefono === loc.telefono &&
+            c.taller === loc.taller)
       );
       if (!isDuplicate) {
         mergedRegs.push({
@@ -335,10 +390,30 @@ export default function AdminPanel() {
     setAnalytics(fresh);
   };
 
+  const handleTestLiveClick = async () => {
+    await recordWhatsAppClick('home', 'Prueba en Vivo de Contador Admin');
+    const fresh = await fetchCombinedAnalyticsSummary();
+    setAnalytics(fresh);
+  };
+
   useEffect(() => {
-    if (isAuthorized) {
-      loadAllData();
-    }
+    if (!isAuthorized) return;
+    loadAllData();
+
+    const refreshAnalyticsOnly = async () => {
+      const fresh = await fetchCombinedAnalyticsSummary();
+      setAnalytics(fresh);
+    };
+
+    window.addEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
+    window.addEventListener('storage', refreshAnalyticsOnly);
+    window.addEventListener('focus', refreshAnalyticsOnly);
+
+    return () => {
+      window.removeEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
+      window.removeEventListener('storage', refreshAnalyticsOnly);
+      window.removeEventListener('focus', refreshAnalyticsOnly);
+    };
   }, [isAuthorized, loadAllData]);
 
   const handleStatusChange = (
@@ -658,67 +733,80 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Exact Site Visitors Banner + KPI Summary Strip */}
-        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-lg text-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        {/* Exact Site Visitors + Real-Time Clicks Banner */}
+        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-lg text-white flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-300">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Contador Exacto de Personas en el Sitio Web</span>
+              <span>Medición en Tiempo Real · Cada Clic y Cada Visitante</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-              {analytics.uniqueVisitors}{' '}
-              {analytics.uniqueVisitors === 1
-                ? 'persona única ha visitado el sitio web'
-                : 'personas únicas han visitado el sitio web'}
+              {analytics.totalAllInteractions}{' '}
+              {analytics.totalAllInteractions === 1
+                ? 'interacción registrada en vivo'
+                : 'interacciones y clics registrados en vivo'}{' '}
+              · {analytics.uniqueVisitors}{' '}
+              {analytics.uniqueVisitors === 1 ? 'dispositivo único' : 'dispositivos únicos'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
-              Conteo exacto de visitantes individuales (sin duplicar cuando una misma persona cambia de pestaña), junto con el total de vistas a secciones y clics al botón de WhatsApp.
+              Cada clic que hagas tú mismo o cualquier visitante en pestañas, botones de WhatsApp o «Comprar Ahora en la Web» suma <strong>+1 de inmediato</strong> en Vistas y Clics. «Personas Únicas» cuenta cada navegador/teléfono distinto una sola vez.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 shrink-0">
-            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-200 block">
-                Personas Totales
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 shrink-0">
+            <div className="px-3.5 py-3 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 backdrop-blur-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 block">
+                Total Clics / Vistas
               </span>
               <span className="text-2xl sm:text-3xl font-black text-white font-mono tabular-nums">
-                {analytics.uniqueVisitors}
+                {analytics.totalAllInteractions}
               </span>
-              <span className="text-[11px] text-indigo-300 block">Visitantes únicos</span>
+              <span className="text-[11px] text-indigo-200 block">Sube en cada clic</span>
             </div>
 
-            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">
-                Personas Hoy
-              </span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tabular-nums">
-                {analytics.uniqueVisitorsToday}
-              </span>
-              <span className="text-[11px] text-slate-300 block">
-                Últ. 7 días: {analytics.uniqueVisitorsLast7Days}
-              </span>
-            </div>
-
-            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-300 block">
-                Secciones Vistas
+            <div className="px-3.5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300 block">
+                Vistas Secciones
               </span>
               <span className="text-2xl sm:text-3xl font-black text-sky-300 font-mono tabular-nums">
                 {analytics.totalSectionViews}
               </span>
-              <span className="text-[11px] text-slate-300 block">Navegaciones totales</span>
+              <span className="text-[11px] text-slate-300 block">Clics en pestañas</span>
             </div>
 
-            <div className="px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 backdrop-blur-xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 block">
+            <div className="px-3.5 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 backdrop-blur-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
                 Clics WhatsApp
               </span>
               <span className="text-2xl sm:text-3xl font-black text-emerald-300 font-mono tabular-nums">
                 {analytics.totalWhatsAppClicks}
               </span>
               <span className="text-[11px] text-emerald-200 block">
-                De {analytics.uniqueWhatsAppClickers}{' '}
-                {analytics.uniqueWhatsAppClickers === 1 ? 'persona' : 'personas'}
+                Botones y ventanas
+              </span>
+            </div>
+
+            <div className="px-3.5 py-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 backdrop-blur-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
+                Clics Comprar Web
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tabular-nums">
+                {analytics.totalCheckoutClicks}
+              </span>
+              <span className="text-[11px] text-amber-200 block">
+                Pago Móvil / BCV
+              </span>
+            </div>
+
+            <div className="px-3.5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs col-span-2 sm:col-span-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 block">
+                Personas Únicas
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-white font-mono tabular-nums">
+                {analytics.uniqueVisitors}
+              </span>
+              <span className="text-[11px] text-slate-300 block">
+                Hoy: {analytics.uniqueVisitorsToday}
               </span>
             </div>
           </div>
@@ -731,14 +819,17 @@ export default function AdminPanel() {
             className="bg-gradient-to-br from-indigo-50/90 via-white to-sky-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 p-5 rounded-2xl border border-indigo-300/80 dark:border-indigo-800/70 shadow-2xs cursor-pointer hover:border-indigo-500 transition-all"
           >
             <div className="flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-300 mb-2">
-              <span>Personas que Visitaron</span>
+              <span>Vistas y Personas</span>
               <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </div>
             <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
-              {analytics.uniqueVisitors}
+              {analytics.totalSectionViews}{' '}
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                vistas
+              </span>
             </p>
             <p className="text-[11px] text-indigo-700 dark:text-indigo-400 font-semibold mt-1">
-              {analytics.uniqueVisitorsToday} hoy · {analytics.totalSectionViews} vistas →
+              {analytics.uniqueVisitors} dispositivos únicos ({analytics.uniqueVisitorsToday} hoy) →
             </p>
           </div>
 
@@ -747,14 +838,14 @@ export default function AdminPanel() {
             className="bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/30 p-5 rounded-2xl border border-emerald-300/80 dark:border-emerald-800/70 shadow-2xs cursor-pointer hover:border-emerald-500 transition-all"
           >
             <div className="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-2">
-              <span>Clics a WhatsApp</span>
+              <span>Clics WhatsApp + Web</span>
               <MousePointerClick className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
-              {analytics.totalWhatsAppClicks}
+              {analytics.totalWhatsAppClicks + analytics.totalCheckoutClicks}
             </p>
             <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">
-              {analytics.uniqueWhatsAppClickers} personas clicaron →
+              {analytics.totalWhatsAppClicks} WhatsApp · {analytics.totalCheckoutClicks} Compra Web →
             </p>
           </div>
 
@@ -852,8 +943,8 @@ export default function AdminPanel() {
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>
-                  Personas que Visitaron y Clics ({analytics.uniqueVisitors} personas ·{' '}
-                  {analytics.totalWhatsAppClicks} clics WA)
+                  Estadísticas en Vivo ({analytics.totalSectionViews} vistas ·{' '}
+                  {analytics.totalWhatsAppClicks} WA · {analytics.totalCheckoutClicks} Web)
                 </span>
               </button>
 
@@ -1001,6 +1092,11 @@ export default function AdminPanel() {
                             {reg.origen}
                           </span>
 
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            Notificado a {reg.emailNotifiedTo || ACADEMY_NOTIFICATION_EMAIL}
+                          </span>
+
                           <span className="text-xs text-slate-400">
                             {new Date(reg.createdAt).toLocaleString('es-VE', {
                               day: '2-digit',
@@ -1019,8 +1115,18 @@ export default function AdminPanel() {
                           </span>
                           <span className="inline-flex items-center gap-1 font-semibold">
                             <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            Sede {reg.ciudad}
+                            Sede {reg.ciudad} {reg.sede ? `(${reg.sede})` : ''}
                           </span>
+                          {reg.fechaInicio && (
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Inicio: <strong>{reg.fechaInicio}</strong>
+                            </span>
+                          )}
+                          {reg.horario && (
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Horario: <strong>{reg.horario}</strong>
+                            </span>
+                          )}
                           <span className="text-slate-500 dark:text-slate-400">
                             Modalidad: <strong>{reg.modalidadPago}</strong>
                           </span>
@@ -1041,7 +1147,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* Right Actions: WhatsApp FIRST + Status + Delete */}
+                      {/* Right Actions: WhatsApp FIRST + Email + Status + Delete */}
                       <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                         <a
                           href={whatsappUrl}
@@ -1056,6 +1162,15 @@ export default function AdminPanel() {
                         >
                           <MessageCircle className="w-4 h-4" />
                           Escribir por WhatsApp
+                        </a>
+
+                        <a
+                          href={buildAcademyEmailMailtoUrl(reg)}
+                          title={`Abrir copia del correo enviado a ${ACADEMY_NOTIFICATION_EMAIL}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          Correo
                         </a>
 
                         <select
@@ -1246,27 +1361,35 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* TAB 4: ANALYTICS (WHATSAPP CLICKS & SECTION VISITS) */}
+          {/* TAB 4: ANALYTICS (WHATSAPP CLICKS, WEB CHECKOUT CLICKS & SECTION VISITS) */}
           {activeTab === 'analytics' && (
             <div className="p-6 sm:p-8 space-y-8">
               {/* Top Analytics Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-emerald-50/50 dark:from-slate-800/80 dark:via-slate-900 dark:to-emerald-950/30 border border-slate-200/90 dark:border-slate-800">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-emerald-50/50 dark:from-slate-800/80 dark:via-slate-900 dark:to-emerald-950/30 border border-slate-200/90 dark:border-slate-800">
                 <div>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-1">
-                    Conteo Exacto de Personas · Tráfico y Conversión a WhatsApp
+                    Medición Exacta en Vivo · Cada Clic Suma +1 al Instante
                   </span>
                   <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-                    {analytics.uniqueVisitors}{' '}
-                    {analytics.uniqueVisitors === 1
-                      ? 'Persona Ha Visitado el Sitio Web'
-                      : 'Personas Han Visitado el Sitio Web'}
+                    {analytics.totalSectionViews} Vistas · {analytics.totalWhatsAppClicks} Clics WhatsApp ·{' '}
+                    {analytics.totalCheckoutClicks} Clics Compra Web ({analytics.uniqueVisitors}{' '}
+                    {analytics.uniqueVisitors === 1 ? 'Dispositivo Único' : 'Dispositivos Únicos'})
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Aquí ves con exactitud cuántas personas únicas han entrado al sitio ({analytics.uniqueVisitorsToday} hoy), cuántas personas vieron cada sección y cuántas hicieron clic en WhatsApp.
+                    Cada vez que tú mismo o un visitante toca una sección del menú, un botón de WhatsApp (incluso dentro de ventanas emergentes) o «Comprar Ahora en la Web», el contador sube inmediatamente.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleTestLiveClick}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold cursor-pointer transition-colors shadow-xs"
+                    title="Registrar un clic de prueba ahora mismo para verificar el contador en vivo"
+                  >
+                    <MousePointerClick className="w-3.5 h-3.5" />
+                    +1 Clic de Prueba en Vivo
+                  </button>
                   <button
                     type="button"
                     onClick={loadAllData}
@@ -1290,7 +1413,7 @@ export default function AdminPanel() {
               {/* Quick Highlight Cards for Key Exclusive Sections */}
               <div>
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
-                  Personas Únicas, Vistas y Clics en Secciones Principales
+                  Vistas, Clics y Personas por Sección Principal
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   {[
@@ -1334,6 +1457,7 @@ export default function AdminPanel() {
                     const uniquePeople = analytics.uniqueVisitorsBySection[card.key] || 0;
                     const views = analytics.sectionViewsByKey[card.key] || 0;
                     const waClicks = analytics.whatsappClicksBySection[card.key] || 0;
+                    const webClicks = analytics.checkoutClicksBySection[card.key] || 0;
                     return (
                       <div
                         key={card.key}
@@ -1347,18 +1471,10 @@ export default function AdminPanel() {
                             {card.title}
                           </h4>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-3 gap-1.5">
-                          <div>
-                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block">
-                              Personas
-                            </span>
-                            <span className="text-lg font-black text-indigo-700 dark:text-indigo-300 font-mono tabular-nums">
-                              {uniquePeople}
-                            </span>
-                          </div>
+                        <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-2 gap-2">
                           <div>
                             <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
-                              Vistas
+                              Vistas Totales
                             </span>
                             <span className="text-lg font-black text-slate-900 dark:text-white font-mono tabular-nums">
                               {views}
@@ -1372,6 +1488,22 @@ export default function AdminPanel() {
                               {waClicks}
                             </span>
                           </div>
+                          <div>
+                            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 block">
+                              Compra Web
+                            </span>
+                            <span className="text-sm font-black text-amber-700 dark:text-amber-300 font-mono tabular-nums">
+                              {webClicks}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block">
+                              Personas
+                            </span>
+                            <span className="text-sm font-black text-indigo-700 dark:text-indigo-300 font-mono tabular-nums">
+                              {uniquePeople}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1379,17 +1511,17 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* Detailed Table: All Sections Views + WhatsApp Clicks */}
+              {/* Detailed Table: All Sections Views + WhatsApp Clicks + Web Checkout Clicks */}
               <div className="grid lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-7 bg-slate-50/70 dark:bg-slate-800/40 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                         <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        Personas Únicas, Ingresos y Clics por cada Sección
+                        Vistas, Clics a WhatsApp, Compra Web y Personas por Sección
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Muestra cuántas personas distintas entraron a cada sección del sitio
+                        Conteo exacto de cada clic y navegación en todas las secciones del sitio
                       </p>
                     </div>
                   </div>
@@ -1398,19 +1530,22 @@ export default function AdminPanel() {
                     {Object.keys(SECTION_LABELS)
                       .sort((a, b) => {
                         const scoreA =
-                          (analytics.uniqueVisitorsBySection[a] || 0) * 3 +
                           (analytics.sectionViewsByKey[a] || 0) * 2 +
-                          (analytics.whatsappClicksBySection[a] || 0) * 3;
+                          (analytics.whatsappClicksBySection[a] || 0) * 3 +
+                          (analytics.checkoutClicksBySection[a] || 0) * 3 +
+                          (analytics.uniqueVisitorsBySection[a] || 0) * 2;
                         const scoreB =
-                          (analytics.uniqueVisitorsBySection[b] || 0) * 3 +
                           (analytics.sectionViewsByKey[b] || 0) * 2 +
-                          (analytics.whatsappClicksBySection[b] || 0) * 3;
+                          (analytics.whatsappClicksBySection[b] || 0) * 3 +
+                          (analytics.checkoutClicksBySection[b] || 0) * 3 +
+                          (analytics.uniqueVisitorsBySection[b] || 0) * 2;
                         return scoreB - scoreA;
                       })
                       .map((sectionKey) => {
                         const uniquePeople = analytics.uniqueVisitorsBySection[sectionKey] || 0;
                         const views = analytics.sectionViewsByKey[sectionKey] || 0;
                         const clicks = analytics.whatsappClicksBySection[sectionKey] || 0;
+                        const webClicks = analytics.checkoutClicksBySection[sectionKey] || 0;
                         const maxViews = Math.max(
                           1,
                           ...(Object.values(analytics.sectionViewsByKey) as number[])
@@ -1426,16 +1561,20 @@ export default function AdminPanel() {
                               <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                                 {getSectionLabel(sectionKey)}
                               </span>
-                              <div className="flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
-                                <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold">
-                                  {uniquePeople} {uniquePeople === 1 ? 'persona' : 'personas'}
-                                </span>
-                                <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono tabular-nums">
+                                <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold">
                                   {views} {views === 1 ? 'vista' : 'vistas'}
                                 </span>
                                 <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
                                   <MessageCircle className="w-3 h-3" />
-                                  {clicks} {clicks === 1 ? 'clic WA' : 'clics WA'}
+                                  {clicks} WA
+                                </span>
+                                <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold flex items-center gap-1">
+                                  <CreditCard className="w-3 h-3" />
+                                  {webClicks} Web
+                                </span>
+                                <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold">
+                                  {uniquePeople} {uniquePeople === 1 ? 'persona' : 'personas'}
                                 </span>
                               </div>
                             </div>
@@ -1443,7 +1582,7 @@ export default function AdminPanel() {
                             <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                               <div
                                 className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-300"
-                                style={{ width: `${views > 0 ? Math.max(6, barWidth) : 0}%` }}
+                                style={{ width: `${views + clicks + webClicks > 0 ? Math.max(6, barWidth) : 0}%` }}
                               />
                             </div>
                           </div>
@@ -1458,28 +1597,31 @@ export default function AdminPanel() {
                     <div>
                       <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                         <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        Registro Reciente en Tiempo Real
+                        Registro Reciente en Tiempo Real ({analytics.recentEvents.length})
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Últimos ingresos a secciones y clics al botón de WhatsApp
+                        Cada clic en pestañas, WhatsApp o Compra Web aparece aquí al segundo
                       </p>
                     </div>
                   </div>
 
                   {analytics.recentEvents.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">
-                      Aún no se han registrado eventos recientes. Al navegar por las secciones o hacer clic en un botón de WhatsApp aparecerán aquí al instante.
+                      Aún no se han registrado eventos recientes. Haz clic en cualquier pestaña o en el botón «+1 Clic de Prueba en Vivo» arriba para verlo aparecer al instante.
                     </div>
                   ) : (
                     <div className="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
                       {analytics.recentEvents.map((ev) => {
                         const isWA = ev.type === 'whatsapp_click';
+                        const isCheckout = ev.type === 'checkout_click';
                         return (
                           <div
                             key={ev.id}
                             className={`p-3 rounded-xl border text-xs flex items-start justify-between gap-3 ${
                               isWA
                                 ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/70'
+                                : isCheckout
+                                ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/70'
                                 : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800'
                             }`}
                           >
@@ -1492,18 +1634,31 @@ export default function AdminPanel() {
                                       Clic en botón de WhatsApp
                                     </span>
                                   </>
+                                ) : isCheckout ? (
+                                  <>
+                                    <CreditCard className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                    <span className="text-amber-800 dark:text-amber-300">
+                                      Clic en Comprar en la Web (Pago Móvil)
+                                    </span>
+                                  </>
                                 ) : (
                                   <>
                                     <Eye className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                                    <span>Ingreso a sección</span>
+                                    <span>Vista / Clic en sección</span>
                                   </>
                                 )}
                               </div>
                               <p className="text-slate-700 dark:text-slate-300 font-semibold">
                                 {ev.sectionLabel || getSectionLabel(ev.section)}
                               </p>
-                              {isWA && ev.buttonLabel && (
-                                <p className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                              {(isWA || isCheckout) && ev.buttonLabel && (
+                                <p
+                                  className={`text-[11px] ${
+                                    isWA
+                                      ? 'text-emerald-700 dark:text-emerald-400'
+                                      : 'text-amber-700 dark:text-amber-400'
+                                  }`}
+                                >
                                   Botón: «{ev.buttonLabel}»
                                 </p>
                               )}
@@ -1515,6 +1670,7 @@ export default function AdminPanel() {
                                 month: 'short',
                                 hour: '2-digit',
                                 minute: '2-digit',
+                                second: '2-digit',
                               })}
                             </span>
                           </div>
@@ -1531,15 +1687,14 @@ export default function AdminPanel() {
                   <div>
                     <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                       <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      Detalle Exacto de Personas que han Visitado el Sitio ({analytics.uniqueVisitors})
+                      Detalle por Dispositivo / Persona Única ({analytics.uniqueVisitors})
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Cada fila representa a 1 persona única con su hora de entrada, secciones exploradas y clics a WhatsApp
+                      Cada tarjeta agrupa todos los clics y secciones vistas desde un mismo navegador o teléfono
                     </p>
                   </div>
                   <span className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold font-mono tabular-nums">
-                    Total Exacto: {analytics.uniqueVisitors}{' '}
-                    {analytics.uniqueVisitors === 1 ? 'Persona' : 'Personas'}
+                    Dispositivos Únicos: {analytics.uniqueVisitors}
                   </span>
                 </div>
 
@@ -1564,6 +1719,7 @@ export default function AdminPanel() {
                               month: 'short',
                               hour: '2-digit',
                               minute: '2-digit',
+                              second: '2-digit',
                             })}
                           </span>
                         </div>

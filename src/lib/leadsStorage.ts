@@ -1,3 +1,9 @@
+import { coursesData } from '../data/coursesData';
+
+export const ACADEMY_NOTIFICATION_EMAIL = 'academyaiso@icloud.com';
+export const AISO_OFFICIAL_WHATSAPP_PHONE = '584144036175';
+export const AISO_OFFICIAL_WHATSAPP_SHORTLINK = 'https://wa.me/message/IIBLPHIKQJIIE1';
+
 export interface AdminRegistrationRecord {
   id: string;
   dbId?: number;
@@ -7,10 +13,17 @@ export interface AdminRegistrationRecord {
   telefono: string;
   ciudad: string;
   taller: string;
+  sede?: string;
+  duracion?: string;
+  fechaInicio?: string;
+  horario?: string;
   modalidadPago: string;
+  precioEfectivo?: string;
+  notaReserva?: string;
   origen: string;
   estado: 'nuevo' | 'contactado' | 'inscrito';
   notas?: string;
+  emailNotifiedTo?: string;
   createdAt: string;
   syncedToCloud?: boolean;
 }
@@ -38,7 +51,7 @@ export interface AdminSubscriberRecord {
 export interface AnalyticsEvent {
   id: string;
   visitorId?: string;
-  type: 'section_view' | 'whatsapp_click';
+  type: 'section_view' | 'whatsapp_click' | 'checkout_click';
   section: string;
   sectionLabel: string;
   buttonLabel?: string;
@@ -53,6 +66,7 @@ export interface VisitorProfileSummary {
   sectionsVisited: string[];
   totalViews: number;
   whatsappClicks: number;
+  checkoutClicks: number;
 }
 
 export interface AnalyticsSummary {
@@ -61,10 +75,13 @@ export interface AnalyticsSummary {
   uniqueVisitorsLast7Days: number;
   uniqueWhatsAppClickers: number;
   totalWhatsAppClicks: number;
+  totalCheckoutClicks: number;
   totalSectionViews: number;
+  totalAllInteractions: number;
   sectionViewsByKey: Record<string, number>;
   uniqueVisitorsBySection: Record<string, number>;
   whatsappClicksBySection: Record<string, number>;
+  checkoutClicksBySection: Record<string, number>;
   recentEvents: AnalyticsEvent[];
   visitorDirectory: VisitorProfileSummary[];
 }
@@ -129,11 +146,36 @@ export function getLocalAnalyticsEvents(): AnalyticsEvent[] {
 function saveLocalAnalyticsEvent(event: AnalyticsEvent) {
   if (typeof window === 'undefined') return;
   const existing = getLocalAnalyticsEvents();
-  const updated = [event, ...existing].slice(0, 2500);
+  const updated = [event, ...existing].slice(0, 3000);
   localStorage.setItem(ANALYTICS_EVENTS_KEY, JSON.stringify(updated));
+  try {
+    window.dispatchEvent(new CustomEvent('aiso-analytics-updated', { detail: event }));
+  } catch {
+    // Ignore
+  }
 }
 
-export function recordSectionVisit(sectionKey: string) {
+function dispatchEventToServer(event: AnalyticsEvent) {
+  const payload = JSON.stringify(event);
+  try {
+    fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        navigator.sendBeacon('/api/analytics/event', payload);
+      }
+    });
+  } catch {
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      navigator.sendBeacon('/api/analytics/event', payload);
+    }
+  }
+}
+
+export function recordSectionVisit(sectionKey: string, buttonLabel?: string) {
   if (!sectionKey || sectionKey === 'admin') return;
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
@@ -142,17 +184,11 @@ export function recordSectionVisit(sectionKey: string) {
     type: 'section_view',
     section: sectionKey,
     sectionLabel: getSectionLabel(sectionKey),
+    buttonLabel: buttonLabel ? buttonLabel.trim().slice(0, 80) : undefined,
     createdAt: new Date().toISOString(),
   };
   saveLocalAnalyticsEvent(event);
-
-  fetch('/api/analytics/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(event),
-  }).catch(() => {
-    // Non-blocking fallback
-  });
+  dispatchEventToServer(event);
 }
 
 export function recordWhatsAppClick(sectionKey: string, buttonLabel?: string) {
@@ -169,14 +205,24 @@ export function recordWhatsAppClick(sectionKey: string, buttonLabel?: string) {
     createdAt: new Date().toISOString(),
   };
   saveLocalAnalyticsEvent(event);
+  dispatchEventToServer(event);
+}
 
-  fetch('/api/analytics/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(event),
-  }).catch(() => {
-    // Non-blocking fallback
-  });
+export function recordWebCheckoutClick(sectionKey: string, buttonLabel?: string) {
+  if (sectionKey === 'admin') return;
+  const cleanSection = sectionKey || 'home';
+  const visitorId = getOrCreateVisitorId();
+  const event: AnalyticsEvent = {
+    id: `evt_pay_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    visitorId,
+    type: 'checkout_click',
+    section: cleanSection,
+    sectionLabel: getSectionLabel(cleanSection),
+    buttonLabel: (buttonLabel || 'Comprar Ahora en la Web').trim().slice(0, 80),
+    createdAt: new Date().toISOString(),
+  };
+  saveLocalAnalyticsEvent(event);
+  dispatchEventToServer(event);
 }
 
 /**
@@ -200,7 +246,9 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
   let serverEvents: AnalyticsEvent[] = [];
 
   try {
-    const res = await fetch('/api/analytics/summary');
+    const res = await fetch(`/api/analytics/summary?t=${Date.now()}`, {
+      cache: 'no-store',
+    });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.events)) {
@@ -225,6 +273,7 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
 
   const sectionViewsByKey: Record<string, number> = {};
   const whatsappClicksBySection: Record<string, number> = {};
+  const checkoutClicksBySection: Record<string, number> = {};
   const sectionUniqueSets: Record<string, Set<string>> = {};
 
   const allUniqueVisitorsSet = new Set<string>();
@@ -241,6 +290,7 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
       sectionsSet: Set<string>;
       totalViews: number;
       whatsappClicks: number;
+      checkoutClicks: number;
     }
   >();
 
@@ -249,6 +299,7 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
   const sevenDaysAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
 
   let totalWhatsAppClicks = 0;
+  let totalCheckoutClicks = 0;
   let totalSectionViews = 0;
 
   for (const ev of allEvents) {
@@ -275,6 +326,7 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
         sectionsSet: new Set<string>(),
         totalViews: 0,
         whatsappClicks: 0,
+        checkoutClicks: 0,
       };
       visitorProfilesMap.set(vKey, profile);
     } else {
@@ -303,6 +355,11 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
       uniqueWhatsAppClickersSet.add(vKey);
       whatsappClicksBySection[ev.section] =
         (whatsappClicksBySection[ev.section] || 0) + 1;
+    } else if (ev.type === 'checkout_click') {
+      totalCheckoutClicks += 1;
+      profile.checkoutClicks += 1;
+      checkoutClicksBySection[ev.section] =
+        (checkoutClicksBySection[ev.section] || 0) + 1;
     }
   }
 
@@ -321,6 +378,7 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
       sectionsVisited: Array.from(p.sectionsSet),
       totalViews: p.totalViews || 1,
       whatsappClicks: p.whatsappClicks,
+      checkoutClicks: p.checkoutClicks,
     }));
 
   return {
@@ -329,11 +387,14 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
     uniqueVisitorsLast7Days: last7DaysUniqueVisitorsSet.size,
     uniqueWhatsAppClickers: uniqueWhatsAppClickersSet.size,
     totalWhatsAppClicks,
+    totalCheckoutClicks,
     totalSectionViews,
+    totalAllInteractions: totalSectionViews + totalWhatsAppClicks + totalCheckoutClicks,
     sectionViewsByKey,
     uniqueVisitorsBySection,
     whatsappClicksBySection,
-    recentEvents: allEvents.slice(0, 80),
+    checkoutClicksBySection,
+    recentEvents: allEvents.slice(0, 120),
     visitorDirectory: visitorDirectory.slice(0, 100),
   };
 }
@@ -379,30 +440,143 @@ export function getLocalSubscribers(): AdminSubscriberRecord[] {
   return safeParse<AdminSubscriberRecord[]>(localStorage.getItem(SUB_STORAGE_KEY), []);
 }
 
+/**
+ * Builds the official Academia AISO WhatsApp link (to the exact number behind https://wa.me/message/IIBLPHIKQJIIE1)
+ * with a pre-filled message mentioning the course the user clicked on on the website.
+ */
+export function buildAisoWhatsAppUrl(
+  courseTitle?: string,
+  city?: string,
+  extraDetail?: string
+): string {
+  const cleanTitle = (courseTitle || '').trim();
+  const cleanCity = (city || '').trim();
+  const message = cleanTitle
+    ? `¡Hola! Estoy interesado en inscribirme en el *${cleanTitle}*${
+        cleanCity ? ` (${cleanCity})` : ''
+      }. Vi la información en el sitio web y deseo recibir los detalles para reservar mi cupo.${
+        extraDetail ? ` ${extraDetail}` : ''
+      }`
+    : `¡Hola! Estoy interesado en inscribirme en los cursos de la Academia AISO${
+        cleanCity ? ` en ${cleanCity}` : ''
+      }. Vi la información en el sitio web y deseo recibir asesoría.`;
+
+  return `https://wa.me/${AISO_OFFICIAL_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+}
+
+export function buildAcademyEmailMailtoUrl(reg: {
+  nombre: string;
+  telefono: string;
+  correo: string;
+  ciudad: string;
+  taller: string;
+  sede?: string;
+  fechaInicio?: string;
+  horario?: string;
+  duracion?: string;
+  modalidadPago: string;
+  precioEfectivo?: string;
+  notaReserva?: string;
+  notas?: string;
+}): string {
+  const subject = `Nueva Inscripción Web AISO: ${reg.nombre} — ${reg.taller} (${reg.ciudad})`;
+  const body = [
+    `NUEVA SOLICITUD DE INSCRIPCIÓN — ACADEMIA AISO`,
+    `--------------------------------------------------`,
+    `DATOS DEL PARTICIPANTE:`,
+    `• Nombre y Apellido: ${reg.nombre}`,
+    `• Teléfono / WhatsApp: ${reg.telefono}`,
+    `• Correo Electrónico: ${reg.correo}`,
+    `--------------------------------------------------`,
+    `DATOS DEL CURSO SELECCIONADO:`,
+    `• Curso: ${reg.taller}`,
+    `• Ciudad: ${reg.ciudad}`,
+    reg.sede ? `• Sede / Dirección: ${reg.sede}` : null,
+    reg.fechaInicio ? `• Fecha de Inicio: ${reg.fechaInicio}` : null,
+    reg.horario ? `• Horario: ${reg.horario}` : null,
+    reg.duracion ? `• Duración: ${reg.duracion}` : null,
+    `• Inversión / Modalidad: ${reg.modalidadPago}`,
+    reg.precioEfectivo ? `• Oferta en Efectivo: ${reg.precioEfectivo}` : null,
+    reg.notaReserva ? `• Condición de Reserva: ${reg.notaReserva}` : null,
+    reg.notas ? `• Notas / Detalles: ${reg.notas}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return `mailto:${ACADEMY_NOTIFICATION_EMAIL}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
+}
+
+function findMatchingCourseDetails(courseIdOrTitle: string, city: string) {
+  const q = (courseIdOrTitle || '').toLowerCase();
+  const c = (city || '').toLowerCase();
+
+  return (
+    coursesData.find((item) => item.id.toLowerCase() === q) ||
+    coursesData.find((item) => item.title.toLowerCase() === q) ||
+    coursesData.find(
+      (item) =>
+        item.city.toLowerCase() === c &&
+        ((q.includes('inteligencia artificial') && item.id.includes('ia')) ||
+          (q.includes('oratoria') && item.id.includes('oratoria')) ||
+          (q.includes('atención') && item.id.includes('atencion')) ||
+          (q.includes('atencion') && item.id.includes('atencion')))
+    )
+  );
+}
+
 export async function recordCourseRegistration(
   data: {
+    courseId?: string;
     nombre: string;
     telefono: string;
     correo: string;
+    cedula?: string;
     ciudad: string;
     taller: string;
+    sede?: string;
+    duracion?: string;
+    fechaInicio?: string;
+    horario?: string;
     modalidadPago: string;
+    precioEfectivo?: string;
+    notaReserva?: string;
     origen?: string;
     notas?: string;
   },
   getToken?: () => Promise<string | null>
 ): Promise<AdminRegistrationRecord> {
+  const matchedCourse = findMatchingCourseDetails(
+    data.courseId || data.taller,
+    data.ciudad
+  );
+
   const newRecord: AdminRegistrationRecord = {
     id: `reg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     nombre: data.nombre.trim(),
+    cedula: data.cedula?.trim(),
     correo: data.correo.trim(),
     telefono: data.telefono.trim(),
-    ciudad: data.ciudad.trim() || 'Caracas',
-    taller: data.taller.trim(),
-    modalidadPago: data.modalidadPago.trim() || 'Estándar BCV',
+    ciudad: data.ciudad.trim() || matchedCourse?.city || 'Caracas',
+    taller: data.taller.trim() || matchedCourse?.title || 'Curso Presencial AISO',
+    sede: data.sede || matchedCourse?.venue || `Sede Oficial AISO ${data.ciudad || 'Caracas'}`,
+    duracion: data.duracion || matchedCourse?.duration || 'Intensivo Presencial',
+    fechaInicio: data.fechaInicio || matchedCourse?.startDate || 'Próxima Cohorte 2026',
+    horario: data.horario || matchedCourse?.schedule || 'Horario oficial de cohorte',
+    modalidadPago:
+      data.modalidadPago.trim() ||
+      (matchedCourse
+        ? `${matchedCourse.priceStandard} BCV${
+            matchedCourse.priceCashOffer ? ` (${matchedCourse.priceCashOffer} efectivo)` : ''
+          }`
+        : 'Estándar BCV'),
+    precioEfectivo: data.precioEfectivo || matchedCourse?.priceCashOffer,
+    notaReserva: data.notaReserva || matchedCourse?.reservationNote,
     origen: data.origen || 'Web AISO',
     estado: 'nuevo',
     notas: data.notas || '',
+    emailNotifiedTo: ACADEMY_NOTIFICATION_EMAIL,
     createdAt: new Date().toISOString(),
     syncedToCloud: false,
   };
@@ -413,7 +587,47 @@ export async function recordCourseRegistration(
     localStorage.setItem(REG_STORAGE_KEY, JSON.stringify([newRecord, ...existing]));
   }
 
-  // 2. Also send to Cloud SQL backend if authenticated token is available
+  // 2. Automatically dispatch email notification to academyaiso@icloud.com via server & FormSubmit AJAX relay
+  try {
+    fetch('/api/notifications/registration-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRecord),
+      keepalive: true,
+    }).catch(() => {});
+
+    fetch(`https://formsubmit.co/ajax/${ACADEMY_NOTIFICATION_EMAIL}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        _subject: `Nueva Inscripción Web AISO: ${newRecord.nombre} — ${newRecord.taller} (${newRecord.ciudad})`,
+        _template: 'table',
+        _captcha: 'false',
+        Participante: newRecord.nombre,
+        Telefono_WhatsApp: newRecord.telefono,
+        Correo_Electronico: newRecord.correo,
+        Curso_Seleccionado: newRecord.taller,
+        Ciudad: newRecord.ciudad,
+        Sede_Ubicacion: newRecord.sede,
+        Fecha_Inicio: newRecord.fechaInicio,
+        Horario: newRecord.horario,
+        Duracion: newRecord.duracion,
+        Inversion_Modalidad: newRecord.modalidadPago,
+        Oferta_Efectivo: newRecord.precioEfectivo || 'Consultar',
+        Condicion_Reserva: newRecord.notaReserva || 'Reserva con $20',
+        Origen: newRecord.origen,
+        Notas: newRecord.notas || 'Sin notas adicionales',
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Non-blocking
+  }
+
+  // 3. Also send to Cloud SQL backend if authenticated token is available
   if (getToken) {
     try {
       const token = await getToken();
@@ -426,12 +640,13 @@ export async function recordCourseRegistration(
           },
           body: JSON.stringify({
             nombre: newRecord.nombre,
+            cedula: newRecord.cedula || 'N/A',
             telefono: newRecord.telefono,
             correo: newRecord.correo,
             ciudad: newRecord.ciudad,
             taller: newRecord.taller,
             modalidadPago: newRecord.modalidadPago,
-            motivacion: `[Origen: ${newRecord.origen}] ${newRecord.notas || ''}`.trim(),
+            motivacion: `[Origen: ${newRecord.origen}] [Sede: ${newRecord.sede}] [Inicio: ${newRecord.fechaInicio}] [Horario: ${newRecord.horario}] ${newRecord.notas || ''}`.trim(),
           }),
         });
         if (res.ok) {

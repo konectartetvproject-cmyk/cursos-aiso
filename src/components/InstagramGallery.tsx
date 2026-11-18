@@ -13,7 +13,9 @@ import {
   Camera,
 } from 'lucide-react';
 
-const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
+import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
+
+const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl();
 const INSTAGRAM_PROFILE_URL = 'https://instagram.com/oratoria_aiso';
 
 interface InstagramPostItem {
@@ -437,7 +439,7 @@ export default function InstagramGallery({ onNavigateView }: InstagramGalleryPro
                 <div className="space-y-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
                   {/* WhatsApp CTA FIRST */}
                   <a
-                    href={WHATSAPP_OFFICIAL_URL}
+                    href={buildAisoWhatsAppUrl(selectedPost.title, selectedPost.location)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-xs"

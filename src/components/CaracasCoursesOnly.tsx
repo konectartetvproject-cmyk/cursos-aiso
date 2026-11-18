@@ -25,7 +25,7 @@ import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
 import WebCheckoutModal from './WebCheckoutModal';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration } from '../lib/leadsStorage';
+import { recordCourseRegistration, buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 
 export default function CaracasCoursesOnly() {
   const { user, getToken } = useAuth();
@@ -69,8 +69,11 @@ export default function CaracasCoursesOnly() {
     setSubmitted(false);
   };
 
-  const getWhatsAppMessage = (_course?: Workshop) => {
-    return 'https://wa.me/message/IIBLPHIKQJIIE1';
+  const getWhatsAppMessage = (course?: Workshop) => {
+    return buildAisoWhatsAppUrl(
+      course?.title || 'Cursos Presenciales Sede Caracas',
+      course?.city || 'Caracas'
+    );
   };
 
   const handleCopyDirectLink = () => {

@@ -28,7 +28,11 @@ import CertificateVerification from './components/CertificateVerification';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import WhatsAppButton from './components/WhatsAppButton';
 import InstagramGallery from './components/InstagramGallery';
-import { recordSectionVisit, recordWhatsAppClick } from './lib/leadsStorage';
+import {
+  recordSectionVisit,
+  recordWhatsAppClick,
+  recordWebCheckoutClick,
+} from './lib/leadsStorage';
 
 const HASH_TO_VIEW: Record<string, string> = {
   '#inicio': 'home',
@@ -100,6 +104,10 @@ export default function App() {
 
   const setCurrentView = useCallback((view: string) => {
     setCurrentViewState(view);
+    if (view && view !== 'admin') {
+      lastTrackedViewRef.current = view;
+      recordSectionVisit(view);
+    }
     if (view === 'verification') {
       window.history.pushState({}, '', '?verify=search');
     } else if (view === 'students') {
@@ -143,7 +151,7 @@ export default function App() {
     };
   }, []);
 
-  // Automatically record section visits when user enters or switches a section
+  // Automatically record section visits when user enters or switches a section via URL/initial load
   useEffect(() => {
     if (currentView && currentView !== 'admin' && lastTrackedViewRef.current !== currentView) {
       lastTrackedViewRef.current = currentView;
@@ -151,27 +159,45 @@ export default function App() {
     }
   }, [currentView]);
 
-  // Intercept internal anchor clicks AND track all WhatsApp button clicks across the site
-  const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = (e.target as HTMLElement).closest('a');
-    if (!target) return;
-    const href = target.getAttribute('href');
+  // Capture-phase listener: guarantees clicks inside modals (which use stopPropagation)
+  // and clicks on external wa.me links or Web Checkout buttons are NEVER missed.
+  const handleGlobalClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    if (!el) return;
+
+    // 1. Track clicks on any "Comprar Ahora en la Web" / Pago Móvil button
+    const buttonTarget = el.closest('button');
+    if (buttonTarget && currentView !== 'admin') {
+      const btnText = (buttonTarget.textContent || '').trim();
+      const lowerBtn = btnText.toLowerCase();
+      if (
+        lowerBtn.includes('comprar ahora en la web') ||
+        lowerBtn.includes('pagar reserva') ||
+        lowerBtn.includes('pagar monto completo') ||
+        lowerBtn.includes('reportar pago')
+      ) {
+        recordWebCheckoutClick(currentView, btnText.slice(0, 90));
+      }
+    }
+
+    // 2. Track clicks on any anchor tag (WhatsApp links or internal hashes)
+    const anchorTarget = el.closest('a');
+    if (!anchorTarget) return;
+    const href = anchorTarget.getAttribute('href');
     if (!href) return;
 
-    // 1. Track clicks on any WhatsApp link (excluding Admin Panel replies)
     if (
       currentView !== 'admin' &&
       (href.includes('wa.me') || href.includes('whatsapp.com'))
     ) {
       const rawText =
-        target.textContent?.trim() ||
-        target.getAttribute('aria-label') ||
-        target.getAttribute('title') ||
+        anchorTarget.textContent?.trim() ||
+        anchorTarget.getAttribute('aria-label') ||
+        anchorTarget.getAttribute('title') ||
         'Escribir por WhatsApp';
       recordWhatsAppClick(currentView, rawText);
     }
 
-    // 2. Intercept internal hash navigation
     if (HASH_TO_VIEW[href.toLowerCase()]) {
       e.preventDefault();
       setCurrentView(HASH_TO_VIEW[href.toLowerCase()]);
@@ -187,7 +213,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <div
-          onClick={handleGlobalClick}
+          onClickCapture={handleGlobalClickCapture}
           className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 font-sans transition-colors duration-200"
         >
           <Navbar currentView={currentView} setCurrentView={setCurrentView} />
@@ -253,7 +279,7 @@ export default function App() {
           ) : (
             <Footer setCurrentView={setCurrentView} />
           )}
-          <WhatsAppButton />
+          <WhatsAppButton currentView={currentView} />
         </div>
       </AuthProvider>
     </ThemeProvider>

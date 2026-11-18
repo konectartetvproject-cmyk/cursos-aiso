@@ -21,9 +21,8 @@ import {
   fetchBcvRateInfo,
   formatBsAmount,
   recordCourseRegistration,
+  buildAisoWhatsAppUrl,
 } from '../lib/leadsStorage';
-
-const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
 
 const PAGO_MOVIL_DATA = {
   telefono: '04244405887',
@@ -58,9 +57,9 @@ export function getCourseCheckoutPricing(course: Workshop): CheckoutPricingConfi
       reservationUsd: 5,
       reservationTitle: 'Pagar Reserva / Inscripción',
       reservationSubtitle: 'Inscripción formal para asegurar tu cupo',
-      fullUsd: 130,
+      fullUsd: 125,
       fullTitle: 'Pagar Monto Completo',
-      fullSubtitle: 'Curso completo ($125) + Inscripción ($5)',
+      fullSubtitle: 'Inversión total del curso ($125 con inscripción incluida)',
     };
   }
 
@@ -151,6 +150,13 @@ export default function WebCheckoutModal({
   const activeUsd =
     selectedOption === 'reserva' ? pricing.reservationUsd : pricing.fullUsd;
   const formattedBs = formatBsAmount(activeUsd, bcvRate);
+  const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(
+    extraLabel ? `${course.title} (${extraLabel})` : course.title,
+    course.city,
+    referencia.trim()
+      ? `Realicé Pago Móvil por $${activeUsd} (Bs. ${formattedBs}) con Referencia #${referencia.trim()}.`
+      : undefined
+  );
 
   const handleCopy = (key: string, text: string) => {
     navigator.clipboard?.writeText(text);

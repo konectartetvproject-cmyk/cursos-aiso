@@ -24,10 +24,8 @@ import {
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration } from '../lib/leadsStorage';
+import { recordCourseRegistration, buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 import WebCheckoutModal from './WebCheckoutModal';
-
-const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
 
 const PROFILE_OUTCOMES = [
   {
@@ -87,6 +85,7 @@ export default function OratoriaCourseOnly({
 
   const activeCourse = selectedCity === 'caracas' ? caracasCourse : valenciaCourse;
   const cityLabel = selectedCity === 'caracas' ? 'Caracas' : 'Valencia';
+  const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(activeCourse.title, cityLabel);
   const venueLabel =
     selectedCity === 'caracas'
       ? 'Caracas, C.C. Millennium Mall'
@@ -131,7 +130,7 @@ export default function OratoriaCourseOnly({
     } else {
       setModalidadPago(
         selectedCity === 'caracas'
-          ? 'Tasa Oficial BCV $125 + $5 Inscripción'
+          ? 'Tasa Oficial BCV $125 (Total con Inscripción)'
           : 'Tasa Oficial BCV $85 + $5 Inscripción'
       );
     }
@@ -588,7 +587,7 @@ export default function OratoriaCourseOnly({
                         {selectedPlan === 'efectivo'
                           ? totalCashWithReg
                           : selectedCity === 'caracas'
-                          ? '$130'
+                          ? '$125'
                           : '$90'}
                       </span>
                       <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
@@ -753,8 +752,8 @@ export default function OratoriaCourseOnly({
                           <option value="Promo Efectivo $100 + $5 Inscripción">
                             Caracas · Promo Efectivo ($100 + $5 inscripción)
                           </option>
-                          <option value="Tasa Oficial BCV $125 + $5 Inscripción">
-                            Caracas · Tasa Oficial BCV ($125 + $5 inscripción)
+                          <option value="Tasa Oficial BCV $125 (Total con Inscripción)">
+                            Caracas · Tasa Oficial BCV ($125 total con inscripción)
                           </option>
                         </>
                       ) : (

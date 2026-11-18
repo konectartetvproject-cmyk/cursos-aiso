@@ -33,14 +33,7 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
   const isAtencionOnly = currentView === 'atencion-only';
   const isInstagramBio = currentView === 'instagram-bio';
   const isStudentPortal = isOratoryPortal || isIAPortal;
-  const isIsolatedView =
-    isStudentPortal ||
-    isCaracasOnly ||
-    isIAOnly ||
-    isOratoriaCaracas ||
-    isOratoriaValencia ||
-    isAtencionOnly ||
-    isInstagramBio;
+  const isIsolatedView = isStudentPortal || isInstagramBio;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

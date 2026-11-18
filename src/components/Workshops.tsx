@@ -22,6 +22,7 @@ import { coursesData } from '../data/coursesData';
 import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
 import WebCheckoutModal from './WebCheckoutModal';
+import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
 
 interface WorkshopsProps {
   onSelectCourse?: (courseId: string) => void;
@@ -70,8 +71,8 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
     }
   };
 
-  const getWhatsAppMessage = (_course?: Workshop) => {
-    return 'https://wa.me/message/IIBLPHIKQJIIE1';
+  const getWhatsAppMessage = (course?: Workshop) => {
+    return buildAisoWhatsAppUrl(course?.title, course?.city);
   };
 
   return (

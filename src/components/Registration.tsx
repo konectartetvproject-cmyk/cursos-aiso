@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle2, MessageCircle } from 'lucide-react';
+import { Send, CheckCircle2, MessageCircle, Mail } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration } from '../lib/leadsStorage';
+import {
+  recordCourseRegistration,
+  buildAisoWhatsAppUrl,
+  buildAcademyEmailMailtoUrl,
+  ACADEMY_NOTIFICATION_EMAIL,
+  AdminRegistrationRecord,
+} from '../lib/leadsStorage';
 
 interface RegistrationProps {
   selectedCourseId?: string;
@@ -13,6 +19,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
   const { user, getToken } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastRecord, setLastRecord] = useState<AdminRegistrationRecord | null>(null);
   const [currentCourse, setCurrentCourse] = useState<string>(selectedCourseId);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -41,38 +48,52 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
 
   const activeCourseObj = coursesData.find(c => c.id === currentCourse);
 
+  const sedeMapping: Record<string, string> = {
+    'sede-lecheria': 'Lechería',
+    'sede-barinas': 'Barinas',
+    'sede-barquisimeto': 'Barquisimeto',
+    'sede-maracay': 'Maracay',
+  };
+  const resolvedCity =
+    activeCourseObj?.city || sedeMapping[currentCourse] || 'Caracas';
+  const resolvedTitle =
+    activeCourseObj?.title ||
+    (sedeMapping[currentCourse]
+      ? `Pre-Registro Sede ${sedeMapping[currentCourse]}`
+      : currentCourse === 'corporativo'
+      ? 'Formación Corporativa In-Company'
+      : currentCourse);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const sedeMapping: Record<string, string> = {
-        'sede-lecheria': 'Lechería',
-        'sede-barinas': 'Barinas',
-        'sede-barquisimeto': 'Barquisimeto',
-        'sede-maracay': 'Maracay',
-      };
-      const resolvedCity =
-        activeCourseObj?.city || sedeMapping[currentCourse] || 'Caracas';
-      const resolvedTitle =
-        activeCourseObj?.title ||
-        (sedeMapping[currentCourse]
-          ? `Pre-Registro Sede ${sedeMapping[currentCourse]}`
-          : currentCourse === 'corporativo'
-          ? 'Formación Corporativa In-Company'
-          : currentCourse);
-
-      await recordCourseRegistration(
+      const saved = await recordCourseRegistration(
         {
+          courseId: currentCourse,
           nombre,
           telefono,
           correo,
           ciudad: resolvedCity,
           taller: resolvedTitle,
-          modalidadPago: activeCourseObj?.priceStandard || 'Por definir',
-          origen: 'Inscripción General Web',
+          sede: activeCourseObj?.venue || `Sede AISO ${resolvedCity}`,
+          duracion: activeCourseObj?.duration || 'Intensivo Presencial',
+          fechaInicio: activeCourseObj?.startDate || 'Próxima Cohorte 2026',
+          horario: activeCourseObj?.schedule || 'Horario por confirmar',
+          modalidadPago: activeCourseObj
+            ? `${activeCourseObj.priceStandard} BCV${
+                activeCourseObj.priceCashOffer
+                  ? ` (${activeCourseObj.priceCashOffer} efectivo)`
+                  : ''
+              }`
+            : 'Por definir',
+          precioEfectivo: activeCourseObj?.priceCashOffer,
+          notaReserva: activeCourseObj?.reservationNote,
+          origen: 'Formulario de Inscripción General Web',
         },
         getToken
       );
+      setLastRecord(saved);
     } catch (err) {
       console.error('Registration submission error:', err);
     } finally {
@@ -82,7 +103,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
   };
 
   const getWhatsAppRegistrationUrl = () => {
-    return 'https://wa.me/message/IIBLPHIKQJIIE1';
+    return buildAisoWhatsAppUrl(resolvedTitle, resolvedCity);
   };
 
   return (
