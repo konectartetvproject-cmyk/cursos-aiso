@@ -77,11 +77,17 @@ export default function AdminPanel() {
   const [inquiries, setInquiries] = useState<AdminInquiryRecord[]>([]);
   const [subscribers, setSubscribers] = useState<AdminSubscriberRecord[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary>({
+    uniqueVisitors: 0,
+    uniqueVisitorsToday: 0,
+    uniqueVisitorsLast7Days: 0,
+    uniqueWhatsAppClickers: 0,
     totalWhatsAppClicks: 0,
     totalSectionViews: 0,
     sectionViewsByKey: {},
+    uniqueVisitorsBySection: {},
     whatsappClicksBySection: {},
     recentEvents: [],
+    visitorDirectory: [],
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -110,8 +116,8 @@ export default function AdminPanel() {
   const [bcvRateInfo, setBcvRateInfo] = useState<BcvRateInfo>({
     rate: 66.5,
     mode: 'auto',
+    autoRate: 66.5,
     manualRate: 66.5,
-    source: 'Tasa Oficial BCV',
     updatedAt: new Date().toISOString(),
   });
   const [showBcvConfigModal, setShowBcvConfigModal] = useState(false);
@@ -652,8 +658,90 @@ export default function AdminPanel() {
           </div>
         </div>
 
+        {/* Exact Site Visitors Banner + KPI Summary Strip */}
+        <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-lg text-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Contador Exacto de Personas en el Sitio Web</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              {analytics.uniqueVisitors}{' '}
+              {analytics.uniqueVisitors === 1
+                ? 'persona única ha visitado el sitio web'
+                : 'personas únicas han visitado el sitio web'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
+              Conteo exacto de visitantes individuales (sin duplicar cuando una misma persona cambia de pestaña), junto con el total de vistas a secciones y clics al botón de WhatsApp.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-200 block">
+                Personas Totales
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-white font-mono tabular-nums">
+                {analytics.uniqueVisitors}
+              </span>
+              <span className="text-[11px] text-indigo-300 block">Visitantes únicos</span>
+            </div>
+
+            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">
+                Personas Hoy
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tabular-nums">
+                {analytics.uniqueVisitorsToday}
+              </span>
+              <span className="text-[11px] text-slate-300 block">
+                Últ. 7 días: {analytics.uniqueVisitorsLast7Days}
+              </span>
+            </div>
+
+            <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-300 block">
+                Secciones Vistas
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-sky-300 font-mono tabular-nums">
+                {analytics.totalSectionViews}
+              </span>
+              <span className="text-[11px] text-slate-300 block">Navegaciones totales</span>
+            </div>
+
+            <div className="px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 backdrop-blur-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 block">
+                Clics WhatsApp
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-emerald-300 font-mono tabular-nums">
+                {analytics.totalWhatsAppClicks}
+              </span>
+              <span className="text-[11px] text-emerald-200 block">
+                De {analytics.uniqueWhatsAppClickers}{' '}
+                {analytics.uniqueWhatsAppClickers === 1 ? 'persona' : 'personas'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* KPI Summary Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div
+            onClick={() => setActiveTab('analytics')}
+            className="bg-gradient-to-br from-indigo-50/90 via-white to-sky-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 p-5 rounded-2xl border border-indigo-300/80 dark:border-indigo-800/70 shadow-2xs cursor-pointer hover:border-indigo-500 transition-all"
+          >
+            <div className="flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-300 mb-2">
+              <span>Personas que Visitaron</span>
+              <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
+              {analytics.uniqueVisitors}
+            </p>
+            <p className="text-[11px] text-indigo-700 dark:text-indigo-400 font-semibold mt-1">
+              {analytics.uniqueVisitorsToday} hoy · {analytics.totalSectionViews} vistas →
+            </p>
+          </div>
+
           <div
             onClick={() => setActiveTab('analytics')}
             className="bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/30 p-5 rounded-2xl border border-emerald-300/80 dark:border-emerald-800/70 shadow-2xs cursor-pointer hover:border-emerald-500 transition-all"
@@ -666,23 +754,7 @@ export default function AdminPanel() {
               {analytics.totalWhatsAppClicks}
             </p>
             <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">
-              Ver clics por sección →
-            </p>
-          </div>
-
-          <div
-            onClick={() => setActiveTab('analytics')}
-            className="bg-gradient-to-br from-indigo-50/90 via-white to-sky-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 p-5 rounded-2xl border border-indigo-300/80 dark:border-indigo-800/70 shadow-2xs cursor-pointer hover:border-indigo-500 transition-all"
-          >
-            <div className="flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-300 mb-2">
-              <span>Ingresos a Secciones</span>
-              <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums">
-              {analytics.totalSectionViews}
-            </p>
-            <p className="text-[11px] text-indigo-700 dark:text-indigo-400 font-semibold mt-1">
-              Ver visitas por sección →
+              {analytics.uniqueWhatsAppClickers} personas clicaron →
             </p>
           </div>
 
@@ -780,8 +852,8 @@ export default function AdminPanel() {
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>
-                  Estadísticas WhatsApp y Visitas ({analytics.totalWhatsAppClicks} clics ·{' '}
-                  {analytics.totalSectionViews} visitas)
+                  Personas que Visitaron y Clics ({analytics.uniqueVisitors} personas ·{' '}
+                  {analytics.totalWhatsAppClicks} clics WA)
                 </span>
               </button>
 
@@ -1181,13 +1253,16 @@ export default function AdminPanel() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-emerald-50/50 dark:from-slate-800/80 dark:via-slate-900 dark:to-emerald-950/30 border border-slate-200/90 dark:border-slate-800">
                 <div>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-1">
-                    Métricas en Tiempo Real · Tráfico y Conversión a WhatsApp
+                    Conteo Exacto de Personas · Tráfico y Conversión a WhatsApp
                   </span>
                   <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-                    Rendimiento por Sección y Clics al Botón de WhatsApp
+                    {analytics.uniqueVisitors}{' '}
+                    {analytics.uniqueVisitors === 1
+                      ? 'Persona Ha Visitado el Sitio Web'
+                      : 'Personas Han Visitado el Sitio Web'}
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Aquí puedes ver cuántas personas han ingresado a cada sección del sitio y cuántas hicieron clic en los botones de escribir por WhatsApp.
+                    Aquí ves con exactitud cuántas personas únicas han entrado al sitio ({analytics.uniqueVisitorsToday} hoy), cuántas personas vieron cada sección y cuántas hicieron clic en WhatsApp.
                   </p>
                 </div>
 
@@ -1215,7 +1290,7 @@ export default function AdminPanel() {
               {/* Quick Highlight Cards for Key Exclusive Sections */}
               <div>
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
-                  Secciones Exclusivas y Enlaces Directos Principales
+                  Personas Únicas, Vistas y Clics en Secciones Principales
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   {[
@@ -1256,6 +1331,7 @@ export default function AdminPanel() {
                       accent: 'border-purple-200 dark:border-purple-800/70 bg-purple-50/40 dark:bg-purple-950/20',
                     },
                   ].map((card) => {
+                    const uniquePeople = analytics.uniqueVisitorsBySection[card.key] || 0;
                     const views = analytics.sectionViewsByKey[card.key] || 0;
                     const waClicks = analytics.whatsappClicksBySection[card.key] || 0;
                     return (
@@ -1271,20 +1347,28 @@ export default function AdminPanel() {
                             {card.title}
                           </h4>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-2 gap-2">
+                        <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-3 gap-1.5">
+                          <div>
+                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 block">
+                              Personas
+                            </span>
+                            <span className="text-lg font-black text-indigo-700 dark:text-indigo-300 font-mono tabular-nums">
+                              {uniquePeople}
+                            </span>
+                          </div>
                           <div>
                             <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
-                              Ingresos
+                              Vistas
                             </span>
-                            <span className="text-xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
+                            <span className="text-lg font-black text-slate-900 dark:text-white font-mono tabular-nums">
                               {views}
                             </span>
                           </div>
                           <div>
                             <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 block">
-                              Clics WhatsApp
+                              Clics WA
                             </span>
-                            <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 font-mono tabular-nums">
+                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 font-mono tabular-nums">
                               {waClicks}
                             </span>
                           </div>
@@ -1302,10 +1386,10 @@ export default function AdminPanel() {
                     <div>
                       <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                         <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        Ingresos y Clics a WhatsApp por cada Sección
+                        Personas Únicas, Ingresos y Clics por cada Sección
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Ordenado por volumen de visitas e interacción
+                        Muestra cuántas personas distintas entraron a cada sección del sitio
                       </p>
                     </div>
                   </div>
@@ -1314,14 +1398,17 @@ export default function AdminPanel() {
                     {Object.keys(SECTION_LABELS)
                       .sort((a, b) => {
                         const scoreA =
+                          (analytics.uniqueVisitorsBySection[a] || 0) * 3 +
                           (analytics.sectionViewsByKey[a] || 0) * 2 +
                           (analytics.whatsappClicksBySection[a] || 0) * 3;
                         const scoreB =
+                          (analytics.uniqueVisitorsBySection[b] || 0) * 3 +
                           (analytics.sectionViewsByKey[b] || 0) * 2 +
                           (analytics.whatsappClicksBySection[b] || 0) * 3;
                         return scoreB - scoreA;
                       })
                       .map((sectionKey) => {
+                        const uniquePeople = analytics.uniqueVisitorsBySection[sectionKey] || 0;
                         const views = analytics.sectionViewsByKey[sectionKey] || 0;
                         const clicks = analytics.whatsappClicksBySection[sectionKey] || 0;
                         const maxViews = Math.max(
@@ -1339,9 +1426,12 @@ export default function AdminPanel() {
                               <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                                 {getSectionLabel(sectionKey)}
                               </span>
-                              <div className="flex items-center gap-3 text-xs font-mono tabular-nums">
-                                <span className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold">
-                                  {views} {views === 1 ? 'ingreso' : 'ingresos'}
+                              <div className="flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
+                                <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold">
+                                  {uniquePeople} {uniquePeople === 1 ? 'persona' : 'personas'}
+                                </span>
+                                <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+                                  {views} {views === 1 ? 'vista' : 'vistas'}
                                 </span>
                                 <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
                                   <MessageCircle className="w-3 h-3" />
@@ -1433,6 +1523,85 @@ export default function AdminPanel() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Exact Visitor Directory (Cada Persona que ha Visitado el Sitio) */}
+              <div className="bg-slate-50/70 dark:bg-slate-800/40 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      Detalle Exacto de Personas que han Visitado el Sitio ({analytics.uniqueVisitors})
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Cada fila representa a 1 persona única con su hora de entrada, secciones exploradas y clics a WhatsApp
+                    </p>
+                  </div>
+                  <span className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold font-mono tabular-nums">
+                    Total Exacto: {analytics.uniqueVisitors}{' '}
+                    {analytics.uniqueVisitors === 1 ? 'Persona' : 'Personas'}
+                  </span>
+                </div>
+
+                {analytics.visitorDirectory.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                    Aún no hay visitantes registrados.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                    {analytics.visitorDirectory.map((visitor) => (
+                      <div
+                        key={visitor.visitorId}
+                        className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between gap-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg font-mono">
+                            {visitor.shortCode}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono tabular-nums">
+                            {new Date(visitor.lastSeen).toLocaleString('es-VE', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                            Secciones visitadas por esta persona:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {visitor.sectionsVisited.map((sec) => (
+                              <span
+                                key={sec}
+                                className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                              >
+                                {getSectionLabel(sec)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+                          <span className="text-slate-600 dark:text-slate-400 font-bold">
+                            {visitor.totalViews} {visitor.totalViews === 1 ? 'sección vista' : 'secciones vistas'}
+                          </span>
+                          <span
+                            className={`font-extrabold ${
+                              visitor.whatsappClicks > 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-slate-400'
+                            }`}
+                          >
+                            {visitor.whatsappClicks} {visitor.whatsappClicks === 1 ? 'clic WA' : 'clics WA'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -402,55 +402,55 @@ export default function OratoriaCourseOnly({
             {/* 3 Architectural Schedule & Location Cards */}
             <div className="grid sm:grid-cols-3 gap-4">
               <motion.div
-                whileHover={{ y: -2 }}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs"
+                whileHover={{ y: -3 }}
+                className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
               >
-                <div className="w-9 h-9 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center mb-3">
-                  <Calendar className="w-4 h-4 stroke-[1.75]" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-3.5">
+                  <Calendar className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-400 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-700 dark:text-indigo-400 block">
                   Fechas Presenciales
                 </span>
-                <span className="text-base sm:text-[17px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 block mt-1 leading-snug">
+                <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 leading-tight">
                   Inicia 21 de Nov
                 </span>
-                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5 block">
+                <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
                   Sábados 21, 28 nov y 5 dic
                 </span>
               </motion.div>
 
               <motion.div
-                whileHover={{ y: -2 }}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs"
+                whileHover={{ y: -3 }}
+                className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
               >
-                <div className="w-9 h-9 rounded-xl bg-amber-50/90 dark:bg-amber-950/60 border border-amber-200/50 dark:border-amber-800/50 text-amber-600 dark:text-amber-300 flex items-center justify-center mb-3">
-                  <Clock className="w-4 h-4 stroke-[1.75]" />
+                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-3.5">
+                  <Clock className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-400 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400 block">
                   Horario Matutino
                 </span>
-                <span className="text-base sm:text-[17px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 block mt-1 tabular-nums leading-snug">
+                <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 tabular-nums leading-tight">
                   9:30 a.m. a 1:00 p.m.
                 </span>
-                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5 block">
+                <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
                   14 horas académicas
                 </span>
               </motion.div>
 
               <motion.div
-                whileHover={{ y: -2 }}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs"
+                whileHover={{ y: -3 }}
+                className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs"
               >
-                <div className="w-9 h-9 rounded-xl bg-sky-50/90 dark:bg-sky-950/60 border border-sky-200/50 dark:border-sky-800/50 text-sky-600 dark:text-sky-300 flex items-center justify-center mb-3">
-                  <MapPin className="w-4 h-4 stroke-[1.75]" />
+                <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-400 flex items-center justify-center mb-3.5">
+                  <MapPin className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-400 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-700 dark:text-sky-400 block">
                   Ubicación ({selectedCity === 'caracas' ? 'Caracas' : 'Valencia'})
                 </span>
-                <span className="text-base sm:text-[17px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 block mt-1 leading-snug">
+                <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 leading-tight">
                   {selectedCity === 'caracas' ? 'C.C. Millennium Mall' : 'Urb. La Viña'}
                 </span>
-                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5 block">
+                <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
                   {selectedCity === 'caracas' ? 'Los Dos Caminos · Sede AISO' : 'Valencia · Sede AISO'}
                 </span>
               </motion.div>
@@ -499,20 +499,20 @@ export default function OratoriaCourseOnly({
             {/* Executive Pricing Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/5">
               <div className="flex items-center justify-between gap-2 mb-4">
-                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-indigo-700 dark:text-indigo-300">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
                   Inversión · Sede {selectedCity === 'caracas' ? 'Caracas' : 'Valencia'}
                 </span>
-                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                   Inscripción $5
                 </span>
               </div>
 
               {/* Interactive Modality Switch */}
-              <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 mb-6">
+              <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 mb-6">
                 <button
                   type="button"
                   onClick={() => handleSelectPlan('efectivo')}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center whitespace-nowrap ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-center whitespace-nowrap ${
                     selectedPlan === 'efectivo'
                       ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
@@ -523,7 +523,7 @@ export default function OratoriaCourseOnly({
                 <button
                   type="button"
                   onClick={() => handleSelectPlan('bcv')}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center whitespace-nowrap ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-center whitespace-nowrap ${
                     selectedPlan === 'bcv'
                       ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
@@ -540,58 +540,58 @@ export default function OratoriaCourseOnly({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
-                  className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 mb-6 space-y-4"
+                  className="p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 mb-6 space-y-4"
                 >
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 block">
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 block">
                         {selectedPlan === 'efectivo'
                           ? 'Promoción Especial en Efectivo'
                           : 'Inversión Estándar a Tasa BCV'}
                       </span>
-                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         Incluye los 3 sábados y certificado oficial
                       </span>
                     </div>
                     <div className="flex items-baseline gap-2">
                       {selectedPlan === 'efectivo' && (
-                        <span className="text-sm font-normal line-through text-slate-400 tabular-nums">
+                        <span className="text-base font-bold line-through text-slate-400 tabular-nums">
                           {standardPrice}
                         </span>
                       )}
-                      <span className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white tabular-nums">
+                      <span className="font-display text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
                         {selectedPlan === 'efectivo' ? cashPrice : standardPrice}
                       </span>
                     </div>
                   </div>
 
-                  <div className="h-px bg-slate-200/70 dark:bg-slate-700/70" />
+                  <div className="h-px bg-slate-200/80 dark:bg-slate-700" />
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80">
-                      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-400 block">
+                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                         Inscripción hoy:
                       </span>
-                      <span className="text-xl sm:text-2xl font-semibold tracking-tight text-indigo-700 dark:text-indigo-300 tabular-nums block my-0.5">
+                      <span className="font-display text-2xl sm:text-3xl font-black tracking-tight text-indigo-700 dark:text-indigo-400 tabular-nums block my-0.5">
                         $5
                       </span>
-                      <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 block">
+                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                         Pago Móvil / BCV
                       </span>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700/80">
-                      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-400 block">
+                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                         Total con Inscripción:
                       </span>
-                      <span className="text-xl sm:text-2xl font-semibold tracking-tight text-emerald-700 dark:text-emerald-300 tabular-nums block my-0.5">
+                      <span className="font-display text-2xl sm:text-3xl font-black tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums block my-0.5">
                         {selectedPlan === 'efectivo'
                           ? totalCashWithReg
                           : selectedCity === 'caracas'
                           ? '$130'
                           : '$90'}
                       </span>
-                      <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 block">
+                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                         {selectedPlan === 'efectivo' ? 'Ahorro especial en efectivo' : 'Tasa BCV'}
                       </span>
                     </div>

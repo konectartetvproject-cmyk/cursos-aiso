@@ -27,6 +27,7 @@ import AdminPanel from './components/AdminPanel';
 import CertificateVerification from './components/CertificateVerification';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import WhatsAppButton from './components/WhatsAppButton';
+import InstagramGallery from './components/InstagramGallery';
 import { recordSectionVisit, recordWhatsAppClick } from './lib/leadsStorage';
 
 const HASH_TO_VIEW: Record<string, string> = {
@@ -214,6 +215,13 @@ export default function App() {
             {currentView === 'students-ia' && <AIStudentPortal />}
             {currentView === 'verification' && <CertificateVerification />}
             {currentView === 'privacy' && <PrivacyPolicy />}
+            {currentView !== 'admin' &&
+              currentView !== 'students' &&
+              currentView !== 'students-ia' &&
+              currentView !== 'verification' &&
+              currentView !== 'privacy' && (
+                <InstagramGallery onNavigateView={setCurrentView} />
+              )}
           </main>
           {currentView === 'students' ||
           currentView === 'students-ia' ||

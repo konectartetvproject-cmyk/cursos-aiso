@@ -86,6 +86,7 @@ async function fetchLiveBcvRate(): Promise<number> {
 
 interface StoredAnalyticsEvent {
   id: string;
+  visitorId?: string;
   type: 'section_view' | 'whatsapp_click';
   section: string;
   sectionLabel: string;
@@ -106,7 +107,7 @@ function readServerAnalytics(): StoredAnalyticsEvent[] {
 
 function writeServerAnalytics(events: StoredAnalyticsEvent[]) {
   try {
-    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(events.slice(0, 2000)), 'utf-8');
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(events.slice(0, 5000)), 'utf-8');
   } catch (err) {
     console.error('Failed to persist analytics file:', err);
   }
@@ -176,7 +177,7 @@ async function startServer() {
     }
   });
 
-  // Public lightweight analytics endpoints (tracks section visits & WhatsApp clicks)
+  // Public lightweight analytics endpoints (tracks unique site visitors, section visits & WhatsApp clicks)
   app.post('/api/analytics/event', (req, res) => {
     try {
       const body = req.body;
@@ -185,8 +186,13 @@ async function startServer() {
       }
       const events = readServerAnalytics();
       if (!events.some((e) => e.id === body.id)) {
+        const forwarded = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'anon').split(',')[0].trim();
+        const ua = String(req.headers['user-agent'] || 'browser').slice(0, 60);
+        const fallbackVisitorId = `v_ip_${Buffer.from(`${forwarded}_${ua}`).toString('base64').slice(0, 16)}`;
+
         const newEvent: StoredAnalyticsEvent = {
           id: String(body.id),
+          visitorId: body.visitorId ? String(body.visitorId) : fallbackVisitorId,
           type: body.type === 'whatsapp_click' ? 'whatsapp_click' : 'section_view',
           section: String(body.section),
           sectionLabel: String(body.sectionLabel || body.section),
