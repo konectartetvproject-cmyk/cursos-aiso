@@ -40,7 +40,18 @@ export interface CheckoutPricingConfig {
   fullSubtitle: string;
 }
 
-export function getCourseCheckoutPricing(course: Workshop): CheckoutPricingConfig {
+export function getCourseCheckoutPricing(course: Workshop | null): CheckoutPricingConfig {
+  if (!course) {
+    return {
+      reservationUsd: 5,
+      reservationTitle: 'Pagar Reserva / Inscripción',
+      reservationSubtitle: 'Asegura tu cupo en la cohorte actual',
+      fullUsd: 100,
+      fullTitle: 'Pagar Monto Completo',
+      fullSubtitle: 'Inversión total del programa',
+    };
+  }
+
   if (course.id === 'caracas-ia') {
     return {
       reservationUsd: 20,
@@ -85,6 +96,17 @@ export function getCourseCheckoutPricing(course: Workshop): CheckoutPricingConfi
     };
   }
 
+  if (course.id === 'barinas-etiqueta') {
+    return {
+      reservationUsd: 5,
+      reservationTitle: 'Pagar Reserva / Inscripción',
+      reservationSubtitle: 'Inscripción de $5 para asegurar tu cupo (incluida en los $35)',
+      fullUsd: 35,
+      fullTitle: 'Pagar Monto Completo',
+      fullSubtitle: 'Inversión total $35 en bolívares BCV (incluye la inscripción)',
+    };
+  }
+
   // Fallback for any other course
   const parsedStandard = Number((course.priceStandard || '100').replace(/[^0-9.]/g, '')) || 100;
   return {
@@ -100,7 +122,7 @@ export function getCourseCheckoutPricing(course: Workshop): CheckoutPricingConfi
 interface WebCheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  course: Workshop;
+  course: Workshop | null;
   initialOption?: 'reserva' | 'completo';
   extraLabel?: string;
 }
@@ -130,7 +152,7 @@ export default function WebCheckoutModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && course) {
       setStep('payment');
       setSelectedOption(initialOption);
       setReferencia('');
@@ -143,9 +165,9 @@ export default function WebCheckoutModal({
           setLoadingRate(false);
         });
     }
-  }, [isOpen, initialOption, course.id]);
+  }, [isOpen, initialOption, course?.id]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !course) return null;
 
   const activeUsd =
     selectedOption === 'reserva' ? pricing.reservationUsd : pricing.fullUsd;
@@ -198,6 +220,8 @@ export default function WebCheckoutModal({
 
   return (
     <div
+      data-course-id={course.id}
+      data-course-title={course.title}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs overflow-y-auto"
       onClick={onClose}
     >

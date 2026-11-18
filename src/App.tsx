@@ -22,6 +22,7 @@ import CaracasCoursesOnly from './components/CaracasCoursesOnly';
 import AICourseOnly from './components/AICourseOnly';
 import OratoriaCourseOnly from './components/OratoriaCourseOnly';
 import AtencionCourseOnly from './components/AtencionCourseOnly';
+import EtiquetaCourseOnly from './components/EtiquetaCourseOnly';
 import InstagramBioHub from './components/InstagramBioHub';
 import AdminPanel from './components/AdminPanel';
 import CertificateVerification from './components/CertificateVerification';
@@ -46,6 +47,8 @@ const HASH_TO_VIEW: Record<string, string> = {
   '#oratoria-valencia': 'oratoria-valencia',
   '#curso-oratoria': 'oratoria-caracas',
   '#curso-atencion': 'atencion-only',
+  '#curso-etiqueta': 'etiqueta-only',
+  '#etiqueta': 'etiqueta-only',
   '#instagram': 'instagram-bio',
   '#bio': 'instagram-bio',
   '#admin': 'admin',
@@ -65,6 +68,7 @@ const VIEW_TO_HASH: Record<string, string> = {
   'oratoria-caracas': '#oratoria-caracas',
   'oratoria-valencia': '#oratoria-valencia',
   'atencion-only': '#curso-atencion',
+  'etiqueta-only': '#curso-etiqueta',
   'instagram-bio': '#instagram',
   admin: '#admin',
   corporate: '#corporativo',
@@ -91,6 +95,7 @@ function resolveViewFromLocation(): string {
   if (cursoParam === 'oratoria-valencia') return 'oratoria-valencia';
   if (cursoParam === 'oratoria-caracas' || cursoParam === 'oratoria') return 'oratoria-caracas';
   if (cursoParam === 'atencion' || cursoParam === 'atencion-al-cliente') return 'atencion-only';
+  if (cursoParam === 'etiqueta' || cursoParam === 'etiqueta-y-protocolo' || cursoParam === 'protocolo') return 'etiqueta-only';
   if (sedeParam === 'caracas') return 'caracas-only';
   if (portalParam === 'ia') return 'students-ia';
   if (portalParam) return 'students';
@@ -126,6 +131,8 @@ export default function App() {
       window.history.pushState({}, '', '?curso=oratoria-valencia');
     } else if (view === 'atencion-only') {
       window.history.pushState({}, '', '?curso=atencion');
+    } else if (view === 'etiqueta-only') {
+      window.history.pushState({}, '', '?curso=etiqueta');
     } else if (view === 'instagram-bio') {
       window.history.pushState({}, '', '?ig=aiso');
     } else if (view === 'admin') {
@@ -189,35 +196,15 @@ export default function App() {
     };
   };
 
-  // PointerDown capture for external WhatsApp links ensures mobile browsers & new tabs
-  // dispatch the analytics beacon BEFORE the browser switches to the WhatsApp app.
-  const handleGlobalPointerDownCapture = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (currentView === 'admin') return;
-    const el = e.target as HTMLElement;
-    if (!el) return;
-    const anchorTarget = el.closest('a');
-    if (!anchorTarget) return;
-    const href = anchorTarget.getAttribute('href') || '';
-    if (href.includes('wa.me') || href.includes('whatsapp.com')) {
-      const { courseSection, courseTitleHint } = extractCourseContextFromElement(anchorTarget);
-      const rawText =
-        anchorTarget.textContent?.trim() ||
-        anchorTarget.getAttribute('aria-label') ||
-        anchorTarget.getAttribute('title') ||
-        'Escribir por WhatsApp';
-      recordWhatsAppClick(courseSection, rawText, `${courseTitleHint} ${href}`);
-    }
-  };
-
   // Capture-phase listener: guarantees clicks inside modals (which use stopPropagation)
   // and clicks on external wa.me links or Web Checkout buttons are NEVER missed.
   const handleGlobalClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
-    if (!el) return;
+    if (!el || currentView === 'admin') return;
 
     // 1. Track clicks on any "Comprar Ahora en la Web" / Pago Móvil button
     const buttonTarget = el.closest('button');
-    if (buttonTarget && currentView !== 'admin') {
+    if (buttonTarget) {
       const btnText = (buttonTarget.textContent || '').trim();
       const lowerBtn = btnText.toLowerCase();
       if (
@@ -237,10 +224,7 @@ export default function App() {
     const href = anchorTarget.getAttribute('href');
     if (!href) return;
 
-    if (
-      currentView !== 'admin' &&
-      (href.includes('wa.me') || href.includes('whatsapp.com'))
-    ) {
+    if (href.includes('wa.me') || href.includes('whatsapp.com')) {
       const { courseSection, courseTitleHint } = extractCourseContextFromElement(anchorTarget);
       const rawText =
         anchorTarget.textContent?.trim() ||
@@ -248,6 +232,23 @@ export default function App() {
         anchorTarget.getAttribute('title') ||
         'Escribir por WhatsApp';
       recordWhatsAppClick(courseSection, rawText, `${courseTitleHint} ${href}`);
+
+      // If the user clicked a specific course's WhatsApp button from the general catalog or home,
+      // also count it as a visit to that specific course section
+      if (
+        courseSection !== currentView &&
+        [
+          'ia-only',
+          'oratoria-caracas',
+          'oratoria-valencia',
+          'atencion-only',
+          'etiqueta-only',
+          'caracas-only',
+        ].includes(courseSection)
+      ) {
+        recordSectionVisit(courseSection, `Interés WhatsApp: ${rawText}`);
+      }
+      return;
     }
 
     if (HASH_TO_VIEW[href.toLowerCase()]) {
@@ -266,21 +267,28 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <div
-          onPointerDownCapture={handleGlobalPointerDownCapture}
           onClickCapture={handleGlobalClickCapture}
           className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 font-sans transition-colors duration-200"
         >
-
           <Navbar currentView={currentView} setCurrentView={setCurrentView} />
           <main className="flex-grow">
             {currentView === 'home' && <Hero />}
             {currentView === 'about' && <About />}
-            {currentView === 'workshops' && <Workshops onSelectCourse={handleSelectCourse} />}
-            {currentView === 'caracas-only' && <CaracasCoursesOnly />}
+            {currentView === 'workshops' && (
+              <Workshops
+                onSelectCourse={handleSelectCourse}
+                onNavigateCourseView={setCurrentView}
+              />
+            )}
+            {currentView === 'caracas-only' && (
+              <CaracasCoursesOnly onNavigateCourseView={setCurrentView} />
+            )}
+
             {currentView === 'ia-only' && <AICourseOnly />}
             {currentView === 'oratoria-caracas' && <OratoriaCourseOnly city="caracas" />}
             {currentView === 'oratoria-valencia' && <OratoriaCourseOnly city="valencia" />}
             {currentView === 'atencion-only' && <AtencionCourseOnly />}
+            {currentView === 'etiqueta-only' && <EtiquetaCourseOnly />}
             {currentView === 'instagram-bio' && (
               <InstagramBioHub onGoToCourses={() => setCurrentView('workshops')} />
             )}
@@ -311,6 +319,7 @@ export default function App() {
           currentView === 'oratoria-caracas' ||
           currentView === 'oratoria-valencia' ||
           currentView === 'atencion-only' ||
+          currentView === 'etiqueta-only' ||
           currentView === 'instagram-bio' ? (
             <footer className="bg-slate-900 dark:bg-slate-950 py-8 border-t border-slate-800 text-center">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -325,6 +334,8 @@ export default function App() {
                     ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Oratoria de Alto Impacto · Sede Valencia, Urb. La Viña. Todos los derechos reservados.`
                     : currentView === 'atencion-only'
                     ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Atención al Cliente de Alto Impacto · Caracas y Valencia. Todos los derechos reservados.`
+                    : currentView === 'etiqueta-only'
+                    ? `© ${new Date().getFullYear()} AISO — Clase de Introducción a la Etiqueta y al Protocolo · Hotel Bristol, Barinas. Todos los derechos reservados.`
                     : currentView === 'caracas-only'
                     ? `© ${new Date().getFullYear()} AISO — Sede Caracas · C.C. Millennium Mall, Los Dos Caminos. Todos los derechos reservados.`
                     : `© ${new Date().getFullYear()} AISO — Portal Exclusivo de Estudiantes. Todos los derechos reservados.`}

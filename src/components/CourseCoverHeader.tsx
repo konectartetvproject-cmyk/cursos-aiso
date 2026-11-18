@@ -432,7 +432,94 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
     );
   }
 
-  // 5. LUMINOUS LIGHT ADAPTED COVER FOR MARACAY ORATORIA & CARACAS AVANZADA
+  // 5. CLASE DE INTRODUCCIÓN A LA ETIQUETA Y AL PROTOCOLO (BARINAS) - Navy & Champagne Gold Cover
+  if (course.id === 'barinas-etiqueta') {
+    return (
+      <div className="relative overflow-hidden bg-gradient-to-br from-amber-50/85 via-white to-slate-100 dark:from-slate-900 dark:via-[#08152C] dark:to-slate-900 text-slate-900 dark:text-white p-6 sm:p-7 border-b border-amber-300/80 dark:border-amber-500/40 select-none">
+        {/* Top Row */}
+        <div className="relative z-10 flex items-center justify-between gap-3 mb-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-amber-300 border border-amber-400/50 text-[11px] font-extrabold uppercase tracking-wider">
+            <MapPin className="w-3.5 h-3.5 text-amber-400" /> Hotel Bristol · Barinas
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onViewFlyer(course)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-slate-700 text-slate-800 dark:text-amber-200 border border-slate-200/90 dark:border-slate-700 text-xs font-bold shadow-2xs transition-all cursor-pointer shrink-0"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            Ver Flyer Completo
+          </button>
+        </div>
+
+        {/* Main Adapted Split */}
+        <div className="relative z-10 grid sm:grid-cols-12 gap-5 items-center">
+          <div className="sm:col-span-7">
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
+              Clase de Introducción
+            </div>
+            <div className="inline-block bg-gradient-to-r from-[#06152d] via-slate-900 to-[#0c2144] border-t-2 border-b-2 border-amber-400 px-4 py-2 rounded-xl shadow-xs my-1.5">
+              <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-amber-300 block leading-tight">
+                Etiqueta y Protocolo
+              </span>
+            </div>
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 mb-1">
+              Aprende los principios que te llevarán al éxito.
+            </p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 mb-3">
+              Dictado por el <strong className="text-slate-900 dark:text-amber-300">MSc. Eduardo Salguero</strong>
+            </p>
+
+            {/* Schedule & Pricing Strip from Flyer */}
+            <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl p-2.5 px-3 border border-amber-400/80 shadow-2xs grid grid-cols-3 gap-2 text-[10px]">
+              <div>
+                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block leading-none">
+                  Comienza:
+                </span>
+                <span className="font-black text-slate-900 dark:text-amber-300 leading-tight">
+                  DOM 22 NOV
+                </span>
+              </div>
+              <div className="border-l border-slate-200 dark:border-slate-700 pl-2">
+                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block leading-none">
+                  Horario:
+                </span>
+                <span className="font-black text-slate-900 dark:text-white font-mono tabular-nums leading-tight">
+                  8:30-1:00 PM
+                </span>
+              </div>
+              <div className="border-l border-slate-200 dark:border-slate-700 pl-2">
+                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block leading-none">
+                  Inversión:
+                </span>
+                <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono tabular-nums leading-tight">
+                  $35 ($25 ef.)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Normal-Size Original Flyer */}
+          <div className="sm:col-span-5 flex justify-center">
+            <div
+              onClick={() => onViewFlyer(course)}
+              title="Flyer oficial Clase de Introducción a la Etiqueta y al Protocolo"
+              className="relative group/flyer w-full max-w-[280px] rounded-2xl overflow-hidden border-2 border-white dark:border-slate-700 ring-1 ring-amber-400/70 shadow-md bg-[#06152d] cursor-pointer"
+            >
+              <img
+                src={course.image}
+                alt={course.imageAlt}
+                referrerPolicy="no-referrer"
+                className="w-full h-auto object-contain block"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 6. LUMINOUS LIGHT ADAPTED COVER FOR MARACAY ORATORIA & CARACAS AVANZADA
   const isMaster = course.id === 'caracas-avanzada';
   return (
     <div

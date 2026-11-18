@@ -954,7 +954,7 @@ export default function AdminPanel() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">
             {[
               {
                 key: 'oratoria-caracas',
@@ -985,11 +985,18 @@ export default function AdminPanel() {
                 accent: 'border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/40 dark:bg-emerald-950/20',
               },
               {
+                key: 'etiqueta-only',
+                title: 'Etiqueta y Protocolo',
+                subtitle: 'Barinas ($35 BCV / $25 ef.)',
+                url: '?curso=etiqueta',
+                accent: 'border-amber-300 dark:border-amber-700/70 bg-amber-50/60 dark:bg-amber-950/25',
+              },
+              {
                 key: 'caracas-only',
                 title: 'Sede Caracas',
                 subtitle: 'Catálogo Exclusivo CCS',
                 url: '?sede=caracas',
-                accent: 'border-amber-200 dark:border-amber-800/70 bg-amber-50/40 dark:bg-amber-950/20',
+                accent: 'border-purple-200 dark:border-purple-800/70 bg-purple-50/40 dark:bg-purple-950/20',
               },
               {
                 key: 'home',
@@ -1601,7 +1608,7 @@ export default function AdminPanel() {
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
                   Vistas, Clics y Personas por Sección Principal
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                   {[
                     {
                       key: 'ia-only',
@@ -1626,6 +1633,12 @@ export default function AdminPanel() {
                       title: 'Atención al Cliente',
                       url: '?curso=atencion',
                       accent: 'border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/40 dark:bg-emerald-950/20',
+                    },
+                    {
+                      key: 'etiqueta-only',
+                      title: 'Etiqueta y Protocolo',
+                      url: '?curso=etiqueta',
+                      accent: 'border-amber-300 dark:border-amber-700/70 bg-amber-50/60 dark:bg-amber-950/25',
                     },
                     {
                       key: 'caracas-only',

@@ -179,7 +179,7 @@ export default function InstagramBioHub({ onGoToCourses }: InstagramBioHubProps)
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-              Oratoria · Inteligencia Artificial Aplicada · Atención al Cliente
+              Oratoria · Inteligencia Artificial · Atención al Cliente · Etiqueta y Protocolo
             </p>
 
             <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
@@ -520,6 +520,7 @@ export default function InstagramBioHub({ onGoToCourses }: InstagramBioHubProps)
                             <option value="Oratoria de Alto Impacto">Curso de Oratoria</option>
                             <option value="Inteligencia Artificial Aplicada">Curso de Inteligencia Artificial</option>
                             <option value="Atención al Cliente">Curso de Atención al Cliente</option>
+                            <option value="Etiqueta y Protocolo">Clase de Etiqueta y Protocolo</option>
                             <option value="Todos los Programas AISO">Todos los Cursos AISO</option>
                           </select>
                         </div>

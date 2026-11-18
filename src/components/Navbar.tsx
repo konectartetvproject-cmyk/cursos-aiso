@@ -17,6 +17,7 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     { name: 'Oratoria Caracas', view: 'oratoria-caracas', href: '#oratoria-caracas' },
     { name: 'Oratoria Valencia', view: 'oratoria-valencia', href: '#oratoria-valencia' },
     { name: 'Curso Atención', view: 'atencion-only', href: '#curso-atencion' },
+    { name: 'Curso Etiqueta', view: 'etiqueta-only', href: '#curso-etiqueta' },
     { name: 'Curso IA', view: 'ia-only', href: '#curso-ia' },
     { name: 'Corporativo', view: 'corporate', href: '#corporativo' },
     { name: 'Preguntas', view: 'faq', href: '#faq' },
@@ -137,26 +138,40 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     );
   }
 
+  const quickCourseTabs = [
+    { label: 'Inicio', view: 'home' },
+    { label: 'Catálogo Cursos', view: 'workshops' },
+    { label: 'Oratoria Caracas', view: 'oratoria-caracas' },
+    { label: 'Oratoria Valencia', view: 'oratoria-valencia' },
+    { label: 'Curso de IA', view: 'ia-only' },
+    { label: 'Atención al Cliente', view: 'atencion-only' },
+    { label: 'Etiqueta y Protocolo', view: 'etiqueta-only' },
+    { label: 'Sede Caracas', view: 'caracas-only' },
+    { label: 'Panel Admin', view: 'admin' },
+  ];
+
   return (
-    <nav className="h-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 lg:px-10 flex-shrink-0 sticky top-0 z-50 transition-colors duration-200">
-      <div 
-        className="flex items-center gap-3.5 cursor-pointer select-none group" 
-        onClick={handleLogoClick}
-      >
-        <img
-          src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
-          alt="Logo Academia AISO"
-          className="w-11 h-11 rounded-xl object-contain bg-black p-0.5 shadow-sm border border-slate-200/60 dark:border-slate-700"
-        />
-        <div className="flex flex-col">
-          <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
-            Academia AISO
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
-            International Social Oratory
-          </span>
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+      <nav className="h-20 flex items-center justify-between px-6 lg:px-10 flex-shrink-0 relative">
+        <div 
+          className="flex items-center gap-3.5 cursor-pointer select-none group" 
+          onClick={handleLogoClick}
+        >
+          <img
+            src="/assets/aistudio/Dise_o_sin_t_tulo__24__e1fc85ad.png"
+            alt="Logo Academia AISO"
+            className="w-11 h-11 rounded-xl object-contain bg-black p-0.5 shadow-sm border border-slate-200/60 dark:border-slate-700"
+          />
+          <div className="flex flex-col">
+            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
+              Academia AISO
+            </span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+              International Social Oratory
+            </span>
+          </div>
         </div>
-      </div>
+
       
       <div className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
         {navLinks.map((link) => {
@@ -425,17 +440,43 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
               )}
             </div>
 
-            <a
-              href="#inscripciones"
-              onClick={(e) => handleTabClick(e, 'registration')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg shadow-xs text-center text-sm font-semibold mt-3"
-            >
-              Apartar Cupo Ahora
-            </a>
+              <a
+                href="#inscripciones"
+                onClick={(e) => handleTabClick(e, 'registration')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg shadow-xs text-center text-sm font-semibold mt-3"
+              >
+                Apartar Cupo Ahora
+              </a>
+            </div>
           </div>
+        )}
+      </nav>
+
+      {/* Barra rápida siempre visible para acceder a cada curso individual y al Panel Admin */}
+      <div className="xl:hidden border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-950/90 px-4 py-2 overflow-x-auto">
+        <div className="flex items-center gap-1.5 min-w-max">
+          {quickCourseTabs.map((tab) => {
+            const active = currentView === tab.view;
+            return (
+              <button
+                key={tab.view}
+                type="button"
+                onClick={(e) => handleTabClick(e, tab.view)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  active
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : tab.view === 'admin'
+                    ? 'bg-slate-900 dark:bg-slate-800 text-amber-300 border border-slate-700'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
-      )}
-    </nav>
+      </div>
+    </header>
   );
 }
 

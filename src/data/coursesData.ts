@@ -321,5 +321,93 @@ export const coursesData: Workshop[] = [
         ]
       }
     ]
+  },
+  {
+    id: "barinas-etiqueta",
+    title: "Clase de Introducción a la Etiqueta y al Protocolo",
+    subtitle: "Aprende los principios que te llevarán al éxito · Educación, seguridad, imagen y cortesía",
+    city: "Barinas",
+    venue: "Hotel Bristol, Barinas · Academia AISO",
+    badgeText: "BARINAS · DOMINGO 22 NOV",
+    badgeColor: "bg-amber-600 text-white",
+    level: "Con el Magíster Eduardo Salguero",
+    levelColor: "text-amber-700 dark:text-amber-400",
+    image: "/assets/aistudio/WhatsApp_Image_2026-11-18_at_11.01.16_AM_d435da4f.jpeg",
+    imageAlt: "Flyer oficial Clase de Introducción a la Etiqueta y al Protocolo en Hotel Bristol, Barinas",
+    imagePosition: "object-top",
+    showFullFlyerInModal: true,
+    highlightBanner: "Domingo 22 de Noviembre · 8:30 a. m. a 1:00 p. m. · Hotel Bristol, Barinas · Dictado por el MSc. Eduardo Salguero",
+    startDate: "Domingo 22 de Noviembre",
+    dates: "Domingo 22 de noviembre",
+    schedule: "De 8:30 a. m. a 1:00 p. m.",
+    duration: "Clase Magistral Intensiva (4.5 horas)",
+    academicHours: "8:30 a. m. a 1:00 p. m.",
+    priceStandard: "$35",
+    priceCashOffer: "$25",
+    registrationFee: "$5 (incluida en la inversión de $35 en bolívares BCV)",
+    reservationNote: "Inscripción: $5 · Inversión: $35 en bolívares BCV (incluye la inscripción) · Promoción: $25 en efectivo",
+    whatsappMessageText: "Hola! Estoy interesado en inscribirme en el curso Clase de Introducción a la Etiqueta y al Protocolo (Sede Barinas), vi la información en el sitio web.",
+    description: "Tu manera de presentarte, comunicarte y relacionarte influye en la impresión que dejas en los demás. Cada saludo, cada gesto y cada conversación son oportunidades para demostrar educación, seguridad y respeto. Academia AISO te invita a conocer los principios de la etiqueta y el protocolo para desenvolverte con mayor confianza en tu vida personal, social y profesional, a cargo del magíster en Educación Superior Eduardo Salguero.",
+    features: [
+      "Fundamentos de etiqueta y protocolo: diferencias y aplicación personal, social y profesional",
+      "Imagen y presentación personal: cuidado personal, postura y vestimenta adecuada a la ocasión",
+      "El arte de saludar y presentarse: iniciar interacciones, presentar personas y trato respetuoso",
+      "Comunicación y buenos modales: escucha atenta, tono de voz, lenguaje corporal y cortesía",
+      "Etiqueta en la mesa: uso básico de servilleta, cubiertos, cristalería y comportamiento en comidas",
+      "Protocolo social y profesional: puntualidad, reuniones, rol de anfitrión/invitado y precedencia",
+      "Aplicación en la vida cotidiana: identificación de errores frecuentes y actuación con buen criterio"
+    ],
+    syllabus: [
+      {
+        title: "01. Fundamentos de etiqueta y protocolo",
+        subtitle: "Domingo 22 de Noviembre · Hotel Bristol, Barinas",
+        points: [
+          "Qué significan la etiqueta y el protocolo, cuáles son sus diferencias y cómo se aplican en situaciones personales, sociales y profesionales."
+        ]
+      },
+      {
+        title: "02. Imagen y presentación personal",
+        subtitle: "Proyección, presencia y contexto",
+        points: [
+          "La importancia del cuidado personal, la postura y la elección de una vestimenta adecuada al contexto y a la ocasión."
+        ]
+      },
+      {
+        title: "03. El arte de saludar y presentarse",
+        subtitle: "Primera impresión y distinción en el trato",
+        points: [
+          "Cómo iniciar una interacción, presentar a otras personas y utilizar formas de trato respetuosas."
+        ]
+      },
+      {
+        title: "04. Comunicación y buenos modales",
+        subtitle: "Elegancia en la conversación y consideración hacia los demás",
+        points: [
+          "Escucha atenta, tono de voz, lenguaje corporal y cortesía para participar en una conversación."
+        ]
+      },
+      {
+        title: "05. Etiqueta en la mesa",
+        subtitle: "Destreza y seguridad en encuentros gastronómicos y ejecutivos",
+        points: [
+          "Uso básico de la servilleta, los cubiertos y la cristalería, junto con las pautas de comportamiento durante una comida."
+        ]
+      },
+      {
+        title: "06. Protocolo social y profesional",
+        subtitle: "Excelencia en eventos, reuniones y precedencia",
+        points: [
+          "Puntualidad, comportamiento en reuniones, responsabilidades del anfitrión y del invitado, y nociones básicas sobre el orden de precedencia."
+        ]
+      },
+      {
+        title: "07. Aplicación en la vida cotidiana",
+        subtitle: "Criterio práctico y seguridad en cada ocasión",
+        points: [
+          "Identificación de errores frecuentes y análisis de situaciones para aprender a actuar con seguridad, respeto y buen criterio."
+        ]
+      }
+    ]
   }
 ];
+

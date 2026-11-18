@@ -13,7 +13,7 @@ import {
   Camera,
 } from 'lucide-react';
 
-import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
+import { buildAisoWhatsAppUrl, recordSectionVisit } from '../lib/leadsStorage';
 
 const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl();
 const INSTAGRAM_PROFILE_URL = 'https://instagram.com/oratoria_aiso';
@@ -102,6 +102,20 @@ const INSTAGRAM_POSTS: InstagramPostItem[] = [
       '✨ ¡Valencia! Fortalece tus habilidades de atención, comunicación, empatía y manejo de clientes difíciles en 3 clases prácticas (Sábados 3:30 p.m. a 6:00 p.m.). Reserva tu cupo hoy con $5.',
     courseView: 'atencion-only',
     courseButtonLabel: 'Ver Sección Atención al Cliente',
+  },
+  {
+    id: 'ig-etiqueta-barinas',
+    image: '/assets/aistudio/WhatsApp_Image_2026-11-18_at_11.01.16_AM_d435da4f.jpeg',
+    title: 'Clase de Introducción a la Etiqueta y al Protocolo · Barinas',
+    category: 'cursos',
+    location: 'Barinas · Hotel Bristol',
+    likes: '412',
+    comments: '57',
+    dateLabel: 'Domingo 22 de Noviembre',
+    caption:
+      '🎓 ¡Barinas! Conoce los principios de la etiqueta y el protocolo junto al Magíster Eduardo Salguero en el Hotel Bristol (8:30 a. m. a 1:00 p. m.). Inscripción: $5 · Inversión: $35 BCV (incluye inscripción) · Promoción: $25 en efectivo.',
+    courseView: 'etiqueta-only',
+    courseButtonLabel: 'Ver Sección Etiqueta y Protocolo',
   },
   {
     id: 'ig-excelencia-ccs',
@@ -254,8 +268,8 @@ export default function InstagramGallery({ onNavigateView }: InstagramGalleryPro
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="inline-flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
             {[
-              { id: 'all', label: 'Todas las Fotos (8)' },
-              { id: 'cursos', label: 'Flyers y Cursos Activos (5)' },
+              { id: 'all', label: 'Todas las Fotos (9)' },
+              { id: 'cursos', label: 'Flyers y Cursos Activos (6)' },
               { id: 'experiencia', label: 'Experiencia AISO (3)' },
             ].map((tab) => (
               <button
@@ -283,11 +297,18 @@ export default function InstagramGallery({ onNavigateView }: InstagramGalleryPro
           {filteredPosts.map((post, idx) => (
             <motion.div
               key={post.id}
+              data-course-id={post.courseView || 'instagram-bio'}
+              data-course-title={post.title}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: idx * 0.04 }}
               whileHover={{ y: -4 }}
-              onClick={() => setSelectedPost(post)}
+              onClick={() => {
+                if (post.courseView) {
+                  recordSectionVisit(post.courseView, `Instagram Flyer: ${post.title}`);
+                }
+                setSelectedPost(post);
+              }}
               className="group rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-indigo-400 dark:hover:border-indigo-500 transition-all overflow-hidden cursor-pointer flex flex-col"
             >
               {/* Post Top Bar */}
@@ -370,6 +391,8 @@ export default function InstagramGallery({ onNavigateView }: InstagramGalleryPro
       <AnimatePresence>
         {selectedPost && (
           <motion.div
+            data-course-id={selectedPost.courseView || 'instagram-bio'}
+            data-course-title={selectedPost.title}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

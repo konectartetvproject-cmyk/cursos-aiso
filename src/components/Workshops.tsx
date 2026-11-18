@@ -26,11 +26,12 @@ import { buildAisoWhatsAppUrl, recordSectionVisit } from '../lib/leadsStorage';
 
 interface WorkshopsProps {
   onSelectCourse?: (courseId: string) => void;
+  onNavigateCourseView?: (view: string) => void;
 }
 
-export default function Workshops({ onSelectCourse }: WorkshopsProps) {
+export default function Workshops({ onSelectCourse, onNavigateCourseView }: WorkshopsProps) {
   const [selectedCity, setSelectedCity] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'ia' | 'oratoria' | 'atencion'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'ia' | 'oratoria' | 'atencion' | 'etiqueta'>('all');
   const [activeModalCourse, setActiveModalCourse] = useState<Workshop | null>(null);
   const [modalTab, setModalTab] = useState<'flyer' | 'syllabus'>('syllabus');
   const [checkoutCourse, setCheckoutCourse] = useState<Workshop | null>(null);
@@ -39,6 +40,7 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'ia') return course.id.includes('ia');
     if (selectedCategory === 'atencion') return course.id.includes('atencion');
+    if (selectedCategory === 'etiqueta') return course.id.includes('etiqueta');
     return course.id.includes('oratoria') || course.id.includes('avanzada');
   };
 
@@ -72,6 +74,15 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const getExclusiveViewForCourse = (courseId: string): string => {
+    if (courseId === 'caracas-ia') return 'ia-only';
+    if (courseId === 'caracas-oratoria') return 'oratoria-caracas';
+    if (courseId === 'valencia-oratoria') return 'oratoria-valencia';
+    if (courseId.includes('atencion')) return 'atencion-only';
+    if (courseId.includes('etiqueta')) return 'etiqueta-only';
+    return 'workshops';
   };
 
   const getWhatsAppMessage = (course?: Workshop) => {
@@ -142,6 +153,8 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                         recordSectionVisit('caracas-only', 'Filtro Sede: Caracas');
                       } else if (sede.key === 'valencia') {
                         recordSectionVisit('oratoria-valencia', 'Filtro Sede: Valencia');
+                      } else if (sede.key === 'barinas') {
+                        recordSectionVisit('etiqueta-only', 'Filtro Sede: Barinas');
                       }
                     }}
                     className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
@@ -163,6 +176,7 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                 { id: 'ia', label: 'Inteligencia Artificial', icon: Cpu },
                 { id: 'oratoria', label: 'Oratoria y Liderazgo', icon: Mic2 },
                 { id: 'atencion', label: 'Atención al Cliente', icon: Users },
+                { id: 'etiqueta', label: 'Etiqueta y Protocolo', icon: Sparkles },
               ].map((cat) => {
                 const Icon = cat.icon;
                 const active = selectedCategory === cat.id;
@@ -171,7 +185,7 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                     key={cat.id}
                     type="button"
                     onClick={() => {
-                      setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion');
+                      setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion' | 'etiqueta');
                       if (cat.id !== 'all') {
                         recordSectionVisit(cat.id, `Filtro Área: ${cat.label}`);
                       }
@@ -454,14 +468,29 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                         <span>Comprar Ahora en la Web</span>
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleEnrollClick(course.id)}
-                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>Pre-Inscripción sin Pago Inmediato</span>
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEnrollClick(course.id)}
+                        className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span>Pre-Inscripción Web</span>
+                      </button>
+                      {onNavigateCourseView && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetView = getExclusiveViewForCourse(course.id);
+                            onNavigateCourseView(targetView);
+                          }}
+                          className="w-full py-2.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/60 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <span>Ir a Sección del Curso</span>
+                          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                 </div>
@@ -475,6 +504,8 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
       {/* Syllabus & Full Original Flyer Modal */}
       {activeModalCourse && (
         <div 
+          data-course-id={activeModalCourse.id}
+          data-course-title={activeModalCourse.title}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setActiveModalCourse(null)}
         >

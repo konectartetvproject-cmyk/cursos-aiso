@@ -93,6 +93,7 @@ export const SECTION_LABELS: Record<string, string> = {
   'oratoria-valencia': 'Curso Exclusivo: Oratoria Valencia (?curso=oratoria-valencia)',
   'oratoria-only': 'Curso Exclusivo: Oratoria General (?curso=oratoria)',
   'atencion-only': 'Curso Exclusivo: Atención al Cliente (?curso=atencion)',
+  'etiqueta-only': 'Curso Exclusivo: Etiqueta y Protocolo Barinas (?curso=etiqueta)',
   'caracas-only': 'Cursos Exclusivos: Sede Caracas (?sede=caracas)',
   'instagram-bio': 'Enlace Perfil de Instagram (?ig=aiso)',
   workshops: 'Catálogo General de Cursos (#talleres)',
@@ -114,7 +115,7 @@ export function getSectionLabel(sectionKey: string): string {
 
 /**
  * Resolves the specific individual course section key ('ia-only', 'oratoria-caracas',
- * 'oratoria-valencia', 'atencion-only', 'caracas-only', 'instagram-bio', 'corporate')
+ * 'oratoria-valencia', 'atencion-only', 'etiqueta-only', 'caracas-only', 'instagram-bio', 'corporate')
  * from a course ID, course title, or WhatsApp URL text.
  */
 export function resolveCourseSectionKey(
@@ -129,6 +130,18 @@ export function resolveCourseSectionKey(
     decoded = courseHint;
   }
   const q = decoded.toLowerCase();
+
+  if (
+    q.includes('barinas-etiqueta') ||
+    q.includes('etiqueta-only') ||
+    q.includes('etiqueta') ||
+    q.includes('protocolo') ||
+    q.includes('eduardo salguero') ||
+    q.includes('hotel bristol') ||
+    q === 'barinas'
+  ) {
+    return 'etiqueta-only';
+  }
 
   if (
     q.includes('caracas-ia') ||
@@ -232,11 +245,10 @@ function saveLocalAnalyticsEvent(event: AnalyticsEvent) {
   }
 }
 
-function dispatchEventToServer(event: AnalyticsEvent) {
+function dispatchEventToServer(event: AnalyticsEvent): Promise<void> {
   const payload = JSON.stringify(event);
-  let beaconSent = false;
 
-  // For click events that may open an external tab/app (like WhatsApp), sendBeacon guarantees delivery
+  // Also queue sendBeacon for WhatsApp clicks as a backup in case the browser switches apps
   if (
     event.type === 'whatsapp_click' &&
     typeof navigator !== 'undefined' &&
@@ -244,36 +256,40 @@ function dispatchEventToServer(event: AnalyticsEvent) {
   ) {
     try {
       const blob = new Blob([payload], { type: 'application/json' });
-      beaconSent = navigator.sendBeacon('/api/analytics/event', blob);
+      navigator.sendBeacon('/api/analytics/event', blob);
     } catch {
-      beaconSent = false;
+      // Ignore beacon error, fetch below handles primary delivery
     }
   }
 
-  if (!beaconSent) {
-    try {
-      fetch('/api/analytics/event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        keepalive: true,
-      }).catch(() => {
+  // Always send immediate fetch with keepalive: true so Cloud SQL records the event right away
+  try {
+    return fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    })
+      .then(() => {})
+      .catch(() => {
         if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-          navigator.sendBeacon('/api/analytics/event', payload);
+          try {
+            const blob = new Blob([payload], { type: 'application/json' });
+            navigator.sendBeacon('/api/analytics/event', blob);
+          } catch {
+            // Ignore
+          }
         }
       });
-    } catch {
-      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-        navigator.sendBeacon('/api/analytics/event', payload);
-      }
-    }
+  } catch {
+    return Promise.resolve();
   }
 }
 
 let lastRecordedSignature = '';
 let lastRecordedTimestamp = 0;
 
-function isDuplicateRapidEvent(signature: string, windowMs = 600): boolean {
+function isSameSyntheticEvent(signature: string, windowMs = 60): boolean {
   const now = Date.now();
   if (signature === lastRecordedSignature && now - lastRecordedTimestamp < windowMs) {
     return true;
@@ -283,10 +299,12 @@ function isDuplicateRapidEvent(signature: string, windowMs = 600): boolean {
   return false;
 }
 
-export function recordSectionVisit(sectionKey: string, buttonLabel?: string) {
-  if (!sectionKey || sectionKey === 'admin') return;
+export function recordSectionVisit(sectionKey: string, buttonLabel?: string): Promise<void> {
+  if (!sectionKey || sectionKey === 'admin') return Promise.resolve();
   const resolvedSection = resolveCourseSectionKey(sectionKey, sectionKey);
-  if (isDuplicateRapidEvent(`view:${resolvedSection}:${buttonLabel || ''}`, 500)) return;
+  if (isSameSyntheticEvent(`view:${resolvedSection}:${buttonLabel || ''}`, 60)) {
+    return Promise.resolve();
+  }
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_view_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -298,20 +316,22 @@ export function recordSectionVisit(sectionKey: string, buttonLabel?: string) {
     createdAt: new Date().toISOString(),
   };
   saveLocalAnalyticsEvent(event);
-  dispatchEventToServer(event);
+  return dispatchEventToServer(event);
 }
 
 export function recordWhatsAppClick(
   sectionKey: string,
   buttonLabel?: string,
   courseHint?: string
-) {
-  if (sectionKey === 'admin') return;
+): Promise<void> {
+  if (sectionKey === 'admin') return Promise.resolve();
   const cleanSection = resolveCourseSectionKey(
     courseHint || buttonLabel || sectionKey,
     sectionKey || 'home'
   );
-  if (isDuplicateRapidEvent(`wa:${cleanSection}:${buttonLabel || ''}`, 700)) return;
+  if (isSameSyntheticEvent(`wa:${cleanSection}:${buttonLabel || ''}`, 60)) {
+    return Promise.resolve();
+  }
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_wa_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -323,20 +343,22 @@ export function recordWhatsAppClick(
     createdAt: new Date().toISOString(),
   };
   saveLocalAnalyticsEvent(event);
-  dispatchEventToServer(event);
+  return dispatchEventToServer(event);
 }
 
 export function recordWebCheckoutClick(
   sectionKey: string,
   buttonLabel?: string,
   courseHint?: string
-) {
-  if (sectionKey === 'admin') return;
+): Promise<void> {
+  if (sectionKey === 'admin') return Promise.resolve();
   const cleanSection = resolveCourseSectionKey(
     courseHint || buttonLabel || sectionKey,
     sectionKey || 'home'
   );
-  if (isDuplicateRapidEvent(`pay:${cleanSection}:${buttonLabel || ''}`, 700)) return;
+  if (isSameSyntheticEvent(`pay:${cleanSection}:${buttonLabel || ''}`, 60)) {
+    return Promise.resolve();
+  }
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_pay_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -348,8 +370,9 @@ export function recordWebCheckoutClick(
     createdAt: new Date().toISOString(),
   };
   saveLocalAnalyticsEvent(event);
-  dispatchEventToServer(event);
+  return dispatchEventToServer(event);
 }
+
 
 /**
  * Infers a deterministic visitor key for legacy events that were recorded before visitorId existed,

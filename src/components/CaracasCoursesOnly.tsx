@@ -31,7 +31,11 @@ import {
   recordSectionVisit,
 } from '../lib/leadsStorage';
 
-export default function CaracasCoursesOnly() {
+interface CaracasCoursesOnlyProps {
+  onNavigateCourseView?: (view: string) => void;
+}
+
+export default function CaracasCoursesOnly({ onNavigateCourseView }: CaracasCoursesOnlyProps) {
   const { user, getToken } = useAuth();
   const caracasCourses = coursesData.filter(
     (course) => course.city.toLowerCase() === 'caracas'
@@ -409,14 +413,34 @@ export default function CaracasCoursesOnly() {
                         <span>Comprar Ahora en la Web</span>
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEnroll(course)}
-                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>Pre-Inscripción sin Pago Inmediato</span>
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEnroll(course)}
+                        className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span>Pre-Inscripción Web</span>
+                      </button>
+                      {onNavigateCourseView && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetView =
+                              course.id === 'caracas-ia'
+                                ? 'ia-only'
+                                : course.id === 'caracas-oratoria'
+                                ? 'oratoria-caracas'
+                                : 'atencion-only';
+                            onNavigateCourseView(targetView);
+                          }}
+                          className="w-full py-2.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/60 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <span>Ir a Sección del Curso</span>
+                          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -428,6 +452,8 @@ export default function CaracasCoursesOnly() {
       {/* Syllabus & Full Original Flyer Modal */}
       {activeModalCourse && (
         <div
+          data-course-id={activeModalCourse.id}
+          data-course-title={activeModalCourse.title}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setActiveModalCourse(null)}
         >
@@ -644,6 +670,8 @@ export default function CaracasCoursesOnly() {
       {/* Self-Contained Caracas Pre-Registration Modal */}
       {enrollCourse && (
         <div
+          data-course-id={enrollCourse.id}
+          data-course-title={enrollCourse.title}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setEnrollCourse(null)}
         >

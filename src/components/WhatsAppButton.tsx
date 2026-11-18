@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
-import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
+import { buildAisoWhatsAppUrl, recordWhatsAppClick } from '../lib/leadsStorage';
 
 const VIEW_COURSE_NAMES: Record<string, { title?: string; city?: string }> = {
   'ia-only': {
@@ -18,6 +18,10 @@ const VIEW_COURSE_NAMES: Record<string, { title?: string; city?: string }> = {
   'atencion-only': {
     title: 'Curso de Atención al Cliente de Alto Impacto',
     city: 'Caracas / Valencia',
+  },
+  'etiqueta-only': {
+    title: 'Clase de Introducción a la Etiqueta y al Protocolo',
+    city: 'Barinas',
   },
   'caracas-only': {
     title: 'Cursos Presenciales en Sede Caracas (C.C. Millennium Mall)',
@@ -93,7 +97,14 @@ export default function WhatsAppButton({ currentView = 'home' }: { currentView?:
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setShowTooltip(false)}
+            onClick={() => {
+              setShowTooltip(false);
+              recordWhatsAppClick(
+                currentView,
+                'Iniciar chat ahora (Tooltip Flotante WhatsApp)',
+                viewInfo.title || currentView
+              );
+            }}
             className="inline-block text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline"
           >
             Iniciar chat ahora →
@@ -107,6 +118,13 @@ export default function WhatsAppButton({ currentView = 'home' }: { currentView?:
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => {
+          recordWhatsAppClick(
+            currentView,
+            'Botón Flotante Oficial WhatsApp',
+            viewInfo.title || currentView
+          );
+        }}
         aria-label="Contactar por WhatsApp a Academia AISO"
         className="group relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#25D366]/30"
       >

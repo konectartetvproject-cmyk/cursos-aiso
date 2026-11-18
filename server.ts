@@ -453,54 +453,85 @@ async function startServer() {
   });
 
   // Public lightweight analytics endpoints (persisted in Cloud SQL PostgreSQL + local file fallback)
+  const persistIncomingAnalyticsEvent = async (
+    raw: Record<string, any>,
+    req: express.Request
+  ): Promise<StoredAnalyticsEvent | null> => {
+    if (!raw || !raw.id || !raw.type || !raw.section) {
+      return null;
+    }
+    const forwarded = String(
+      req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'anon'
+    )
+      .split(',')[0]
+      .trim();
+    const ua = String(req.headers['user-agent'] || 'browser').slice(0, 60);
+    const fallbackVisitorId = `v_ip_${Buffer.from(`${forwarded}_${ua}`)
+      .toString('base64')
+      .slice(0, 16)}`;
+
+    const validType: StoredAnalyticsEvent['type'] =
+      raw.type === 'whatsapp_click'
+        ? 'whatsapp_click'
+        : raw.type === 'checkout_click'
+        ? 'checkout_click'
+        : 'section_view';
+
+    const newEvent: StoredAnalyticsEvent = {
+      id: String(raw.id),
+      visitorId: raw.visitorId ? String(raw.visitorId) : fallbackVisitorId,
+      type: validType,
+      section: String(raw.section),
+      sectionLabel: String(raw.sectionLabel || raw.section),
+      buttonLabel: raw.buttonLabel ? String(raw.buttonLabel) : undefined,
+      createdAt: raw.createdAt ? String(raw.createdAt) : new Date().toISOString(),
+    };
+
+    const events = readServerAnalytics();
+    if (!events.some((e) => e.id === newEvent.id)) {
+      writeServerAnalytics([newEvent, ...events]);
+    }
+
+    await createAnalyticsEventInDb({
+      eventId: newEvent.id,
+      visitorId: newEvent.visitorId || fallbackVisitorId,
+      type: newEvent.type,
+      section: newEvent.section,
+      sectionLabel: newEvent.sectionLabel,
+      buttonLabel: newEvent.buttonLabel,
+      createdAt: newEvent.createdAt,
+    });
+
+    return newEvent;
+  };
+
   app.post('/api/analytics/event', async (req, res) => {
     try {
       const body =
         typeof req.body === 'string'
           ? JSON.parse(req.body)
           : req.body;
-      if (!body || !body.id || !body.type || !body.section) {
+      const saved = await persistIncomingAnalyticsEvent(body, req);
+      if (!saved) {
         return res.status(400).json({ error: 'Invalid event payload' });
       }
-      const forwarded = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'anon').split(',')[0].trim();
-      const ua = String(req.headers['user-agent'] || 'browser').slice(0, 60);
-      const fallbackVisitorId = `v_ip_${Buffer.from(`${forwarded}_${ua}`).toString('base64').slice(0, 16)}`;
-
-      const validType: StoredAnalyticsEvent['type'] =
-        body.type === 'whatsapp_click'
-          ? 'whatsapp_click'
-          : body.type === 'checkout_click'
-          ? 'checkout_click'
-          : 'section_view';
-
-      const newEvent: StoredAnalyticsEvent = {
-        id: String(body.id),
-        visitorId: body.visitorId ? String(body.visitorId) : fallbackVisitorId,
-        type: validType,
-        section: String(body.section),
-        sectionLabel: String(body.sectionLabel || body.section),
-        buttonLabel: body.buttonLabel ? String(body.buttonLabel) : undefined,
-        createdAt: body.createdAt || new Date().toISOString(),
-      };
-
-      const events = readServerAnalytics();
-      if (!events.some((e) => e.id === newEvent.id)) {
-        writeServerAnalytics([newEvent, ...events]);
-      }
-
-      await createAnalyticsEventInDb({
-        eventId: newEvent.id,
-        visitorId: newEvent.visitorId || fallbackVisitorId,
-        type: newEvent.type,
-        section: newEvent.section,
-        sectionLabel: newEvent.sectionLabel,
-        buttonLabel: newEvent.buttonLabel,
-        createdAt: newEvent.createdAt,
-      });
-
-      res.status(201).json({ recorded: true });
+      res.status(201).json({ recorded: true, id: saved.id });
     } catch (err) {
-      console.error('Analytics event error:', err);
+      console.error('Analytics event POST error:', err);
+      res.status(500).json({ error: 'Failed to record event' });
+    }
+  });
+
+  app.get('/api/analytics/track', async (req, res) => {
+    try {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      const saved = await persistIncomingAnalyticsEvent(req.query as Record<string, any>, req);
+      if (!saved) {
+        return res.status(400).json({ error: 'Invalid query payload' });
+      }
+      res.status(200).json({ recorded: true, id: saved.id });
+    } catch (err) {
+      console.error('Analytics event GET track error:', err);
       res.status(500).json({ error: 'Failed to record event' });
     }
   });
