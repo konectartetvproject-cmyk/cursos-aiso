@@ -8,6 +8,7 @@ import {
   buildAcademyEmailMailtoUrl,
   ACADEMY_NOTIFICATION_EMAIL,
   AdminRegistrationRecord,
+  recordSectionVisit,
 } from '../lib/leadsStorage';
 
 interface RegistrationProps {
@@ -41,10 +42,12 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setCurrentCourse(val);
+    recordSectionVisit(val, `Selector Curso Inscripción: ${val}`);
     if (onCourseChange) {
       onCourseChange(val);
     }
   };
+
 
   const activeCourseObj = coursesData.find(c => c.id === currentCourse);
 

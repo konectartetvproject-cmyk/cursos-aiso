@@ -16,7 +16,11 @@ import {
   getAllNewsletterSubscribers,
   deleteRegistrationById,
   deleteInquiryById,
+  createAnalyticsEventInDb,
+  getAllAnalyticsEventsFromDb,
+  clearAllAnalyticsEventsFromDb,
 } from './src/db/users.ts';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -448,8 +452,8 @@ async function startServer() {
     }
   });
 
-  // Public lightweight analytics endpoints (tracks unique site visitors, section visits, WhatsApp clicks & web checkout clicks)
-  app.post('/api/analytics/event', (req, res) => {
+  // Public lightweight analytics endpoints (persisted in Cloud SQL PostgreSQL + local file fallback)
+  app.post('/api/analytics/event', async (req, res) => {
     try {
       const body =
         typeof req.body === 'string'
@@ -458,30 +462,42 @@ async function startServer() {
       if (!body || !body.id || !body.type || !body.section) {
         return res.status(400).json({ error: 'Invalid event payload' });
       }
+      const forwarded = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'anon').split(',')[0].trim();
+      const ua = String(req.headers['user-agent'] || 'browser').slice(0, 60);
+      const fallbackVisitorId = `v_ip_${Buffer.from(`${forwarded}_${ua}`).toString('base64').slice(0, 16)}`;
+
+      const validType: StoredAnalyticsEvent['type'] =
+        body.type === 'whatsapp_click'
+          ? 'whatsapp_click'
+          : body.type === 'checkout_click'
+          ? 'checkout_click'
+          : 'section_view';
+
+      const newEvent: StoredAnalyticsEvent = {
+        id: String(body.id),
+        visitorId: body.visitorId ? String(body.visitorId) : fallbackVisitorId,
+        type: validType,
+        section: String(body.section),
+        sectionLabel: String(body.sectionLabel || body.section),
+        buttonLabel: body.buttonLabel ? String(body.buttonLabel) : undefined,
+        createdAt: body.createdAt || new Date().toISOString(),
+      };
+
       const events = readServerAnalytics();
-      if (!events.some((e) => e.id === body.id)) {
-        const forwarded = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'anon').split(',')[0].trim();
-        const ua = String(req.headers['user-agent'] || 'browser').slice(0, 60);
-        const fallbackVisitorId = `v_ip_${Buffer.from(`${forwarded}_${ua}`).toString('base64').slice(0, 16)}`;
-
-        const validType: StoredAnalyticsEvent['type'] =
-          body.type === 'whatsapp_click'
-            ? 'whatsapp_click'
-            : body.type === 'checkout_click'
-            ? 'checkout_click'
-            : 'section_view';
-
-        const newEvent: StoredAnalyticsEvent = {
-          id: String(body.id),
-          visitorId: body.visitorId ? String(body.visitorId) : fallbackVisitorId,
-          type: validType,
-          section: String(body.section),
-          sectionLabel: String(body.sectionLabel || body.section),
-          buttonLabel: body.buttonLabel ? String(body.buttonLabel) : undefined,
-          createdAt: body.createdAt || new Date().toISOString(),
-        };
+      if (!events.some((e) => e.id === newEvent.id)) {
         writeServerAnalytics([newEvent, ...events]);
       }
+
+      await createAnalyticsEventInDb({
+        eventId: newEvent.id,
+        visitorId: newEvent.visitorId || fallbackVisitorId,
+        type: newEvent.type,
+        section: newEvent.section,
+        sectionLabel: newEvent.sectionLabel,
+        buttonLabel: newEvent.buttonLabel,
+        createdAt: newEvent.createdAt,
+      });
+
       res.status(201).json({ recorded: true });
     } catch (err) {
       console.error('Analytics event error:', err);
@@ -489,25 +505,57 @@ async function startServer() {
     }
   });
 
-  app.get('/api/analytics/summary', (_req, res) => {
+  app.get('/api/analytics/summary', async (_req, res) => {
     try {
-      const events = readServerAnalytics();
+      const [dbEvents, fileEvents] = await Promise.all([
+        getAllAnalyticsEventsFromDb(),
+        Promise.resolve(readServerAnalytics()),
+      ]);
+
+      const mergedMap = new Map<string, StoredAnalyticsEvent>();
+      for (const ev of [...dbEvents, ...fileEvents]) {
+        if (ev && ev.id && !mergedMap.has(ev.id)) {
+          mergedMap.set(ev.id, ev);
+        }
+      }
+
+      // Sync any file-only events into Cloud SQL in background so nothing is ever lost
+      const dbIds = new Set(dbEvents.map((e) => e.id));
+      for (const fEv of fileEvents.slice(0, 200)) {
+        if (fEv && fEv.id && !dbIds.has(fEv.id)) {
+          createAnalyticsEventInDb({
+            eventId: fEv.id,
+            visitorId: fEv.visitorId || 'legacy_visitor',
+            type: fEv.type,
+            section: fEv.section,
+            sectionLabel: fEv.sectionLabel,
+            buttonLabel: fEv.buttonLabel,
+            createdAt: fEv.createdAt,
+          }).catch(() => {});
+        }
+      }
+
+      const events = Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
       res.json({ events });
     } catch (err) {
       console.error('Analytics summary error:', err);
-      res.status(500).json({ events: [] });
+      res.status(500).json({ events: readServerAnalytics() });
     }
   });
 
-  app.delete('/api/analytics/reset', (_req, res) => {
+  app.delete('/api/analytics/reset', async (_req, res) => {
     try {
       writeServerAnalytics([]);
+      await clearAllAnalyticsEventsFromDb();
       res.json({ reset: true });
     } catch (err) {
       console.error('Analytics reset error:', err);
       res.status(500).json({ error: 'Failed to reset analytics' });
     }
   });
+
 
   // Public automatic email notification endpoint for any registration form submission -> academyaiso@icloud.com
   app.post('/api/notifications/registration-email', async (req, res) => {

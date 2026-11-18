@@ -112,6 +112,83 @@ export function getSectionLabel(sectionKey: string): string {
   return SECTION_LABELS[sectionKey] || sectionKey;
 }
 
+/**
+ * Resolves the specific individual course section key ('ia-only', 'oratoria-caracas',
+ * 'oratoria-valencia', 'atencion-only', 'caracas-only', 'instagram-bio', 'corporate')
+ * from a course ID, course title, or WhatsApp URL text.
+ */
+export function resolveCourseSectionKey(
+  courseHint?: string,
+  fallbackSection: string = 'home'
+): string {
+  if (!courseHint) return fallbackSection;
+  let decoded = courseHint;
+  try {
+    decoded = decodeURIComponent(courseHint);
+  } catch {
+    decoded = courseHint;
+  }
+  const q = decoded.toLowerCase();
+
+  if (
+    q.includes('caracas-ia') ||
+    q.includes('inteligencia artificial') ||
+    q.includes('curso de ia') ||
+    q.includes('curso=ia') ||
+    q === 'ia' ||
+    q === 'ia-only'
+  ) {
+    return 'ia-only';
+  }
+
+  if (
+    q.includes('valencia-oratoria') ||
+    q.includes('oratoria-valencia') ||
+    (q.includes('oratoria') && q.includes('valencia'))
+  ) {
+    return 'oratoria-valencia';
+  }
+
+  if (
+    q.includes('caracas-oratoria') ||
+    q.includes('oratoria-caracas') ||
+    (q.includes('oratoria') && q.includes('caracas')) ||
+    q === 'oratoria'
+  ) {
+    return 'oratoria-caracas';
+  }
+
+  if (
+    q.includes('caracas-atencion') ||
+    q.includes('valencia-atencion') ||
+    q.includes('atencion-only') ||
+    q.includes('atención al cliente') ||
+    q.includes('atencion al cliente') ||
+    q === 'atencion'
+  ) {
+    return 'atencion-only';
+  }
+
+  if (
+    q.includes('sede=caracas') ||
+    q.includes('caracas-only') ||
+    q.includes('sede exclusiva caracas') ||
+    q.includes('cursos presenciales sede caracas')
+  ) {
+    return 'caracas-only';
+  }
+
+  if (q.includes('corporativ') || q.includes('in-company')) {
+    return 'corporate';
+  }
+
+  if (q.includes('ig=aiso') || q.includes('instagram-bio')) {
+    return 'instagram-bio';
+  }
+
+  return fallbackSection;
+}
+
 const REG_STORAGE_KEY = 'aiso_admin_registrations_v1';
 const INQ_STORAGE_KEY = 'aiso_admin_inquiries_v1';
 const SUB_STORAGE_KEY = 'aiso_admin_subscribers_v1';
@@ -157,33 +234,66 @@ function saveLocalAnalyticsEvent(event: AnalyticsEvent) {
 
 function dispatchEventToServer(event: AnalyticsEvent) {
   const payload = JSON.stringify(event);
-  try {
-    fetch('/api/analytics/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {
+  let beaconSent = false;
+
+  // For click events that may open an external tab/app (like WhatsApp), sendBeacon guarantees delivery
+  if (
+    event.type === 'whatsapp_click' &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.sendBeacon === 'function'
+  ) {
+    try {
+      const blob = new Blob([payload], { type: 'application/json' });
+      beaconSent = navigator.sendBeacon('/api/analytics/event', blob);
+    } catch {
+      beaconSent = false;
+    }
+  }
+
+  if (!beaconSent) {
+    try {
+      fetch('/api/analytics/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {
+        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          navigator.sendBeacon('/api/analytics/event', payload);
+        }
+      });
+    } catch {
       if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
         navigator.sendBeacon('/api/analytics/event', payload);
       }
-    });
-  } catch {
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      navigator.sendBeacon('/api/analytics/event', payload);
     }
   }
 }
 
+let lastRecordedSignature = '';
+let lastRecordedTimestamp = 0;
+
+function isDuplicateRapidEvent(signature: string, windowMs = 600): boolean {
+  const now = Date.now();
+  if (signature === lastRecordedSignature && now - lastRecordedTimestamp < windowMs) {
+    return true;
+  }
+  lastRecordedSignature = signature;
+  lastRecordedTimestamp = now;
+  return false;
+}
+
 export function recordSectionVisit(sectionKey: string, buttonLabel?: string) {
   if (!sectionKey || sectionKey === 'admin') return;
+  const resolvedSection = resolveCourseSectionKey(sectionKey, sectionKey);
+  if (isDuplicateRapidEvent(`view:${resolvedSection}:${buttonLabel || ''}`, 500)) return;
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_view_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     visitorId,
     type: 'section_view',
-    section: sectionKey,
-    sectionLabel: getSectionLabel(sectionKey),
+    section: resolvedSection,
+    sectionLabel: getSectionLabel(resolvedSection),
     buttonLabel: buttonLabel ? buttonLabel.trim().slice(0, 80) : undefined,
     createdAt: new Date().toISOString(),
   };
@@ -191,9 +301,17 @@ export function recordSectionVisit(sectionKey: string, buttonLabel?: string) {
   dispatchEventToServer(event);
 }
 
-export function recordWhatsAppClick(sectionKey: string, buttonLabel?: string) {
+export function recordWhatsAppClick(
+  sectionKey: string,
+  buttonLabel?: string,
+  courseHint?: string
+) {
   if (sectionKey === 'admin') return;
-  const cleanSection = sectionKey || 'home';
+  const cleanSection = resolveCourseSectionKey(
+    courseHint || buttonLabel || sectionKey,
+    sectionKey || 'home'
+  );
+  if (isDuplicateRapidEvent(`wa:${cleanSection}:${buttonLabel || ''}`, 700)) return;
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_wa_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -208,9 +326,17 @@ export function recordWhatsAppClick(sectionKey: string, buttonLabel?: string) {
   dispatchEventToServer(event);
 }
 
-export function recordWebCheckoutClick(sectionKey: string, buttonLabel?: string) {
+export function recordWebCheckoutClick(
+  sectionKey: string,
+  buttonLabel?: string,
+  courseHint?: string
+) {
   if (sectionKey === 'admin') return;
-  const cleanSection = sectionKey || 'home';
+  const cleanSection = resolveCourseSectionKey(
+    courseHint || buttonLabel || sectionKey,
+    sectionKey || 'home'
+  );
+  if (isDuplicateRapidEvent(`pay:${cleanSection}:${buttonLabel || ''}`, 700)) return;
   const visitorId = getOrCreateVisitorId();
   const event: AnalyticsEvent = {
     id: `evt_pay_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -259,13 +385,30 @@ export async function fetchCombinedAnalyticsSummary(): Promise<AnalyticsSummary>
     // Fallback to local events
   }
 
+  // Push any local-only events to the server DB so all devices see the exact same counts
+  const serverIds = new Set(serverEvents.map((e) => e.id));
+  for (const locEv of localEvents.slice(0, 150)) {
+    if (locEv && locEv.id && !serverIds.has(locEv.id)) {
+      dispatchEventToServer(locEv);
+    }
+  }
+
   // Merge by unique event ID
   const map = new Map<string, AnalyticsEvent>();
   for (const ev of [...serverEvents, ...localEvents]) {
     if (ev && ev.id && !map.has(ev.id)) {
-      map.set(ev.id, ev);
+      const normalizedSection = resolveCourseSectionKey(
+        `${ev.section} ${ev.buttonLabel || ''} ${ev.sectionLabel || ''}`,
+        ev.section
+      );
+      map.set(ev.id, {
+        ...ev,
+        section: normalizedSection,
+        sectionLabel: getSectionLabel(normalizedSection),
+      });
     }
   }
+
 
   const allEvents = Array.from(map.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

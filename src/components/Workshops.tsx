@@ -22,7 +22,7 @@ import { coursesData } from '../data/coursesData';
 import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
 import WebCheckoutModal from './WebCheckoutModal';
-import { buildAisoWhatsAppUrl } from '../lib/leadsStorage';
+import { buildAisoWhatsAppUrl, recordSectionVisit } from '../lib/leadsStorage';
 
 interface WorkshopsProps {
   onSelectCourse?: (courseId: string) => void;
@@ -52,16 +52,19 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
     coursesData.filter((c) => c.city.toLowerCase() === city.toLowerCase()).length;
 
   const handleOpenFlyer = (course: Workshop) => {
+    recordSectionVisit(course.id, `Ver Flyer: ${course.title}`);
     setActiveModalCourse(course);
     setModalTab('flyer');
   };
 
   const handleOpenSyllabus = (course: Workshop) => {
+    recordSectionVisit(course.id, `Ver Pensum: ${course.title}`);
     setActiveModalCourse(course);
     setModalTab('syllabus');
   };
 
   const handleEnrollClick = (courseId: string) => {
+    recordSectionVisit(courseId, `Pre-Inscripción: ${courseId}`);
     if (onSelectCourse) {
       onSelectCourse(courseId);
     }
@@ -133,7 +136,14 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                   <button
                     key={sede.key}
                     type="button"
-                    onClick={() => setSelectedCity(sede.key)}
+                    onClick={() => {
+                      setSelectedCity(sede.key);
+                      if (sede.key === 'caracas') {
+                        recordSectionVisit('caracas-only', 'Filtro Sede: Caracas');
+                      } else if (sede.key === 'valencia') {
+                        recordSectionVisit('oratoria-valencia', 'Filtro Sede: Valencia');
+                      }
+                    }}
                     className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       isSelected
                         ? 'bg-indigo-600 text-white shadow-xs'
@@ -160,7 +170,12 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion')}
+                    onClick={() => {
+                      setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion');
+                      if (cat.id !== 'all') {
+                        recordSectionVisit(cat.id, `Filtro Área: ${cat.label}`);
+                      }
+                    }}
                     className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       active
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white'
@@ -222,12 +237,15 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
             return (
               <div 
                 key={course.id}
+                data-course-id={course.id}
+                data-course-title={course.title}
                 className={`bg-white dark:bg-slate-900 rounded-3xl border flex flex-col overflow-hidden transition-all duration-300 shadow-xs hover:shadow-md group ${
                   isAICourse
                     ? 'border-sky-300/90 dark:border-sky-500/60 hover:border-sky-500'
                     : 'border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50'
                 }`}
               >
+
                 {/* Adapted Custom Flyer Cover Header (Luminous Light Style) */}
                 <CourseCoverHeader course={course} onViewFlyer={handleOpenFlyer} />
 

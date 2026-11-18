@@ -32,7 +32,9 @@ import {
   recordSectionVisit,
   recordWhatsAppClick,
   recordWebCheckoutClick,
+  resolveCourseSectionKey,
 } from './lib/leadsStorage';
+
 
 const HASH_TO_VIEW: Record<string, string> = {
   '#inicio': 'home',
@@ -159,6 +161,54 @@ export default function App() {
     }
   }, [currentView]);
 
+  const extractCourseContextFromElement = (el: HTMLElement): { courseSection: string; courseTitleHint: string } => {
+    const courseContainer = el.closest('[data-course-id]') as HTMLElement | null;
+    const dataCourseId =
+      el.getAttribute('data-course-id') ||
+      courseContainer?.getAttribute('data-course-id') ||
+      '';
+    const dataCourseTitle =
+      el.getAttribute('data-course-title') ||
+      courseContainer?.getAttribute('data-course-title') ||
+      '';
+
+    const anchorTarget = el.closest('a');
+    const href = anchorTarget?.getAttribute('href') || '';
+    let decodedHref = href;
+    try {
+      decodedHref = decodeURIComponent(href);
+    } catch {
+      decodedHref = href;
+    }
+
+    const combinedHint = `${dataCourseId} ${dataCourseTitle} ${decodedHref}`;
+    const resolved = resolveCourseSectionKey(combinedHint, currentView);
+    return {
+      courseSection: resolved,
+      courseTitleHint: dataCourseTitle || decodedHref,
+    };
+  };
+
+  // PointerDown capture for external WhatsApp links ensures mobile browsers & new tabs
+  // dispatch the analytics beacon BEFORE the browser switches to the WhatsApp app.
+  const handleGlobalPointerDownCapture = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (currentView === 'admin') return;
+    const el = e.target as HTMLElement;
+    if (!el) return;
+    const anchorTarget = el.closest('a');
+    if (!anchorTarget) return;
+    const href = anchorTarget.getAttribute('href') || '';
+    if (href.includes('wa.me') || href.includes('whatsapp.com')) {
+      const { courseSection, courseTitleHint } = extractCourseContextFromElement(anchorTarget);
+      const rawText =
+        anchorTarget.textContent?.trim() ||
+        anchorTarget.getAttribute('aria-label') ||
+        anchorTarget.getAttribute('title') ||
+        'Escribir por WhatsApp';
+      recordWhatsAppClick(courseSection, rawText, `${courseTitleHint} ${href}`);
+    }
+  };
+
   // Capture-phase listener: guarantees clicks inside modals (which use stopPropagation)
   // and clicks on external wa.me links or Web Checkout buttons are NEVER missed.
   const handleGlobalClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -176,7 +226,8 @@ export default function App() {
         lowerBtn.includes('pagar monto completo') ||
         lowerBtn.includes('reportar pago')
       ) {
-        recordWebCheckoutClick(currentView, btnText.slice(0, 90));
+        const { courseSection, courseTitleHint } = extractCourseContextFromElement(buttonTarget);
+        recordWebCheckoutClick(courseSection, btnText.slice(0, 90), courseTitleHint);
       }
     }
 
@@ -190,12 +241,13 @@ export default function App() {
       currentView !== 'admin' &&
       (href.includes('wa.me') || href.includes('whatsapp.com'))
     ) {
+      const { courseSection, courseTitleHint } = extractCourseContextFromElement(anchorTarget);
       const rawText =
         anchorTarget.textContent?.trim() ||
         anchorTarget.getAttribute('aria-label') ||
         anchorTarget.getAttribute('title') ||
         'Escribir por WhatsApp';
-      recordWhatsAppClick(currentView, rawText);
+      recordWhatsAppClick(courseSection, rawText, `${courseTitleHint} ${href}`);
     }
 
     if (HASH_TO_VIEW[href.toLowerCase()]) {
@@ -206,6 +258,7 @@ export default function App() {
 
   const handleSelectCourse = (courseId: string) => {
     setSelectedCourseId(courseId);
+    recordSectionVisit(courseId, `Selección de Curso: ${courseId}`);
     setCurrentView('registration');
   };
 
@@ -213,9 +266,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <div
+          onPointerDownCapture={handleGlobalPointerDownCapture}
           onClickCapture={handleGlobalClickCapture}
           className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 font-sans transition-colors duration-200"
         >
+
           <Navbar currentView={currentView} setCurrentView={setCurrentView} />
           <main className="flex-grow">
             {currentView === 'home' && <Hero />}

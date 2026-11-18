@@ -405,16 +405,19 @@ export default function AdminPanel() {
       setAnalytics(fresh);
     };
 
+    const pollInterval = window.setInterval(refreshAnalyticsOnly, 3500);
     window.addEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
     window.addEventListener('storage', refreshAnalyticsOnly);
     window.addEventListener('focus', refreshAnalyticsOnly);
 
     return () => {
+      window.clearInterval(pollInterval);
       window.removeEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
       window.removeEventListener('storage', refreshAnalyticsOnly);
       window.removeEventListener('focus', refreshAnalyticsOnly);
     };
   }, [isAuthorized, loadAllData]);
+
 
   const handleStatusChange = (
     reg: AdminRegistrationRecord,
@@ -914,7 +917,190 @@ export default function AdminPanel() {
           </div>
         </div>
 
+        {/* Always-Visible Per-Course Visits & WhatsApp Clicks Breakdown */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs p-6 sm:p-7 space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">
+                <Activity className="w-4 h-4" />
+                <span>Desglose en Tiempo Real por Curso Individual y Botones de WhatsApp</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                Visitas a Secciones de Cursos ({analytics.totalSectionViews}) y Clics a WhatsApp ({analytics.totalWhatsAppClicks})
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Registra automáticamente en la base de datos cada visita a las pestañas, tarjetas, flyers, pensum y cada clic a los botones de WhatsApp de cada curso.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleTestLiveClick}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold cursor-pointer transition-colors shadow-2xs"
+                title="Probar el registro instantáneo de un clic a WhatsApp"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                +1 Clic WhatsApp de Prueba
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('analytics')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold cursor-pointer transition-colors"
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                Ver Historial Completo de Clics
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+            {[
+              {
+                key: 'oratoria-caracas',
+                title: 'Oratoria Caracas',
+                subtitle: 'Millennium Mall ($125 / $100 ef.)',
+                url: '?curso=oratoria-caracas',
+                accent: 'border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/40 dark:bg-indigo-950/20',
+              },
+              {
+                key: 'oratoria-valencia',
+                title: 'Oratoria Valencia',
+                subtitle: 'Urb. La Viña ($85 / $60 ef.)',
+                url: '?curso=oratoria-valencia',
+                accent: 'border-blue-200 dark:border-blue-800/70 bg-blue-50/40 dark:bg-blue-950/20',
+              },
+              {
+                key: 'ia-only',
+                title: 'Curso de IA',
+                subtitle: 'Caracas ($140 / $120 ef.)',
+                url: '?curso=ia',
+                accent: 'border-sky-200 dark:border-sky-800/70 bg-sky-50/40 dark:bg-sky-950/20',
+              },
+              {
+                key: 'atencion-only',
+                title: 'Atención al Cliente',
+                subtitle: 'Caracas y Valencia ($45)',
+                url: '?curso=atencion',
+                accent: 'border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/40 dark:bg-emerald-950/20',
+              },
+              {
+                key: 'caracas-only',
+                title: 'Sede Caracas',
+                subtitle: 'Catálogo Exclusivo CCS',
+                url: '?sede=caracas',
+                accent: 'border-amber-200 dark:border-amber-800/70 bg-amber-50/40 dark:bg-amber-950/20',
+              },
+              {
+                key: 'home',
+                title: 'Portada / General',
+                subtitle: 'Inicio y Catálogo General',
+                url: '#inicio / #talleres',
+                accent: 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40',
+                extraKeys: ['workshops', 'registration', 'instagram-bio'],
+              },
+            ].map((card) => {
+              const keysToSum = [card.key, ...(card.extraKeys || [])];
+              const views = keysToSum.reduce(
+                (acc, k) => acc + (analytics.sectionViewsByKey[k] || 0),
+                0
+              );
+              const waClicks = keysToSum.reduce(
+                (acc, k) => acc + (analytics.whatsappClicksBySection[k] || 0),
+                0
+              );
+              const webClicks = keysToSum.reduce(
+                (acc, k) => acc + (analytics.checkoutClicksBySection[k] || 0),
+                0
+              );
+              const uniquePeople = Math.max(
+                ...keysToSum.map((k) => analytics.uniqueVisitorsBySection[k] || 0)
+              );
+
+              return (
+                <div
+                  key={card.key}
+                  onClick={() => setActiveTab('analytics')}
+                  className={`p-4 rounded-2xl border ${card.accent} flex flex-col justify-between cursor-pointer hover:shadow-sm transition-all`}
+                >
+                  <div>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 block">
+                      {card.url}
+                    </span>
+                    <h4 className="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">
+                      {card.title}
+                    </h4>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                      {card.subtitle}
+                    </span>
+                  </div>
+
+                  <div className="mt-3.5 pt-3 border-t border-slate-200/70 dark:border-slate-800 grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-[10px] font-bold uppercase text-indigo-700 dark:text-indigo-400 block">
+                        Visitas Curso
+                      </span>
+                      <span className="text-xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
+                        {views}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/50 border border-emerald-300/60 dark:border-emerald-800/70">
+                      <span className="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 block">
+                        Clics WhatsApp
+                      </span>
+                      <span className="text-xl font-black text-emerald-700 dark:text-emerald-300 font-mono tabular-nums">
+                        {waClicks}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 block">
+                        Compra Web: <strong>{webClicks}</strong>
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 block">
+                        Personas: <strong>{uniquePeople}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {analytics.recentEvents.length > 0 && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-extrabold text-slate-700 dark:text-slate-300">
+                Últimos clics registrados:
+              </span>
+              {analytics.recentEvents.slice(0, 4).map((ev) => (
+                <span
+                  key={ev.id}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold ${
+                    ev.type === 'whatsapp_click'
+                      ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+                      : ev.type === 'checkout_click'
+                      ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
+                      : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                  }`}
+                >
+                  {ev.type === 'whatsapp_click' ? (
+                    <MessageCircle className="w-3 h-3 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Eye className="w-3 h-3 text-indigo-600 shrink-0" />
+                  )}
+                  <span>
+                    {ev.type === 'whatsapp_click' ? 'WhatsApp:' : 'Visita:'}{' '}
+                    {getSectionLabel(ev.section).replace('Curso Exclusivo: ', '')}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Navigation Tabs & Filters */}
+
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Tabs */}

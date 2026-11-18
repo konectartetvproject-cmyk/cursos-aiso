@@ -25,7 +25,11 @@ import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
 import WebCheckoutModal from './WebCheckoutModal';
 import { useAuth } from '../context/AuthContext';
-import { recordCourseRegistration, buildAisoWhatsAppUrl } from '../lib/leadsStorage';
+import {
+  recordCourseRegistration,
+  buildAisoWhatsAppUrl,
+  recordSectionVisit,
+} from '../lib/leadsStorage';
 
 export default function CaracasCoursesOnly() {
   const { user, getToken } = useAuth();
@@ -55,16 +59,19 @@ export default function CaracasCoursesOnly() {
   });
 
   const handleOpenFlyer = (course: Workshop) => {
+    recordSectionVisit(course.id, `Ver Flyer Caracas: ${course.title}`);
     setActiveModalCourse(course);
     setModalTab('flyer');
   };
 
   const handleOpenSyllabus = (course: Workshop) => {
+    recordSectionVisit(course.id, `Ver Pensum Caracas: ${course.title}`);
     setActiveModalCourse(course);
     setModalTab('syllabus');
   };
 
   const handleOpenEnroll = (course: Workshop) => {
+    recordSectionVisit(course.id, `Pre-Inscripción Caracas: ${course.title}`);
     setEnrollCourse(course);
     setSubmitted(false);
   };
@@ -146,7 +153,12 @@ export default function CaracasCoursesOnly() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion')}
+                  onClick={() => {
+                    setSelectedCategory(cat.id as 'all' | 'ia' | 'oratoria' | 'atencion');
+                    if (cat.id !== 'all') {
+                      recordSectionVisit(cat.id, `Filtro Caracas: ${cat.label}`);
+                    }
+                  }}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap ${
                     active
                       ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
@@ -187,12 +199,15 @@ export default function CaracasCoursesOnly() {
             return (
               <div
                 key={course.id}
+                data-course-id={course.id}
+                data-course-title={course.title}
                 className={`bg-white dark:bg-slate-900 rounded-3xl border flex flex-col overflow-hidden transition-all duration-300 shadow-xs hover:shadow-md group ${
                   isAICourse
                     ? 'border-sky-300/90 dark:border-sky-500/60 hover:border-sky-500 md:col-span-2 lg:col-span-1'
                     : 'border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50'
                 }`}
               >
+
                 {/* Adapted Custom Flyer Cover Header (Luminous Light Style) */}
                 <CourseCoverHeader course={course} onViewFlyer={handleOpenFlyer} />
 

@@ -50,6 +50,17 @@ export const newsletterSubscribers = pgTable('newsletter_subscribers', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const analyticsEvents = pgTable('analytics_events', {
+  id: serial('id').primaryKey(),
+  eventId: text('event_id').notNull().unique(),
+  visitorId: text('visitor_id').notNull(),
+  type: text('type').notNull(),
+  section: text('section').notNull(),
+  sectionLabel: text('section_label').notNull(),
+  buttonLabel: text('button_label'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   registrations: many(registrations),
   inquiries: many(inquiries),
@@ -68,3 +79,4 @@ export const inquiriesRelations = relations(inquiries, ({ one }) => ({
     references: [users.id],
   }),
 }));
+

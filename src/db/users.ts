@@ -1,5 +1,12 @@
 import { db } from './index.ts';
-import { users, registrations, inquiries, certificates, newsletterSubscribers } from './schema.ts';
+import {
+  users,
+  registrations,
+  inquiries,
+  certificates,
+  newsletterSubscribers,
+  analyticsEvents,
+} from './schema.ts';
 import { eq, desc } from 'drizzle-orm';
 
 export async function getOrCreateUser(uid: string, email: string, name?: string) {
@@ -205,4 +212,73 @@ export async function deleteInquiryById(id: number) {
     throw new Error('Could not delete inquiry.', { cause: error });
   }
 }
+
+export async function createAnalyticsEventInDb(data: {
+  eventId: string;
+  visitorId: string;
+  type: string;
+  section: string;
+  sectionLabel: string;
+  buttonLabel?: string;
+  createdAt?: string;
+}) {
+  try {
+    const parsedDate = data.createdAt ? new Date(data.createdAt) : new Date();
+    const validDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+    await db
+      .insert(analyticsEvents)
+      .values({
+        eventId: data.eventId,
+        visitorId: data.visitorId,
+        type: data.type,
+        section: data.section,
+        sectionLabel: data.sectionLabel,
+        buttonLabel: data.buttonLabel || null,
+        createdAt: validDate,
+      })
+      .onConflictDoNothing({ target: analyticsEvents.eventId });
+    return { recorded: true };
+  } catch (error) {
+    console.error('Database query failed in createAnalyticsEventInDb:', error);
+    return { recorded: false };
+  }
+}
+
+export async function getAllAnalyticsEventsFromDb() {
+  try {
+    const rows = await db
+      .select()
+      .from(analyticsEvents)
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(4000);
+
+    return rows.map((r) => ({
+      id: r.eventId,
+      visitorId: r.visitorId,
+      type: (r.type === 'whatsapp_click'
+        ? 'whatsapp_click'
+        : r.type === 'checkout_click'
+        ? 'checkout_click'
+        : 'section_view') as 'section_view' | 'whatsapp_click' | 'checkout_click',
+      section: r.section,
+      sectionLabel: r.sectionLabel,
+      buttonLabel: r.buttonLabel || undefined,
+      createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.error('Database query failed in getAllAnalyticsEventsFromDb:', error);
+    return [];
+  }
+}
+
+export async function clearAllAnalyticsEventsFromDb() {
+  try {
+    await db.delete(analyticsEvents);
+    return { reset: true };
+  } catch (error) {
+    console.error('Database query failed in clearAllAnalyticsEventsFromDb:', error);
+    return { reset: false };
+  }
+}
+
 
