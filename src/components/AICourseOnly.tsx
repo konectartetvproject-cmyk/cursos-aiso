@@ -20,10 +20,12 @@ import {
   ArrowRight,
   Award,
   Layers,
+  CreditCard,
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { useAuth } from '../context/AuthContext';
 import { recordCourseRegistration } from '../lib/leadsStorage';
+import WebCheckoutModal from './WebCheckoutModal';
 
 const WHATSAPP_OFFICIAL_URL = 'https://wa.me/message/IIBLPHIKQJIIE1';
 
@@ -85,6 +87,7 @@ export default function AICourseOnly() {
 
   const [activeSaturday, setActiveSaturday] = useState<number>(0);
   const [activeProfile, setActiveProfile] = useState<string>('emprendedor');
+  const [checkoutOpen, setCheckoutOpen] = useState<boolean>(false);
 
   const currentProfileObj =
     PROFILE_OUTCOMES.find((p) => p.id === activeProfile) || PROFILE_OUTCOMES[0];
@@ -250,15 +253,15 @@ export default function AICourseOnly() {
             {aiCourse.description}
           </p>
 
-          {/* Exact 2 Hero Action Buttons Requested */}
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          {/* Primary WhatsApp CTA FIRST + Comprar Ahora en la Web + Share */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
             <motion.a
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
               href={WHATSAPP_OFFICIAL_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold shadow-lg shadow-emerald-600/20 transition-all inline-flex items-center gap-2.5 cursor-pointer"
+              className="px-7 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold shadow-lg shadow-emerald-600/20 transition-all inline-flex items-center gap-2.5 cursor-pointer"
             >
               <MessageCircle className="w-5 h-5" />
               <span>Inscribirme por WhatsApp</span>
@@ -269,8 +272,19 @@ export default function AICourseOnly() {
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
               type="button"
+              onClick={() => setCheckoutOpen(true)}
+              className="px-7 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm sm:text-base font-extrabold shadow-md transition-all inline-flex items-center gap-2.5 cursor-pointer"
+            >
+              <CreditCard className="w-5 h-5 text-amber-400 dark:text-white" />
+              <span>Comprar Ahora en la Web</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
               onClick={handleCopyDirectLink}
-              className="px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700 text-xs sm:text-sm font-bold shadow-2xs transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="px-5 py-4 rounded-2xl bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700 text-xs sm:text-sm font-bold shadow-2xs transition-all inline-flex items-center gap-2 cursor-pointer"
               title="Copiar enlace"
             >
               {copiedLink ? (
@@ -545,17 +559,30 @@ export default function AICourseOnly() {
                 </motion.div>
               </AnimatePresence>
 
-              <motion.a
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                href={WHATSAPP_OFFICIAL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-4 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Reservar mi Cupo por WhatsApp
-              </motion.a>
+              <div className="space-y-2.5">
+                <motion.a
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  href={WHATSAPP_OFFICIAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Reservar mi Cupo por WhatsApp
+                </motion.a>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  type="button"
+                  onClick={() => setCheckoutOpen(true)}
+                  className="w-full py-3.5 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <CreditCard className="w-4 h-4 text-amber-400 dark:text-white" />
+                  Comprar Ahora en la Web (Reserva o Total)
+                </motion.button>
+              </div>
             </div>
 
             {/* Direct Registration Form Card */}
@@ -606,8 +633,8 @@ export default function AICourseOnly() {
                     </h3>
                   </div>
 
-                  {/* Primary Direct WhatsApp Button Placed FIRST */}
-                  <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                  {/* Primary Direct WhatsApp Button Placed FIRST + Comprar en la Web */}
+                  <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800 space-y-2">
                     <a
                       href={WHATSAPP_OFFICIAL_URL}
                       target="_blank"
@@ -617,7 +644,15 @@ export default function AICourseOnly() {
                       <MessageCircle className="w-4 h-4 shrink-0" />
                       <span>Inscripción Directa por WhatsApp</span>
                     </a>
-                    <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutOpen(true)}
+                      className="w-full py-3 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/70 text-xs font-extrabold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CreditCard className="w-4 h-4 shrink-0" />
+                      <span>Comprar Ahora en la Web (Pago Móvil BCV)</span>
+                    </button>
+                    <span className="block text-center text-[11px] font-medium text-slate-400 dark:text-slate-500 pt-1">
                       O registra tus datos en el formulario:
                     </span>
                   </div>
@@ -908,20 +943,38 @@ export default function AICourseOnly() {
                 Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $20 deducibles del total.
               </p>
             </div>
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href={WHATSAPP_OFFICIAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Inscribirme por WhatsApp Ahora
-            </motion.a>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                href={WHATSAPP_OFFICIAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Inscribirme por WhatsApp Ahora
+              </motion.a>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setCheckoutOpen(true)}
+                className="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-xs sm:text-sm font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4 text-amber-400 dark:text-white" />
+                Comprar Ahora en la Web
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
+
+      <WebCheckoutModal
+        isOpen={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        course={aiCourse}
+      />
     </section>
   );
 }

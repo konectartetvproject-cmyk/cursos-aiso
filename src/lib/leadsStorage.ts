@@ -443,3 +443,130 @@ export function buildStudentWhatsAppReplyUrl(phone: string, text: string): strin
   }
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
+
+export interface BcvRateInfo {
+  rate: number;
+  mode: 'auto' | 'manual';
+  autoRate: number;
+  manualRate: number | null;
+  updatedAt?: string;
+}
+
+const LOCAL_BCV_KEY = 'aiso_admin_bcv_config_v1';
+
+export async function fetchBcvRateInfo(): Promise<BcvRateInfo> {
+  // Check local override first
+  const localCfg =
+    typeof window !== 'undefined'
+      ? safeParse<{ mode: 'auto' | 'manual'; manualRate?: number } | null>(
+          localStorage.getItem(LOCAL_BCV_KEY),
+          null
+        )
+      : null;
+
+  try {
+    const res = await fetch('/api/bcv-rate');
+    if (res.ok) {
+      const data = await res.json();
+      const serverRate = Number(data.rate) || 46.5;
+      const autoRate = Number(data.autoRate) || serverRate;
+      if (localCfg?.mode === 'manual' && localCfg.manualRate && localCfg.manualRate > 0) {
+        return {
+          rate: localCfg.manualRate,
+          mode: 'manual',
+          autoRate,
+          manualRate: localCfg.manualRate,
+          updatedAt: data.updatedAt,
+        };
+      }
+      return {
+        rate: serverRate,
+        mode: data.mode === 'manual' ? 'manual' : 'auto',
+        autoRate,
+        manualRate: data.manualRate ? Number(data.manualRate) : null,
+        updatedAt: data.updatedAt,
+      };
+    }
+  } catch {
+    // Fallback to client-side fetch of oficial BCV rate if server route is unavailable
+  }
+
+  try {
+    const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+    if (res.ok) {
+      const json = await res.json();
+      const live = Number(json?.promedio);
+      if (live && live > 1) {
+        const rounded = Number(live.toFixed(2));
+        if (localCfg?.mode === 'manual' && localCfg.manualRate && localCfg.manualRate > 0) {
+          return {
+            rate: localCfg.manualRate,
+            mode: 'manual',
+            autoRate: rounded,
+            manualRate: localCfg.manualRate,
+          };
+        }
+        return {
+          rate: rounded,
+          mode: 'auto',
+          autoRate: rounded,
+          manualRate: null,
+        };
+      }
+    }
+  } catch {
+    // Fallback default
+  }
+
+  const fallbackRate =
+    localCfg?.mode === 'manual' && localCfg.manualRate && localCfg.manualRate > 0
+      ? localCfg.manualRate
+      : 46.5;
+
+  return {
+    rate: fallbackRate,
+    mode: localCfg?.mode || 'auto',
+    autoRate: 46.5,
+    manualRate: localCfg?.manualRate || null,
+  };
+}
+
+export async function saveBcvRateConfig(
+  mode: 'auto' | 'manual',
+  manualRate?: number
+): Promise<BcvRateInfo> {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(
+      LOCAL_BCV_KEY,
+      JSON.stringify({ mode, manualRate: manualRate && manualRate > 0 ? manualRate : undefined })
+    );
+  }
+  try {
+    const res = await fetch('/api/bcv-rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, manualRate }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        rate: Number(data.rate) || 46.5,
+        mode: data.mode === 'manual' ? 'manual' : 'auto',
+        autoRate: Number(data.autoRate) || 46.5,
+        manualRate: data.manualRate ? Number(data.manualRate) : null,
+      };
+    }
+  } catch {
+    // Fallback
+  }
+  return fetchBcvRateInfo();
+}
+
+export function formatBsAmount(usdAmount: number, bcvRate: number): string {
+  const totalBs = usdAmount * bcvRate;
+  return totalBs.toLocaleString('es-VE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+

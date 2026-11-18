@@ -25,6 +25,8 @@ import {
   MousePointerClick,
   Eye,
   Activity,
+  Landmark,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { coursesData } from '../data/coursesData';
@@ -33,6 +35,7 @@ import {
   AdminInquiryRecord,
   AdminSubscriberRecord,
   AnalyticsSummary,
+  BcvRateInfo,
   SECTION_LABELS,
   getSectionLabel,
   getLocalRegistrations,
@@ -47,6 +50,9 @@ import {
   buildStudentWhatsAppReplyUrl,
   fetchCombinedAnalyticsSummary,
   resetAnalyticsStats,
+  fetchBcvRateInfo,
+  saveBcvRateConfig,
+  formatBsAmount,
 } from '../lib/leadsStorage';
 
 const ADMIN_EMAILS = ['konectartetvproject@gmail.com', 'academyaiso@icloud.com'];
@@ -99,6 +105,20 @@ export default function AdminPanel() {
   const [newPin, setNewPin] = useState('');
   const [pinSavedMsg, setPinSavedMsg] = useState(false);
   const [copiedEmails, setCopiedEmails] = useState(false);
+
+  // BCV Rate Configuration state
+  const [bcvRateInfo, setBcvRateInfo] = useState<BcvRateInfo>({
+    rate: 66.5,
+    mode: 'auto',
+    manualRate: 66.5,
+    source: 'Tasa Oficial BCV',
+    updatedAt: new Date().toISOString(),
+  });
+  const [showBcvConfigModal, setShowBcvConfigModal] = useState(false);
+  const [bcvModeInput, setBcvModeInput] = useState<'auto' | 'manual'>('auto');
+  const [bcvManualRateInput, setBcvManualRateInput] = useState('66.50');
+  const [isSavingBcv, setIsSavingBcv] = useState(false);
+  const [bcvSavedSuccess, setBcvSavedSuccess] = useState(false);
 
   const isAuthorizedGoogleUser =
     !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
@@ -266,14 +286,42 @@ export default function AdminPanel() {
       }
     }
 
-    const analyticsSummary = await fetchCombinedAnalyticsSummary();
+    const [analyticsSummary, latestBcv] = await Promise.all([
+      fetchCombinedAnalyticsSummary(),
+      fetchBcvRateInfo(),
+    ]);
 
     setRegistrations(mergedRegs);
     setInquiries(mergedInqs);
     setSubscribers(Array.from(mergedSubsMap.values()));
     setAnalytics(analyticsSummary);
+    setBcvRateInfo(latestBcv);
+    setBcvModeInput(latestBcv.mode);
+    setBcvManualRateInput(String(latestBcv.rate));
     setIsLoading(false);
   }, [getToken]);
+
+  const handleSaveBcvConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingBcv(true);
+    try {
+      const parsed = Number(bcvManualRateInput.replace(',', '.'));
+      const updated = await saveBcvRateConfig(
+        bcvModeInput,
+        !isNaN(parsed) && parsed > 0 ? parsed : bcvRateInfo.rate
+      );
+      setBcvRateInfo(updated);
+      setBcvModeInput(updated.mode);
+      setBcvManualRateInput(String(updated.rate));
+      setBcvSavedSuccess(true);
+      setTimeout(() => {
+        setBcvSavedSuccess(false);
+        setShowBcvConfigModal(false);
+      }, 1500);
+    } finally {
+      setIsSavingBcv(false);
+    }
+  };
 
   const handleResetAnalytics = async () => {
     await resetAnalyticsStats();
@@ -573,6 +621,18 @@ export default function AdminPanel() {
 
             <button
               type="button"
+              onClick={() => setShowBcvConfigModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-extrabold transition-all cursor-pointer"
+              title="Configurar Tasa BCV para Compras en la Web"
+            >
+              <Landmark className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>
+                Tasa BCV: {formatBsAmount(1, bcvRateInfo.rate)} ({bcvRateInfo.mode === 'manual' ? 'Manual' : 'Auto'})
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setShowPinConfig(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
               title="Cambiar clave de acceso"
@@ -856,7 +916,16 @@ export default function AdminPanel() {
                               : 'Nuevo · Por Contactar'}
                           </span>
 
-                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-md">
+                           <span
+                            className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 ${
+                              reg.origen?.includes('Pago Móvil')
+                                ? 'bg-emerald-600 text-white font-extrabold'
+                                : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'
+                            }`}
+                          >
+                            {reg.origen?.includes('Pago Móvil') && (
+                              <CreditCard className="w-3 h-3" />
+                            )}
                             {reg.origen}
                           </span>
 
@@ -1580,6 +1649,137 @@ export default function AdminPanel() {
                     className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold cursor-pointer"
                   >
                     Guardar Clave
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Configure BCV Rate (Auto or Manual Override) */}
+      {showBcvConfigModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs"
+          onClick={() => setShowBcvConfigModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+                  Pagos Web · Pago Móvil BNC (0191)
+                </span>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                  Configurar Tasa Oficial BCV (Bs./USD)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBcvConfigModal(false)}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {bcvSavedSuccess ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 text-sm font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>¡Tasa BCV actualizada para el botón Comprar Ahora en la Web!</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveBcvConfig} className="space-y-4">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                      Tasa activa actual:
+                    </span>
+                    <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                      {formatBsAmount(1, bcvRateInfo.rate)} / $1
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Modo activo:</span>
+                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                      {bcvRateInfo.mode === 'manual'
+                        ? 'Tasa Manual Fijada en Panel'
+                        : 'Automática Oficial del Día'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                    Selecciona el modo de cálculo en Bolívares
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setBcvModeInput('auto')}
+                      className={`py-2 px-3 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                        bcvModeInput === 'auto'
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      Automática del Día
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBcvModeInput('manual')}
+                      className={`py-2 px-3 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                        bcvModeInput === 'manual'
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      Manual en Panel
+                    </button>
+                  </div>
+                </div>
+
+                {bcvModeInput === 'manual' ? (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Tasa BCV Manual en Bolívares por $1 USD
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      required
+                      value={bcvManualRateInput}
+                      onChange={(e) => setBcvManualRateInput(e.target.value)}
+                      placeholder="Ej. 66.50"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm font-mono font-bold text-slate-900 dark:text-white"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Este valor multiplicará los montos en USD únicamente dentro de la ventana de pago web.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    En modo automático, el sistema consulta diariamente la tasa oficial del BCV y calcula el monto exacto en Bolívares dentro de la ventana de pago.
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBcvConfigModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingBcv}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer"
+                  >
+                    {isSavingBcv ? 'Guardando...' : 'Guardar Tasa BCV'}
                   </button>
                 </div>
               </form>

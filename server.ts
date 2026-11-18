@@ -21,6 +21,68 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ANALYTICS_FILE = path.join(__dirname, '.analytics-events.json');
+const BCV_RATE_FILE = path.join(__dirname, '.bcv-rate.json');
+
+interface StoredBcvRateConfig {
+  mode: 'auto' | 'manual';
+  manualRate?: number;
+  cachedAutoRate?: number;
+  lastFetchedAt?: string;
+}
+
+function readBcvConfig(): StoredBcvRateConfig {
+  try {
+    if (!fs.existsSync(BCV_RATE_FILE)) return { mode: 'auto', cachedAutoRate: 46.5 };
+    const raw = fs.readFileSync(BCV_RATE_FILE, 'utf-8');
+    return JSON.parse(raw) as StoredBcvRateConfig;
+  } catch {
+    return { mode: 'auto', cachedAutoRate: 46.5 };
+  }
+}
+
+function writeBcvConfig(cfg: StoredBcvRateConfig) {
+  try {
+    fs.writeFileSync(BCV_RATE_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to persist BCV config:', err);
+  }
+}
+
+async function fetchLiveBcvRate(): Promise<number> {
+  const cfg = readBcvConfig();
+  const now = Date.now();
+  const lastFetched = cfg.lastFetchedAt ? new Date(cfg.lastFetchedAt).getTime() : 0;
+
+  // Refresh every 30 minutes
+  if (cfg.cachedAutoRate && now - lastFetched < 30 * 60 * 1000) {
+    return cfg.cachedAutoRate;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data: any = await res.json();
+      const promedio = Number(data?.promedio);
+      if (promedio && promedio > 1) {
+        writeBcvConfig({
+          ...cfg,
+          cachedAutoRate: Number(promedio.toFixed(2)),
+          lastFetchedAt: new Date().toISOString(),
+        });
+        return Number(promedio.toFixed(2));
+      }
+    }
+  } catch {
+    // Fallback to cached rate
+  }
+
+  return cfg.cachedAutoRate || 46.5;
+}
 
 interface StoredAnalyticsEvent {
   id: string;
@@ -55,6 +117,64 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // BCV Official Exchange Rate endpoint (automatic live BCV + manual admin override)
+  app.get('/api/bcv-rate', async (_req, res) => {
+    try {
+      const cfg = readBcvConfig();
+      const autoRate = await fetchLiveBcvRate();
+      const activeRate =
+        cfg.mode === 'manual' && cfg.manualRate && cfg.manualRate > 0
+          ? cfg.manualRate
+          : autoRate;
+
+      res.json({
+        rate: Number(activeRate.toFixed(2)),
+        mode: cfg.mode || 'auto',
+        autoRate: Number(autoRate.toFixed(2)),
+        manualRate: cfg.manualRate || null,
+        updatedAt: cfg.lastFetchedAt || new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error('BCV rate GET error:', err);
+      res.json({
+        rate: 46.5,
+        mode: 'auto',
+        autoRate: 46.5,
+        manualRate: null,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  });
+
+  app.post('/api/bcv-rate', async (req, res) => {
+    try {
+      const cfg = readBcvConfig();
+      const mode = req.body?.mode === 'manual' ? 'manual' : 'auto';
+      const manualRate = Number(req.body?.manualRate);
+      const nextCfg: StoredBcvRateConfig = {
+        ...cfg,
+        mode,
+        manualRate: !isNaN(manualRate) && manualRate > 0 ? Number(manualRate.toFixed(2)) : cfg.manualRate,
+      };
+      writeBcvConfig(nextCfg);
+      const autoRate = await fetchLiveBcvRate();
+      const activeRate =
+        nextCfg.mode === 'manual' && nextCfg.manualRate && nextCfg.manualRate > 0
+          ? nextCfg.manualRate
+          : autoRate;
+
+      res.json({
+        rate: Number(activeRate.toFixed(2)),
+        mode: nextCfg.mode,
+        autoRate: Number(autoRate.toFixed(2)),
+        manualRate: nextCfg.manualRate || null,
+      });
+    } catch (err) {
+      console.error('BCV rate POST error:', err);
+      res.status(500).json({ error: 'Failed to update BCV rate' });
+    }
+  });
 
   // Public lightweight analytics endpoints (tracks section visits & WhatsApp clicks)
   app.post('/api/analytics/event', (req, res) => {

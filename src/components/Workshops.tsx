@@ -15,11 +15,13 @@ import {
   Award,
   Cpu,
   Mic2,
-  Users
+  Users,
+  CreditCard,
 } from 'lucide-react';
 import { coursesData } from '../data/coursesData';
 import { Workshop } from '../types';
 import CourseCoverHeader from './CourseCoverHeader';
+import WebCheckoutModal from './WebCheckoutModal';
 
 interface WorkshopsProps {
   onSelectCourse?: (courseId: string) => void;
@@ -30,6 +32,7 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'ia' | 'oratoria' | 'atencion'>('all');
   const [activeModalCourse, setActiveModalCourse] = useState<Workshop | null>(null);
   const [modalTab, setModalTab] = useState<'flyer' | 'syllabus'>('syllabus');
+  const [checkoutCourse, setCheckoutCourse] = useState<Workshop | null>(null);
 
   const matchesCategory = (course: Workshop) => {
     if (selectedCategory === 'all') return true;
@@ -384,24 +387,34 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                     </button>
                   </div>
 
-                  {/* Actions: WhatsApp FIRST, then Web Form */}
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-                    <a
-                      href={getWhatsAppMessage(course)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full sm:flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5"
-                    >
-                      <MessageCircle className="w-4 h-4 shrink-0" />
-                      <span>Inscribirme por WhatsApp</span>
-                    </a>
+                  {/* Actions: WhatsApp FIRST, then Comprar Ahora en la Web, then Pre-Inscripcion */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                      <a
+                        href={getWhatsAppMessage(course)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full sm:flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1.5"
+                      >
+                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <span>Inscribirme por WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutCourse(course)}
+                        className="w-full sm:flex-1 py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold shadow-xs transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
+                      >
+                        <CreditCard className="w-4 h-4 text-amber-400 dark:text-white shrink-0" />
+                        <span>Comprar Ahora en la Web</span>
+                      </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleEnrollClick(course.id)}
-                      className="w-full sm:w-auto py-3.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-500/60 hover:text-indigo-700 dark:hover:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      {isAICourse ? 'Reservar en Web ($20)' : 'Pre-Inscripción Web'}
+                      <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span>Pre-Inscripción sin Pago Inmediato</span>
                     </button>
                   </div>
 
@@ -616,13 +629,14 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const id = activeModalCourse.id;
+                    const courseToBuy = activeModalCourse;
                     setActiveModalCourse(null);
-                    handleEnrollClick(id);
+                    setCheckoutCourse(courseToBuy);
                   }}
-                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-xs transition-all inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  Pre-Inscripción Web
+                  <CreditCard className="w-3.5 h-3.5 text-amber-400 dark:text-white" />
+                  Comprar Ahora en la Web
                 </button>
                 <button
                   type="button"
@@ -637,6 +651,12 @@ export default function Workshops({ onSelectCourse }: WorkshopsProps) {
           </div>
         </div>
       )}
+
+      <WebCheckoutModal
+        isOpen={!!checkoutCourse}
+        onClose={() => setCheckoutCourse(null)}
+        course={checkoutCourse}
+      />
 
     </section>
   );
