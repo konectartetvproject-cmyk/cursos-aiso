@@ -1,7 +1,6 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import nodemailer from 'nodemailer';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
@@ -24,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const ANALYTICS_FILE = path.join(__dirname, '.analytics-events.json');
 const BCV_RATE_FILE = path.join(__dirname, '.bcv-rate.json');
 const EMAIL_LOG_FILE = path.join(__dirname, '.email-notifications.json');
-const TARGET_ACADEMY_EMAIL = process.env.NOTIFICATION_EMAIL_TO || 'academyaiso@icloud.com';
+const TARGET_ACADEMY_EMAIL = 'academyaiso@icloud.com';
 
 export interface RegistrationEmailNotificationPayload {
   id: string;
@@ -219,38 +218,9 @@ async function sendAutomaticRegistrationEmail(data: {
   `;
 
   let deliveryChannel = 'auto-relay';
-  let status: 'sent' | 'queued' = 'queued';
 
-  // 1. Try direct SMTP delivery if SMTP credentials are configured
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: Number(process.env.SMTP_PORT) === 465,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-      await transporter.sendMail({
-        from: `"Academia AISO Web" <${process.env.SMTP_USER}>`,
-        to: TARGET_ACADEMY_EMAIL,
-        replyTo: data.correo || process.env.SMTP_USER,
-        subject,
-        text: textBody,
-        html: htmlBody,
-      });
-      deliveryChannel = 'smtp-direct';
-      status = 'sent';
-    } catch (smtpErr) {
-      console.error('SMTP send warning (falling back to relay):', smtpErr);
-    }
-  }
-
-  // 2. Also attempt FormSubmit AJAX email delivery to academyaiso@icloud.com
-  if (status !== 'sent') {
-    try {
+  // Automatic FormSubmit AJAX email delivery to academyaiso@icloud.com (zero env vars required)
+  try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 4500);
       const relayRes = await fetch(`https://formsubmit.co/ajax/${TARGET_ACADEMY_EMAIL}`, {
@@ -286,12 +256,10 @@ async function sendAutomaticRegistrationEmail(data: {
       clearTimeout(timeout);
       if (relayRes.ok) {
         deliveryChannel = 'formsubmit-relay';
-        status = 'sent';
       }
     } catch {
       // Logged in local outbox file even if external relay is unreachable
     }
-  }
 
   const notificationRecord: RegistrationEmailNotificationPayload = {
     id: data.id || `mail_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
