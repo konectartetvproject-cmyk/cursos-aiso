@@ -128,7 +128,8 @@ export default function Footer({ setCurrentView }: FooterProps) {
             <ul className="space-y-3.5">
               <li><a href="#inicio" onClick={(e) => handleNavClick(e, 'home')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Inicio</a></li>
               <li><a href="#talleres" onClick={(e) => handleNavClick(e, 'workshops')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Catálogo de Cursos</a></li>
-              <li><a href="#curso-oratoria" onClick={(e) => handleNavClick(e, 'oratoria-only')} className="text-indigo-300 hover:text-white transition-colors text-sm font-semibold">Curso de Oratoria</a></li>
+              <li><a href="#oratoria-caracas" onClick={(e) => handleNavClick(e, 'oratoria-caracas')} className="text-indigo-300 hover:text-white transition-colors text-sm font-semibold">Curso Oratoria Caracas</a></li>
+              <li><a href="#oratoria-valencia" onClick={(e) => handleNavClick(e, 'oratoria-valencia')} className="text-indigo-300 hover:text-white transition-colors text-sm font-semibold">Curso Oratoria Valencia</a></li>
               <li><a href="#curso-atencion" onClick={(e) => handleNavClick(e, 'atencion-only')} className="text-emerald-300 hover:text-white transition-colors text-sm font-semibold">Curso Atención al Cliente</a></li>
               <li><a href="#curso-ia" onClick={(e) => handleNavClick(e, 'ia-only')} className="text-sky-300 hover:text-white transition-colors text-sm font-semibold">Curso Inteligencia Artificial</a></li>
               <li><a href="#corporativo" onClick={(e) => handleNavClick(e, 'corporate')} className="text-slate-400 hover:text-indigo-400 transition-colors text-sm">Formación Corporativa</a></li>

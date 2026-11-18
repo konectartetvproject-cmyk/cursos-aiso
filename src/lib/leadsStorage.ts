@@ -55,7 +55,9 @@ export interface AnalyticsSummary {
 export const SECTION_LABELS: Record<string, string> = {
   home: 'Inicio / Portada Principal',
   'ia-only': 'Curso Exclusivo: Inteligencia Artificial (?curso=ia)',
-  'oratoria-only': 'Curso Exclusivo: Oratoria (?curso=oratoria)',
+  'oratoria-caracas': 'Curso Exclusivo: Oratoria Caracas (?curso=oratoria-caracas)',
+  'oratoria-valencia': 'Curso Exclusivo: Oratoria Valencia (?curso=oratoria-valencia)',
+  'oratoria-only': 'Curso Exclusivo: Oratoria General (?curso=oratoria)',
   'atencion-only': 'Curso Exclusivo: Atención al Cliente (?curso=atencion)',
   'caracas-only': 'Cursos Exclusivos: Sede Caracas (?sede=caracas)',
   'instagram-bio': 'Enlace Perfil de Instagram (?ig=aiso)',

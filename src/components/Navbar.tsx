@@ -14,7 +14,8 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     { name: 'Metodología', view: 'about', href: '#nosotros' },
     { name: 'Cursos', view: 'workshops', href: '#talleres' },
     { name: 'Cursos Caracas', view: 'caracas-only', href: '#caracas' },
-    { name: 'Curso Oratoria', view: 'oratoria-only', href: '#curso-oratoria' },
+    { name: 'Oratoria Caracas', view: 'oratoria-caracas', href: '#oratoria-caracas' },
+    { name: 'Oratoria Valencia', view: 'oratoria-valencia', href: '#oratoria-valencia' },
     { name: 'Curso Atención', view: 'atencion-only', href: '#curso-atencion' },
     { name: 'Curso IA', view: 'ia-only', href: '#curso-ia' },
     { name: 'Corporativo', view: 'corporate', href: '#corporativo' },
@@ -27,7 +28,8 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
   const isIAPortal = currentView === 'students-ia';
   const isCaracasOnly = currentView === 'caracas-only';
   const isIAOnly = currentView === 'ia-only';
-  const isOratoriaOnly = currentView === 'oratoria-only';
+  const isOratoriaCaracas = currentView === 'oratoria-caracas';
+  const isOratoriaValencia = currentView === 'oratoria-valencia';
   const isAtencionOnly = currentView === 'atencion-only';
   const isInstagramBio = currentView === 'instagram-bio';
   const isStudentPortal = isOratoryPortal || isIAPortal;
@@ -35,7 +37,8 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
     isStudentPortal ||
     isCaracasOnly ||
     isIAOnly ||
-    isOratoriaOnly ||
+    isOratoriaCaracas ||
+    isOratoriaValencia ||
     isAtencionOnly ||
     isInstagramBio;
 
@@ -106,8 +109,10 @@ export default function Navbar({ currentView, setCurrentView }: { currentView: s
                 ? 'Acceso Directo · @oratoria_aiso'
                 : isIAOnly
                 ? 'Curso Práctico: Inteligencia Artificial Aplicada · Caracas'
-                : isOratoriaOnly
-                ? 'Curso Práctico: Oratoria de Alto Impacto · Caracas y Valencia'
+                : isOratoriaCaracas
+                ? 'Curso Práctico: Oratoria de Alto Impacto · Sede Caracas'
+                : isOratoriaValencia
+                ? 'Curso Práctico: Oratoria de Alto Impacto · Sede Valencia'
                 : isAtencionOnly
                 ? 'Curso Práctico: Atención al Cliente de Alto Impacto · Caracas y Valencia'
                 : isCaracasOnly

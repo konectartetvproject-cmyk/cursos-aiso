@@ -1217,7 +1217,7 @@ export default function AdminPanel() {
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
                   Secciones Exclusivas y Enlaces Directos Principales
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                   {[
                     {
                       key: 'ia-only',
@@ -1226,10 +1226,16 @@ export default function AdminPanel() {
                       accent: 'border-sky-200 dark:border-sky-800/70 bg-sky-50/40 dark:bg-sky-950/20',
                     },
                     {
-                      key: 'oratoria-only',
-                      title: 'Curso Oratoria',
-                      url: '?curso=oratoria',
+                      key: 'oratoria-caracas',
+                      title: 'Oratoria Caracas',
+                      url: '?curso=oratoria-caracas',
                       accent: 'border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/40 dark:bg-indigo-950/20',
+                    },
+                    {
+                      key: 'oratoria-valencia',
+                      title: 'Oratoria Valencia',
+                      url: '?curso=oratoria-valencia',
+                      accent: 'border-blue-200 dark:border-blue-800/70 bg-blue-50/40 dark:bg-blue-950/20',
                     },
                     {
                       key: 'atencion-only',

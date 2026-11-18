@@ -35,7 +35,9 @@ const HASH_TO_VIEW: Record<string, string> = {
   '#talleres': 'workshops',
   '#caracas': 'caracas-only',
   '#curso-ia': 'ia-only',
-  '#curso-oratoria': 'oratoria-only',
+  '#oratoria-caracas': 'oratoria-caracas',
+  '#oratoria-valencia': 'oratoria-valencia',
+  '#curso-oratoria': 'oratoria-caracas',
   '#curso-atencion': 'atencion-only',
   '#instagram': 'instagram-bio',
   '#bio': 'instagram-bio',
@@ -53,7 +55,8 @@ const VIEW_TO_HASH: Record<string, string> = {
   workshops: '#talleres',
   'caracas-only': '#caracas',
   'ia-only': '#curso-ia',
-  'oratoria-only': '#curso-oratoria',
+  'oratoria-caracas': '#oratoria-caracas',
+  'oratoria-valencia': '#oratoria-valencia',
   'atencion-only': '#curso-atencion',
   'instagram-bio': '#instagram',
   admin: '#admin',
@@ -78,7 +81,8 @@ function resolveViewFromLocation(): string {
   if (igParam) return 'instagram-bio';
   if (params.get('verify')) return 'verification';
   if (cursoParam === 'ia') return 'ia-only';
-  if (cursoParam === 'oratoria') return 'oratoria-only';
+  if (cursoParam === 'oratoria-valencia') return 'oratoria-valencia';
+  if (cursoParam === 'oratoria-caracas' || cursoParam === 'oratoria') return 'oratoria-caracas';
   if (cursoParam === 'atencion' || cursoParam === 'atencion-al-cliente') return 'atencion-only';
   if (sedeParam === 'caracas') return 'caracas-only';
   if (portalParam === 'ia') return 'students-ia';
@@ -105,8 +109,10 @@ export default function App() {
       window.history.pushState({}, '', '?sede=caracas');
     } else if (view === 'ia-only') {
       window.history.pushState({}, '', '?curso=ia');
-    } else if (view === 'oratoria-only') {
-      window.history.pushState({}, '', '?curso=oratoria');
+    } else if (view === 'oratoria-caracas') {
+      window.history.pushState({}, '', '?curso=oratoria-caracas');
+    } else if (view === 'oratoria-valencia') {
+      window.history.pushState({}, '', '?curso=oratoria-valencia');
     } else if (view === 'atencion-only') {
       window.history.pushState({}, '', '?curso=atencion');
     } else if (view === 'instagram-bio') {
@@ -190,7 +196,8 @@ export default function App() {
             {currentView === 'workshops' && <Workshops onSelectCourse={handleSelectCourse} />}
             {currentView === 'caracas-only' && <CaracasCoursesOnly />}
             {currentView === 'ia-only' && <AICourseOnly />}
-            {currentView === 'oratoria-only' && <OratoriaCourseOnly />}
+            {currentView === 'oratoria-caracas' && <OratoriaCourseOnly city="caracas" />}
+            {currentView === 'oratoria-valencia' && <OratoriaCourseOnly city="valencia" />}
             {currentView === 'atencion-only' && <AtencionCourseOnly />}
             {currentView === 'instagram-bio' && (
               <InstagramBioHub onGoToCourses={() => setCurrentView('workshops')} />
@@ -212,7 +219,8 @@ export default function App() {
           currentView === 'students-ia' ||
           currentView === 'caracas-only' ||
           currentView === 'ia-only' ||
-          currentView === 'oratoria-only' ||
+          currentView === 'oratoria-caracas' ||
+          currentView === 'oratoria-valencia' ||
           currentView === 'atencion-only' ||
           currentView === 'instagram-bio' ? (
             <footer className="bg-slate-900 dark:bg-slate-950 py-8 border-t border-slate-800 text-center">
@@ -222,8 +230,10 @@ export default function App() {
                     ? `© ${new Date().getFullYear()} AISO — Academia International Social Oratory · @oratoria_aiso.`
                     : currentView === 'ia-only'
                     ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Inteligencia Artificial Aplicada · C.C. Millennium Mall, Caracas. Todos los derechos reservados.`
-                    : currentView === 'oratoria-only'
-                    ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Oratoria de Alto Impacto · Caracas y Valencia. Todos los derechos reservados.`
+                    : currentView === 'oratoria-caracas'
+                    ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Oratoria de Alto Impacto · Sede Caracas, C.C. Millennium Mall. Todos los derechos reservados.`
+                    : currentView === 'oratoria-valencia'
+                    ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Oratoria de Alto Impacto · Sede Valencia, Urb. La Viña. Todos los derechos reservados.`
                     : currentView === 'atencion-only'
                     ? `© ${new Date().getFullYear()} AISO — Curso Práctico: Atención al Cliente de Alto Impacto · Caracas y Valencia. Todos los derechos reservados.`
                     : currentView === 'caracas-only'
