@@ -82,15 +82,15 @@ export const coursesData: Workshop[] = [
     badgeColor: "bg-indigo-600 text-white",
     level: "Certificado de Orador de Alto Impacto",
     levelColor: "text-indigo-600 dark:text-indigo-400",
-    image: "/assets/aistudio/WhatsApp_Image_2026-11-16_at_11.19.37_AM_54f46517.jpeg",
+    image: "/assets/aistudio/definitivo_caracas_oratoria.jpeg",
     imageAlt: "Flyer oficial Curso de Oratoria presencial en Caracas C.C. Millennium Mall",
     imagePosition: "object-top",
     showFullFlyerInModal: true,
-    highlightBanner: "Programa Intensivo: 3 Sábados · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
-    startDate: "Sábado 21 de Noviembre",
-    dates: "Sábados: 21 de Noviembre, 28 de Noviembre y 05 de Diciembre",
+    highlightBanner: "Programa Intensivo: 3 Martes · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
+    startDate: "Martes 24 de Noviembre",
+    dates: "Martes: 24 de Noviembre, 01 de Diciembre y 08 de Diciembre",
     schedule: "9:30 a.m. a 1:00 p.m.",
-    duration: "3 Sábados intensivos prácticos/teóricos",
+    duration: "3 Martes intensivos prácticos/teóricos",
     academicHours: "14 horas académicas",
     priceStandard: "$125",
     priceCashOffer: "$100",
@@ -108,7 +108,7 @@ export const coursesData: Workshop[] = [
     syllabus: [
       {
         title: "Módulo 1: Fundamentos, Control Escénico y Estructura del Mensaje",
-        subtitle: "Sábado 21 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Martes 24 de Noviembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Introducción al estudio de la Oratoria y aplicaciones prácticas.",
           "Dominio escénico y metodología para el control del miedo.",
@@ -118,7 +118,7 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 2: Voz, Lenguaje Corporal y Persuasión",
-        subtitle: "Sábado 28 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Martes 01 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Manejo de la voz, respiración diafragmática y eliminación de muletillas.",
           "Lenguaje Corporal.",
@@ -129,10 +129,10 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 3: Presentación, Micrófono y Evaluación Final",
-        subtitle: "Sábado 05 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Martes 08 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Presentación del discurso final ante el grupo, familiares y amigos.",
-          "Entrega de certificados de Orador de Alto Impacto."
+          "Entrega de certificados."
         ]
       }
     ]
@@ -207,15 +207,15 @@ export const coursesData: Workshop[] = [
     badgeColor: "bg-indigo-600 text-white",
     level: "Certificado de Orador de Alto Impacto",
     levelColor: "text-indigo-600 dark:text-indigo-400",
-    image: "/assets/aistudio/WhatsApp_Image_2026-11-16_at_11.55.26_AM_270d4795.jpeg",
+    image: "/assets/aistudio/WhatsApp_Image_2026-11-23_at_2.50.35_PM_83adca84.jpeg",
     imageAlt: "Flyer oficial Curso de Oratoria presencial en Valencia",
     imagePosition: "object-top",
     showFullFlyerInModal: true,
-    highlightBanner: "Programa Intensivo: 3 Sábados · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
-    startDate: "Sábado 21 de Noviembre",
-    dates: "Sábados: 21 de Noviembre, 28 de Noviembre y 05 de Diciembre",
+    highlightBanner: "Programa Intensivo: 3 Jueves · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
+    startDate: "Jueves 26 de Noviembre",
+    dates: "Jueves: 26 de Noviembre, 03 y 10 de Diciembre",
     schedule: "9:30 a.m. a 1:00 p.m.",
-    duration: "3 Sábados intensivos prácticos/teóricos",
+    duration: "3 Jueves intensivos prácticos/teóricos",
     academicHours: "14 horas académicas",
     priceStandard: "$85",
     priceCashOffer: "$60",
@@ -228,12 +228,12 @@ export const coursesData: Workshop[] = [
       "Manejo de la voz, respiración diafragmática y eliminación de muletillas",
       "Lenguaje corporal, inteligencia emocional y claves para persuadir e inspirar",
       "Manejo de participantes difíciles y resolución de imprevistos en vivo",
-      "Presentación del discurso final con micrófono ante familiares y amigos + Certificado"
+      "Presentación del discurso final con micrófono + Entrega de certificados"
     ],
     syllabus: [
       {
         title: "Módulo 1: Fundamentos, Control Escénico y Estructura del Mensaje",
-        subtitle: "Sábado 21 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 26 de Noviembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Introducción al estudio de la Oratoria y aplicaciones prácticas.",
           "Dominio escénico y metodología para el control del miedo.",
@@ -243,7 +243,7 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 2: Voz, Lenguaje Corporal y Persuasión",
-        subtitle: "Sábado 28 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 03 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Manejo de la voz, respiración diafragmática y eliminación de muletillas.",
           "Lenguaje Corporal.",
@@ -254,10 +254,10 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 3: Presentación, Micrófono y Evaluación Final",
-        subtitle: "Sábado 05 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 10 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
-          "Presentación del discurso final ante el grupo, familiares y amigos.",
-          "Entrega de certificados de Orador de Alto Impacto."
+          "Presentación del discurso final.",
+          "Entrega de certificados."
         ]
       }
     ]

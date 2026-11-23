@@ -87,6 +87,108 @@
         ]
       }
     </script>
+
+    <!-- Meta Pixel Code (Dataset ID: 1477529244259900) -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1477529244259900');
+      fbq('track', 'PageView');
+    </script>
+
+    <!-- Instant Pre-Hydration Visit Tracker (captures visits in <10ms before React bundle loads) -->
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var rawHash = (window.location.hash || '').toLowerCase();
+          var hash = rawHash.split('?')[0].split('&')[0];
+          if (params.get('admin') || hash === '#admin') return;
+
+          var section = 'home';
+          var curso = (params.get('curso') || '').toLowerCase();
+          var sede = (params.get('sede') || '').toLowerCase();
+          var portal = (params.get('portal') || '').toLowerCase();
+
+          if (params.get('ig') || params.get('bio') || hash === '#instagram' || hash === '#bio') section = 'instagram-bio';
+          else if (curso === 'ia' || hash === '#curso-ia') section = 'ia-only';
+          else if (curso === 'oratoria-valencia' || hash === '#oratoria-valencia') section = 'oratoria-valencia';
+          else if (curso === 'oratoria-caracas' || curso === 'oratoria' || hash === '#oratoria-caracas' || hash === '#curso-oratoria') section = 'oratoria-caracas';
+          else if (curso === 'atencion' || curso === 'atencion-al-cliente' || hash === '#curso-atencion') section = 'atencion-only';
+          else if (curso === 'etiqueta' || curso === 'etiqueta-y-protocolo' || curso === 'protocolo' || hash === '#curso-etiqueta' || hash === '#etiqueta') section = 'etiqueta-only';
+          else if (sede === 'caracas' || hash === '#caracas') section = 'caracas-only';
+          else if (portal === 'ia') section = 'students-ia';
+          else if (portal) section = 'students';
+          else if (hash === '#talleres') section = 'workshops';
+          else if (hash === '#corporativo') section = 'corporate';
+          else if (hash === '#inscripciones') section = 'registration';
+          else if (hash === '#nosotros') section = 'about';
+          else if (hash === '#testimonios') section = 'testimonials';
+          else if (hash === '#faq') section = 'faq';
+          else if (hash === '#contacto') section = 'contact';
+
+          var LABELS = {
+            'home': 'Inicio / Portada Principal',
+            'ia-only': 'Curso Individual: Inteligencia Artificial (Caracas)',
+            'oratoria-caracas': 'Curso Individual: Oratoria de Alto Impacto (Caracas)',
+            'oratoria-valencia': 'Curso Individual: Oratoria de Alto Impacto (Valencia)',
+            'atencion-only': 'Curso Individual: Atención al Cliente (Caracas y Valencia)',
+            'etiqueta-only': 'Curso Individual: Etiqueta y Protocolo (Barinas)',
+            'caracas-only': 'Sede Exclusiva Caracas (C.C. Millennium Mall)',
+            'workshops': 'Catálogo General de Cursos y Sedes',
+            'instagram-bio': 'Enlace de Biografía de Instagram (@oratoria_aiso)',
+            'registration': 'Formulario de Inscripción',
+            'corporate': 'Formación In-Company / Empresas',
+            'about': 'Nosotros / Metodología AISO',
+            'testimonials': 'Testimonios de Egresados',
+            'faq': 'Preguntas Frecuentes',
+            'contact': 'Contacto Directo',
+            'students': 'Portal de Estudiantes (Oratoria)',
+            'students-ia': 'Portal de Estudiantes (Campus IA)'
+          };
+
+          var vKey = 'aiso_unique_visitor_id_v1';
+          var visitorId = localStorage.getItem(vKey);
+          if (!visitorId) {
+            visitorId = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+            localStorage.setItem(vKey, visitorId);
+          }
+
+          var ref = document.referrer ? new URL(document.referrer).hostname.replace('www.', '') : '';
+          var sourceNote = params.get('fbclid') ? 'Entrada desde Meta / Instagram Ads' : (ref ? 'Entrada desde ' + ref : 'Visita Directa al Sitio Web');
+
+          var ev = {
+            id: 'evt_view_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            visitorId: visitorId,
+            type: 'section_view',
+            section: section,
+            sectionLabel: LABELS[section] || section,
+            buttonLabel: sourceNote,
+            createdAt: new Date().toISOString()
+          };
+
+          window.__AISO_INITIAL_TRACKED_VIEW__ = section;
+
+          var eKey = 'aiso_admin_analytics_events_v1';
+          var existing = [];
+          try { existing = JSON.parse(localStorage.getItem(eKey) || '[]') || []; } catch (e) {}
+          localStorage.setItem(eKey, JSON.stringify([ev].concat(existing).slice(0, 3000)));
+
+          fetch('/api/analytics/event', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ev),
+            keepalive: true
+          }).catch(function () {});
+        } catch (err) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

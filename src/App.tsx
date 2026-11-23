@@ -81,7 +81,8 @@ const VIEW_TO_HASH: Record<string, string> = {
 function resolveViewFromLocation(): string {
   if (typeof window === 'undefined') return 'home';
   const params = new URLSearchParams(window.location.search);
-  const hash = window.location.hash.toLowerCase();
+  const rawHash = window.location.hash.toLowerCase();
+  const hash = rawHash.split('?')[0].split('&')[0];
   const portalParam = params.get('portal');
   const sedeParam = params.get('sede')?.toLowerCase();
   const cursoParam = params.get('curso')?.toLowerCase();
@@ -107,7 +108,9 @@ function resolveViewFromLocation(): string {
 export default function App() {
   const [currentView, setCurrentViewState] = useState<string>(() => resolveViewFromLocation());
   const [selectedCourseId, setSelectedCourseId] = useState<string>('caracas-ia');
-  const lastTrackedViewRef = useRef<string | null>(null);
+  const lastTrackedViewRef = useRef<string | null>(
+    typeof window !== 'undefined' ? (window as any).__AISO_INITIAL_TRACKED_VIEW__ || null : null
+  );
 
   const setCurrentView = useCallback((view: string) => {
     setCurrentViewState(view);

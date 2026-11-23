@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,6 +30,118 @@ const ANALYTICS_FILE = path.join(__dirname, '.analytics-events.json');
 const BCV_RATE_FILE = path.join(__dirname, '.bcv-rate.json');
 const EMAIL_LOG_FILE = path.join(__dirname, '.email-notifications.json');
 const TARGET_ACADEMY_EMAIL = 'academyaiso@icloud.com';
+
+function sha256Hash(value: string): string {
+  return crypto.createHash('sha256').update(value.trim().toLowerCase()).digest('hex');
+}
+
+function normalizePhoneForMeta(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('0') && digits.length === 11) {
+    return `58${digits.slice(1)}`;
+  }
+  if (digits.length === 10 && (digits.startsWith('41') || digits.startsWith('42'))) {
+    return `58${digits}`;
+  }
+  return digits;
+}
+
+async function sendMetaConversionEvent(params: {
+  eventName: 'PageView' | 'ViewContent' | 'Contact' | 'InitiateCheckout' | 'Lead' | 'CompleteRegistration';
+  eventId?: string;
+  eventSourceUrl?: string;
+  req?: express.Request;
+  email?: string;
+  phone?: string;
+  fullName?: string;
+  city?: string;
+  contentName?: string;
+  contentCategory?: string;
+  value?: number;
+  currency?: string;
+}) {
+  const DEFAULT_META_TOKEN =
+    'EAATneVBFzO4BTM1gKVxt4hV0OdbfL7F9iybs1r4uLIBOkLZB7UiW6yJswNPm9v96voWdxdD6LO2jrVSZAGizK3dJyrZAVYWjoBOUpNEtnSOsZCPSpL5rGbVYL6sX31okZAnKfO581JoMqESdxPlMPVQTrU5k4N38N4L5CwLjfERQcxe8HNeOEfJpKNnjcPAZDZD';
+  const pixelId = (process.env.META_PIXEL_ID || '1477529244259900').trim();
+  const accessToken = (process.env.META_CAPI_ACCESS_TOKEN || DEFAULT_META_TOKEN).trim();
+  const testEventCode = (process.env.META_TEST_EVENT_CODE || '').trim();
+
+  if (!pixelId || !accessToken) {
+    return { sent: false, reason: 'missing_credentials' };
+  }
+
+  try {
+    const clientIp = params.req
+      ? String(params.req.headers['x-forwarded-for'] || params.req.socket.remoteAddress || '')
+          .split(',')[0]
+          .trim()
+      : undefined;
+    const userAgent = params.req ? String(params.req.headers['user-agent'] || '') : undefined;
+
+    const userData: Record<string, any> = {
+      country: [sha256Hash('ve')],
+    };
+    if (clientIp) userData.client_ip_address = clientIp;
+    if (userAgent) userData.client_user_agent = userAgent;
+    if (params.email && params.email.trim()) {
+      userData.em = [sha256Hash(params.email)];
+    }
+    if (params.phone && params.phone.trim()) {
+      const normalizedPhone = normalizePhoneForMeta(params.phone);
+      if (normalizedPhone) userData.ph = [sha256Hash(normalizedPhone)];
+    }
+    if (params.fullName && params.fullName.trim()) {
+      const parts = params.fullName.trim().split(/\s+/);
+      if (parts[0]) userData.fn = [sha256Hash(parts[0])];
+      if (parts.length > 1) userData.ln = [sha256Hash(parts.slice(1).join(' '))];
+    }
+    if (params.city && params.city.trim()) {
+      userData.ct = [sha256Hash(params.city.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, ''))];
+    }
+
+    const customData: Record<string, any> = {};
+    if (params.contentName) customData.content_name = params.contentName;
+    if (params.contentCategory) customData.content_category = params.contentCategory;
+    if (typeof params.value === 'number') {
+      customData.value = params.value;
+      customData.currency = params.currency || 'USD';
+    }
+
+    const payload: Record<string, any> = {
+      data: [
+        {
+          event_name: params.eventName,
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: params.eventId || `capi_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          action_source: 'website',
+          event_source_url:
+            params.eventSourceUrl ||
+            (params.req ? String(params.req.headers.referer || 'https://www.aiso.website/') : 'https://www.aiso.website/'),
+          user_data: userData,
+          custom_data: customData,
+        },
+      ],
+    };
+
+    if (testEventCode) {
+      payload.test_event_code = testEventCode;
+    }
+
+    const graphUrl = `https://graph.facebook.com/v21.0/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(accessToken)}`;
+    const response = await fetch(graphUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    return { sent: response.ok, status: response.status, result };
+  } catch (err: any) {
+    console.error('Meta Conversions API dispatch error:', err?.message || err);
+    return { sent: false, error: err?.message || 'dispatch_failed' };
+  }
+}
 
 export interface RegistrationEmailNotificationPayload {
   id: string;
@@ -453,11 +566,87 @@ async function startServer() {
     }
   });
 
-  // Public lightweight analytics endpoints (persisted in Cloud SQL PostgreSQL + local file fallback)
-  const persistIncomingAnalyticsEvent = async (
+  // High-reliability Analytics Engine: Instant Memory + Disk Cache + Automatic Cloud SQL PostgreSQL Sync Queue
+  const memoryAnalyticsMap = new Map<string, StoredAnalyticsEvent>();
+  const pendingDbQueue = new Map<string, StoredAnalyticsEvent>();
+  let dbConnectedStatus = false;
+  let isSyncingDb = false;
+
+  // 1. Hydrate from local file immediately on startup (< 1ms)
+  for (const ev of readServerAnalytics()) {
+    if (ev && ev.id) {
+      memoryAnalyticsMap.set(ev.id, ev);
+    }
+  }
+
+  // 2. Background worker to sync with Cloud SQL PostgreSQL (handles scale-to-zero cold starts gracefully)
+  const syncWithCloudSql = async () => {
+    if (isSyncingDb) return;
+    isSyncingDb = true;
+    try {
+      // Flush any pending events into Cloud SQL PostgreSQL
+      for (const [eventId, ev] of Array.from(pendingDbQueue.entries())) {
+        const res = await createAnalyticsEventInDb({
+          eventId: ev.id,
+          visitorId: ev.visitorId || 'visitor_web',
+          type: ev.type,
+          section: ev.section,
+          sectionLabel: ev.sectionLabel,
+          buttonLabel: ev.buttonLabel,
+          createdAt: ev.createdAt,
+        });
+        if (res.recorded) {
+          pendingDbQueue.delete(eventId);
+          dbConnectedStatus = true;
+        }
+      }
+
+      // Pull all historical events from Cloud SQL PostgreSQL
+      const dbEvents = await getAllAnalyticsEventsFromDb();
+      if (dbEvents.length > 0) {
+        dbConnectedStatus = true;
+        const dbIds = new Set(dbEvents.map((e) => e.id));
+        for (const dbEv of dbEvents) {
+          if (dbEv && dbEv.id && !memoryAnalyticsMap.has(dbEv.id)) {
+            memoryAnalyticsMap.set(dbEv.id, dbEv);
+          }
+        }
+        // Push any memory-only events back to Cloud SQL so nothing is ever lost
+        for (const memEv of Array.from(memoryAnalyticsMap.values()).slice(0, 300)) {
+          if (memEv && memEv.id && !dbIds.has(memEv.id)) {
+            await createAnalyticsEventInDb({
+              eventId: memEv.id,
+              visitorId: memEv.visitorId || 'visitor_web',
+              type: memEv.type,
+              section: memEv.section,
+              sectionLabel: memEv.sectionLabel,
+              buttonLabel: memEv.buttonLabel,
+              createdAt: memEv.createdAt,
+            });
+          }
+        }
+        const sortedAll = Array.from(memoryAnalyticsMap.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        writeServerAnalytics(sortedAll);
+      }
+    } catch {
+      // Will retry automatically on next cycle
+    } finally {
+      isSyncingDb = false;
+    }
+  };
+
+  // Start initial Cloud SQL sync and periodic background sync every 6 seconds
+  syncWithCloudSql().catch(() => {});
+  setInterval(() => {
+    syncWithCloudSql().catch(() => {});
+  }, 6000);
+
+  const persistIncomingAnalyticsEvent = (
     raw: Record<string, any>,
     req: express.Request
-  ): Promise<StoredAnalyticsEvent | null> => {
+  ): StoredAnalyticsEvent | null => {
     if (!raw || !raw.id || !raw.type || !raw.section) {
       return null;
     }
@@ -488,12 +677,18 @@ async function startServer() {
       createdAt: raw.createdAt ? String(raw.createdAt) : new Date().toISOString(),
     };
 
-    const events = readServerAnalytics();
-    if (!events.some((e) => e.id === newEvent.id)) {
-      writeServerAnalytics([newEvent, ...events]);
+    // 1. Save immediately in memory & disk (< 1ms, zero blocking)
+    if (!memoryAnalyticsMap.has(newEvent.id)) {
+      memoryAnalyticsMap.set(newEvent.id, newEvent);
+      const sorted = Array.from(memoryAnalyticsMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      writeServerAnalytics(sorted);
     }
 
-    await createAnalyticsEventInDb({
+    // 2. Queue for permanent Cloud SQL PostgreSQL persistence & trigger immediate non-blocking write
+    pendingDbQueue.set(newEvent.id, newEvent);
+    createAnalyticsEventInDb({
       eventId: newEvent.id,
       visitorId: newEvent.visitorId || fallbackVisitorId,
       type: newEvent.type,
@@ -501,18 +696,40 @@ async function startServer() {
       sectionLabel: newEvent.sectionLabel,
       buttonLabel: newEvent.buttonLabel,
       createdAt: newEvent.createdAt,
-    });
+    })
+      .then((res) => {
+        if (res.recorded) {
+          pendingDbQueue.delete(newEvent.id);
+          dbConnectedStatus = true;
+        }
+      })
+      .catch(() => {});
+
+    // 3. Forward event to Meta Conversions API (CAPI) asynchronously
+    const metaEventName =
+      newEvent.type === 'whatsapp_click'
+        ? 'Contact'
+        : newEvent.type === 'checkout_click'
+        ? 'InitiateCheckout'
+        : 'ViewContent';
+    sendMetaConversionEvent({
+      eventName: metaEventName,
+      eventId: newEvent.id,
+      req,
+      contentName: newEvent.buttonLabel || newEvent.sectionLabel,
+      contentCategory: newEvent.section,
+    }).catch(() => {});
 
     return newEvent;
   };
 
-  app.post('/api/analytics/event', async (req, res) => {
+  app.post('/api/analytics/event', (req, res) => {
     try {
       const body =
         typeof req.body === 'string'
           ? JSON.parse(req.body)
           : req.body;
-      const saved = await persistIncomingAnalyticsEvent(body, req);
+      const saved = persistIncomingAnalyticsEvent(body, req);
       if (!saved) {
         return res.status(400).json({ error: 'Invalid event payload' });
       }
@@ -523,10 +740,10 @@ async function startServer() {
     }
   });
 
-  app.get('/api/analytics/track', async (req, res) => {
+  app.get('/api/analytics/track', (req, res) => {
     try {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      const saved = await persistIncomingAnalyticsEvent(req.query as Record<string, any>, req);
+      const saved = persistIncomingAnalyticsEvent(req.query as Record<string, any>, req);
       if (!saved) {
         return res.status(400).json({ error: 'Invalid query payload' });
       }
@@ -539,46 +756,50 @@ async function startServer() {
 
   app.get('/api/analytics/summary', async (_req, res) => {
     try {
-      const [dbEvents, fileEvents] = await Promise.all([
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
+      // Race Cloud SQL query against a fast 1200ms timeout so Admin Panel never hangs during DB wake-up
+      const dbEvents = await Promise.race([
         getAllAnalyticsEventsFromDb(),
-        Promise.resolve(readServerAnalytics()),
+        new Promise<StoredAnalyticsEvent[]>((resolve) => setTimeout(() => resolve([]), 1200)),
       ]);
 
-      const mergedMap = new Map<string, StoredAnalyticsEvent>();
-      for (const ev of [...dbEvents, ...fileEvents]) {
-        if (ev && ev.id && !mergedMap.has(ev.id)) {
-          mergedMap.set(ev.id, ev);
+      if (dbEvents.length > 0) {
+        dbConnectedStatus = true;
+        for (const ev of dbEvents) {
+          if (ev && ev.id && !memoryAnalyticsMap.has(ev.id)) {
+            memoryAnalyticsMap.set(ev.id, ev);
+          }
         }
+      } else {
+        // Trigger background sync in case Cloud SQL is waking up from scale-to-zero
+        syncWithCloudSql().catch(() => {});
       }
 
-      // Sync any file-only events into Cloud SQL in background so nothing is ever lost
-      const dbIds = new Set(dbEvents.map((e) => e.id));
-      for (const fEv of fileEvents.slice(0, 200)) {
-        if (fEv && fEv.id && !dbIds.has(fEv.id)) {
-          createAnalyticsEventInDb({
-            eventId: fEv.id,
-            visitorId: fEv.visitorId || 'legacy_visitor',
-            type: fEv.type,
-            section: fEv.section,
-            sectionLabel: fEv.sectionLabel,
-            buttonLabel: fEv.buttonLabel,
-            createdAt: fEv.createdAt,
-          }).catch(() => {});
-        }
-      }
-
-      const events = Array.from(mergedMap.values()).sort(
+      const events = Array.from(memoryAnalyticsMap.values()).sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      res.json({ events });
+
+      res.json({
+        events,
+        database: {
+          connected: dbConnectedStatus,
+          engine: 'Cloud SQL PostgreSQL (analytics_events)',
+          totalEvents: events.length,
+          pendingSync: pendingDbQueue.size,
+        },
+      });
     } catch (err) {
       console.error('Analytics summary error:', err);
-      res.status(500).json({ events: readServerAnalytics() });
+      const fallbackEvents = Array.from(memoryAnalyticsMap.values());
+      res.status(200).json({ events: fallbackEvents });
     }
   });
 
   app.delete('/api/analytics/reset', async (_req, res) => {
     try {
+      memoryAnalyticsMap.clear();
+      pendingDbQueue.clear();
       writeServerAnalytics([]);
       await clearAllAnalyticsEventsFromDb();
       res.json({ reset: true });
@@ -614,6 +835,22 @@ async function startServer() {
         origen: body.origen ? String(body.origen) : 'Inscripción Web AISO',
         notas: body.notas ? String(body.notas) : undefined,
       });
+
+      // Automatically send CompleteRegistration & Lead events to Meta Conversions API (CAPI)
+      sendMetaConversionEvent({
+        eventName: 'CompleteRegistration',
+        eventId: notification.id,
+        req,
+        email: notification.correo,
+        phone: notification.telefono,
+        fullName: notification.nombre,
+        city: notification.ciudad,
+        contentName: notification.taller,
+        contentCategory: notification.ciudad,
+        value: 35,
+        currency: 'USD',
+      }).catch(() => {});
+
       res.status(201).json({
         sent: true,
         recipient: TARGET_ACADEMY_EMAIL,
@@ -622,6 +859,30 @@ async function startServer() {
     } catch (err: any) {
       console.error('Failed to send registration email notification:', err);
       res.status(500).json({ error: 'Failed to send registration notification' });
+    }
+  });
+
+  // Direct Meta Conversions API custom event endpoint
+  app.post('/api/conversions/event', async (req, res) => {
+    try {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const result = await sendMetaConversionEvent({
+        eventName: body?.eventName || 'Lead',
+        eventId: body?.eventId,
+        eventSourceUrl: body?.eventSourceUrl,
+        req,
+        email: body?.email,
+        phone: body?.phone,
+        fullName: body?.fullName,
+        city: body?.city,
+        contentName: body?.contentName,
+        contentCategory: body?.contentCategory,
+        value: typeof body?.value === 'number' ? body.value : undefined,
+        currency: body?.currency || 'USD',
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ sent: false, error: err?.message || 'failed' });
     }
   });
 

@@ -82,7 +82,7 @@ export default function Hero() {
                   <span>Oratoria AISO</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                  Sedes en Caracas y Valencia · Inicia Sábado 21 Nov
+                  Caracas (24 Nov) y Valencia (26 Nov)
                 </p>
               </a>
 

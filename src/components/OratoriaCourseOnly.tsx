@@ -130,7 +130,7 @@ export default function OratoriaCourseOnly({
     } else {
       setModalidadPago(
         selectedCity === 'caracas'
-          ? 'Tasa Oficial BCV $125 (Total con Inscripción)'
+          ? 'Tasa Oficial BCV $125 + $5 Inscripción'
           : 'Tasa Oficial BCV $85 + $5 Inscripción'
       );
     }
@@ -165,7 +165,7 @@ export default function OratoriaCourseOnly({
       number: '01',
       icon: Mic,
       title: 'Dominio escénico y control del miedo',
-      desc: 'Aplica nuestra metodología práctica desde el primer sábado para transformar los nervios y el miedo escénico en seguridad, presencia y temple frente a cualquier público.',
+      desc: 'Aplica nuestra metodología práctica desde el primer día de clase para transformar los nervios y el miedo escénico en seguridad, presencia y temple frente a cualquier público.',
       outcome: 'Seguridad real frente al auditorio desde el día 1',
       span: 'lg:col-span-7',
       featured: true,
@@ -264,7 +264,9 @@ export default function OratoriaCourseOnly({
             <span>{venueLabel}</span>
             <span aria-hidden="true">·</span>
             <span className="font-semibold text-amber-700 dark:text-amber-400">
-              3 Sábados Presenciales (14 Horas Académicas)
+              {selectedCity === 'caracas'
+                ? '3 Martes Presenciales (14 Horas Académicas)'
+                : '3 Jueves Presenciales (14 Horas Académicas)'}
             </span>
           </div>
 
@@ -411,10 +413,12 @@ export default function OratoriaCourseOnly({
                   Fechas Presenciales
                 </span>
                 <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 leading-tight">
-                  Inicia 21 de Nov
+                  {selectedCity === 'caracas' ? 'Inicia Martes 24 Nov' : 'Inicia Jueves 26 Nov'}
                 </span>
                 <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
-                  Sábados 21, 28 nov y 5 dic
+                  {selectedCity === 'caracas'
+                    ? 'Martes 24 nov, 01 y 08 dic'
+                    : 'Jueves 26 nov, 03 y 10 dic'}
                 </span>
               </motion.div>
 
@@ -549,7 +553,9 @@ export default function OratoriaCourseOnly({
                           : 'Inversión Estándar a Tasa BCV'}
                       </span>
                       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Incluye los 3 sábados y certificado oficial
+                        {selectedCity === 'caracas'
+                          ? 'Incluye los 3 martes y certificado oficial'
+                          : 'Incluye los 3 jueves y certificado oficial'}
                       </span>
                     </div>
                     <div className="flex items-baseline gap-2">
@@ -587,11 +593,11 @@ export default function OratoriaCourseOnly({
                         {selectedPlan === 'efectivo'
                           ? totalCashWithReg
                           : selectedCity === 'caracas'
-                          ? '$125'
+                          ? '$130'
                           : '$90'}
                       </span>
                       <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                        {selectedPlan === 'efectivo' ? 'Ahorro especial en efectivo' : 'Tasa BCV'}
+                        {selectedPlan === 'efectivo' ? 'Ahorro especial en efectivo' : 'Tasa BCV + $5 insc.'}
                       </span>
                     </div>
                   </div>
@@ -750,10 +756,10 @@ export default function OratoriaCourseOnly({
                       {selectedCity === 'caracas' ? (
                         <>
                           <option value="Promo Efectivo $100 + $5 Inscripción">
-                            Caracas · Promo Efectivo ($100 + $5 inscripción)
+                            Caracas · Promo Efectivo ($100 + $5 inscripción = $105)
                           </option>
-                          <option value="Tasa Oficial BCV $125 (Total con Inscripción)">
-                            Caracas · Tasa Oficial BCV ($125 total con inscripción)
+                          <option value="Tasa Oficial BCV $125 + $5 Inscripción">
+                            Caracas · Tasa Oficial BCV ($125 + $5 inscripción)
                           </option>
                         </>
                       ) : (
@@ -913,12 +919,14 @@ export default function OratoriaCourseOnly({
           </AnimatePresence>
         </div>
 
-        {/* 6. 3-SATURDAY ARCHITECTURAL SYLLABUS */}
+        {/* 6. 3-SESSION ARCHITECTURAL SYLLABUS */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-7 sm:p-10 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
               <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 block mb-1">
-                Pensum Oficial · 3 Sábados Intensivos (14 Horas Académicas)
+                {selectedCity === 'caracas'
+                  ? 'Pensum Oficial · 3 Martes Intensivos (14 Horas Académicas)'
+                  : 'Pensum Oficial · 3 Jueves Intensivos (14 Horas Académicas)'}
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
                 <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -948,7 +956,7 @@ export default function OratoriaCourseOnly({
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-mono font-extrabold text-indigo-700 dark:text-indigo-400">
-                      0{idx + 1}. SÁBADO PRESENCIAL
+                      0{idx + 1}. {selectedCity === 'caracas' ? 'MARTES PRESENCIAL' : 'JUEVES PRESENCIAL'}
                     </span>
                     <Layers className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
                   </div>
@@ -983,7 +991,9 @@ export default function OratoriaCourseOnly({
           <div className="mt-8 p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-                ¿Listo para dominar el escenario y hablar con impacto en 3 sábados?
+                {selectedCity === 'caracas'
+                  ? '¿Listo para dominar el escenario y hablar con impacto en 3 martes?'
+                  : '¿Listo para dominar el escenario y hablar con impacto en 3 jueves?'}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
                 Escríbenos directamente por WhatsApp para apartar tu cupo hoy con solo $5 de inscripción.

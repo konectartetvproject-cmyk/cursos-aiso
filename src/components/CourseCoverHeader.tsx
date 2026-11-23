@@ -208,7 +208,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               {course.city}
             </div>
 
-            {/* Crisp Flyer Strip: 3 CLASES | LOS SÁBADOS INICIA: 21 DE NOVIEMBRE */}
+            {/* Crisp Flyer Strip: 3 CLASES | LOS MARTES (Caracas) / LOS JUEVES (Valencia) */}
             <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl p-3 px-4 border border-blue-200/80 dark:border-slate-700 shadow-2xs flex flex-wrap items-center justify-between gap-2">
               <span className="text-base sm:text-lg font-black text-blue-700 dark:text-sky-400 uppercase tracking-tight">
                 3 Clases
@@ -216,10 +216,10 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
               <div className="text-left">
                 <span className="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 leading-none">
-                  Los Sábados · Inicia:
+                  {course.id === 'caracas-oratoria' ? 'Los Martes · Inicia:' : 'Los Jueves · Inicia:'}
                 </span>
                 <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase">
-                  21 de Noviembre
+                  {course.id === 'caracas-oratoria' ? '24 de Noviembre' : '26 de Noviembre'}
                 </span>
               </div>
             </div>

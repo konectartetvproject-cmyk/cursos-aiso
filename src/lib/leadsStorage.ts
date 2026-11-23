@@ -245,8 +245,40 @@ function saveLocalAnalyticsEvent(event: AnalyticsEvent) {
   }
 }
 
+function triggerMetaBrowserEvent(
+  eventName: 'ViewContent' | 'Contact' | 'InitiateCheckout' | 'CompleteRegistration' | 'Lead',
+  params: Record<string, any>,
+  eventId: string
+) {
+  if (typeof window === 'undefined') return;
+  const fbq = (window as any).fbq;
+  if (typeof fbq === 'function') {
+    try {
+      fbq('track', eventName, params, { eventID: eventId });
+    } catch {
+      // Ignore fbq errors
+    }
+  }
+}
+
 function dispatchEventToServer(event: AnalyticsEvent): Promise<void> {
   const payload = JSON.stringify(event);
+
+  // Fire synchronized Meta Pixel event with matching eventID for CAPI deduplication
+  const metaEventName =
+    event.type === 'whatsapp_click'
+      ? 'Contact'
+      : event.type === 'checkout_click'
+      ? 'InitiateCheckout'
+      : 'ViewContent';
+  triggerMetaBrowserEvent(
+    metaEventName,
+    {
+      content_name: event.buttonLabel || event.sectionLabel,
+      content_category: event.section,
+    },
+    event.id
+  );
 
   // Also queue sendBeacon for WhatsApp clicks as a backup in case the browser switches apps
   if (
@@ -752,6 +784,18 @@ export async function recordCourseRegistration(
     const existing = getLocalRegistrations();
     localStorage.setItem(REG_STORAGE_KEY, JSON.stringify([newRecord, ...existing]));
   }
+
+  // Fire Meta Pixel CompleteRegistration & Lead events with matching eventID for CAPI deduplication
+  triggerMetaBrowserEvent(
+    'CompleteRegistration',
+    {
+      content_name: newRecord.taller,
+      content_category: newRecord.ciudad,
+      currency: 'USD',
+      value: 35,
+    },
+    newRecord.id
+  );
 
   // 2. Automatically dispatch email notification to academyaiso@icloud.com via server & FormSubmit AJAX relay
   try {
