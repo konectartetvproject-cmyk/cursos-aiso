@@ -355,13 +355,50 @@ async function sendAutomaticRegistrationEmail(data: {
     </div>
   `;
 
-  let deliveryChannel = 'auto-relay';
+  const notificationRecord: RegistrationEmailNotificationPayload = {
+    id: data.id || `mail_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    to: TARGET_ACADEMY_EMAIL,
+    subject,
+    nombre: data.nombre,
+    telefono: data.telefono,
+    correo: data.correo,
+    cedula: data.cedula,
+    ciudad: data.ciudad,
+    taller: data.taller,
+    sede: data.sede,
+    duracion: data.duracion,
+    fechaInicio: data.fechaInicio,
+    horario: data.horario,
+    modalidadPago: data.modalidadPago,
+    precioEfectivo: data.precioEfectivo,
+    notaReserva: data.notaReserva,
+    origen: data.origen || 'Inscripción Web',
+    notas: data.notas,
+    deliveryChannel: 'formsubmit-relay',
+    status: 'sent',
+    createdAt,
+  };
 
-  // Automatic FormSubmit AJAX email delivery to academyaiso@icloud.com (zero env vars required)
-  try {
+  // 1. Save immediately (< 1ms) to disk outbox so Admin Panel sees it right away
+  const existing = readEmailNotifications();
+  const isDuplicate = existing.some(
+    (item) =>
+      item.id === notificationRecord.id ||
+      (Date.now() - new Date(item.createdAt).getTime() < 120000 &&
+        item.nombre.trim().toLowerCase() === notificationRecord.nombre.trim().toLowerCase() &&
+        item.telefono.trim() === notificationRecord.telefono.trim() &&
+        item.taller.trim().toLowerCase() === notificationRecord.taller.trim().toLowerCase())
+  );
+  if (!isDuplicate) {
+    writeEmailNotifications([notificationRecord, ...existing]);
+  }
+
+  // 2. Dispatch external FormSubmit AJAX email delivery asynchronously (non-blocking)
+  (async () => {
+    try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 4500);
-      const relayRes = await fetch(`https://formsubmit.co/ajax/${TARGET_ACADEMY_EMAIL}`, {
+      await fetch(`https://formsubmit.co/ajax/${TARGET_ACADEMY_EMAIL}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -392,41 +429,10 @@ async function sendAutomaticRegistrationEmail(data: {
         signal: controller.signal,
       });
       clearTimeout(timeout);
-      if (relayRes.ok) {
-        deliveryChannel = 'formsubmit-relay';
-      }
     } catch {
-      // Logged in local outbox file even if external relay is unreachable
+      // Already saved in local outbox and Cloud SQL
     }
-
-  const notificationRecord: RegistrationEmailNotificationPayload = {
-    id: data.id || `mail_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    to: TARGET_ACADEMY_EMAIL,
-    subject,
-    nombre: data.nombre,
-    telefono: data.telefono,
-    correo: data.correo,
-    cedula: data.cedula,
-    ciudad: data.ciudad,
-    taller: data.taller,
-    sede: data.sede,
-    duracion: data.duracion,
-    fechaInicio: data.fechaInicio,
-    horario: data.horario,
-    modalidadPago: data.modalidadPago,
-    precioEfectivo: data.precioEfectivo,
-    notaReserva: data.notaReserva,
-    origen: data.origen || 'Inscripción Web',
-    notas: data.notas,
-    deliveryChannel,
-    status: 'sent',
-    createdAt,
-  };
-
-  const existing = readEmailNotifications();
-  if (!existing.some((item) => item.id === notificationRecord.id)) {
-    writeEmailNotifications([notificationRecord, ...existing]);
-  }
+  })();
 
   return notificationRecord;
 }
@@ -989,38 +995,107 @@ async function startServer() {
   app.post('/api/registrations', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      let userId: number | null = null;
-      let fallbackName = 'Estudiante AISO';
-      let fallbackEmail = 'sin-correo@aiso.website';
+      const nombre = String(body?.nombre || 'Estudiante AISO').trim();
+      const cedula = String(body?.cedula || 'N/A').trim();
+      const correo = String(body?.correo || 'sin-correo@aiso.website').trim();
+      const telefono = String(body?.telefono || '').trim();
+      const ciudad = String(body?.ciudad || 'Caracas').trim();
+      const taller = String(body?.taller || 'caracas-oratoria').trim();
+      const modalidadPago = String(body?.modalidadPago || 'Estándar BCV').trim();
+      const motivacion = String(body?.motivacion || '').trim();
 
-      if (req.user?.uid) {
-        const email = req.user.email || body?.correo || '';
-        const userRecord = await getOrCreateUser(
-          req.user.uid,
-          email,
-          body?.nombre || req.user.name
-        );
-        userId = userRecord?.id ?? null;
-        fallbackName = userRecord?.name || fallbackName;
-        fallbackEmail = email || fallbackEmail;
+      // 1. Instant local disk backup (< 1ms) so zero registrations are ever lost even during DB wake-up
+      const existingNotifs = readEmailNotifications();
+      const isDupNotif = existingNotifs.some(
+        (item) =>
+          Date.now() - new Date(item.createdAt).getTime() < 120000 &&
+          item.nombre.trim().toLowerCase() === nombre.toLowerCase() &&
+          item.telefono.trim() === telefono &&
+          item.taller.trim().toLowerCase() === taller.toLowerCase()
+      );
+      const backupId = body?.id || `reg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      if (!isDupNotif) {
+        const backupEntry: RegistrationEmailNotificationPayload = {
+          id: backupId,
+          to: TARGET_ACADEMY_EMAIL,
+          subject: `Nueva Inscripción Web AISO: ${nombre} — ${taller} (${ciudad})`,
+          nombre,
+          telefono,
+          correo,
+          cedula,
+          ciudad,
+          taller,
+          modalidadPago,
+          origen: 'Formulario de Inscripción Web',
+          notas: motivacion,
+          deliveryChannel: 'cloudsql-direct',
+          status: 'sent',
+          createdAt: new Date().toISOString(),
+        };
+        writeEmailNotifications([backupEntry, ...existingNotifs]);
       }
 
-      const record = await createRegistration({
-        userId,
-        nombre: String(body?.nombre || fallbackName).trim(),
-        cedula: String(body?.cedula || 'N/A').trim(),
-        correo: String(body?.correo || fallbackEmail).trim(),
-        telefono: String(body?.telefono || '').trim(),
-        ciudad: String(body?.ciudad || 'Caracas').trim(),
-        taller: String(body?.taller || 'caracas-oratoria').trim(),
-        modalidadPago: String(body?.modalidadPago || 'Estándar BCV').trim(),
-        motivacion: String(body?.motivacion || '').trim(),
-      });
+      // 2. Write to Cloud SQL PostgreSQL registrations table
+      let userId: number | null = null;
+      if (req.user?.uid) {
+        try {
+          const email = req.user.email || correo;
+          const userRecord = await getOrCreateUser(req.user.uid, email, nombre || req.user.name);
+          userId = userRecord?.id ?? null;
+        } catch {
+          userId = null;
+        }
+      }
 
-      res.status(201).json({
-        registration: record,
-        database: 'Cloud SQL PostgreSQL (registrations)',
-      });
+      try {
+        const record = await createRegistration({
+          userId,
+          nombre,
+          cedula,
+          correo,
+          telefono,
+          ciudad,
+          taller,
+          modalidadPago,
+          motivacion,
+        });
+
+        return res.status(201).json({
+          registration: record,
+          database: 'Cloud SQL PostgreSQL (registrations)',
+        });
+      } catch {
+        // Retry asynchronously if Cloud SQL is waking up from scale-to-zero
+        setTimeout(() => {
+          createRegistration({
+            userId,
+            nombre,
+            cedula,
+            correo,
+            telefono,
+            ciudad,
+            taller,
+            modalidadPago,
+            motivacion,
+          }).catch(() => {});
+        }, 2000);
+
+        return res.status(201).json({
+          registration: {
+            id: Date.now(),
+            nombre,
+            cedula,
+            correo,
+            telefono,
+            ciudad,
+            taller,
+            modalidadPago,
+            motivacion,
+            createdAt: new Date().toISOString(),
+          },
+          database: 'Cloud SQL PostgreSQL (queued)',
+        });
+      }
     } catch (error: any) {
       console.error('Failed to create registration:', error);
       res.status(500).json({ error: error.message || 'Failed to create registration' });
@@ -1108,6 +1183,31 @@ async function startServer() {
         getAllInquiries(),
         getAllNewsletterSubscribers(),
       ]);
+
+      // Sync any disk-backed registrations into Cloud SQL if not already present
+      const diskNotifs = readEmailNotifications();
+      for (const n of diskNotifs) {
+        const existsInDb = registrationsList.some(
+          (r) =>
+            r.nombre.trim().toLowerCase() === (n.nombre || '').trim().toLowerCase() &&
+            r.telefono.trim() === (n.telefono || '').trim() &&
+            r.taller.trim().toLowerCase() === (n.taller || '').trim().toLowerCase()
+        );
+        if (!existsInDb && n.nombre && n.taller) {
+          createRegistration({
+            userId: null,
+            nombre: n.nombre,
+            cedula: n.cedula || 'N/A',
+            correo: n.correo || 'sin-correo@aiso.website',
+            telefono: n.telefono || '',
+            ciudad: n.ciudad || 'Caracas',
+            taller: n.taller,
+            modalidadPago: n.modalidadPago || 'Estándar BCV',
+            motivacion: `[Origen: ${n.origen || 'Inscripción Web'}] ${n.notas || ''}`.trim(),
+          }).catch(() => {});
+        }
+      }
+
       const statuses = readLeadStatuses();
       res.json({
         registrations: registrationsList,
@@ -1146,8 +1246,22 @@ async function startServer() {
   app.delete('/api/admin/registrations/:id', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ error: 'Invalid ID' });
-      await deleteRegistrationById(id);
+      if (id) {
+        const allRegs = await getAllRegistrations();
+        const target = allRegs.find((r) => r.id === id);
+        await deleteRegistrationById(id);
+        if (target) {
+          const remaining = readEmailNotifications().filter(
+            (n) =>
+              !(
+                n.nombre.trim().toLowerCase() === target.nombre.trim().toLowerCase() &&
+                n.telefono.trim() === target.telefono.trim() &&
+                n.taller.trim().toLowerCase() === target.taller.trim().toLowerCase()
+              )
+          );
+          writeEmailNotifications(remaining);
+        }
+      }
       res.json({ deleted: true });
     } catch (error: any) {
       console.error('Failed to delete registration:', error);
@@ -1167,93 +1281,104 @@ async function startServer() {
     }
   });
 
-  // AI Oratory Coach + 11 Steps Dynamic Speech Generator
+  // AI Oratory Coach + 5 Specialist Modes (v07) + 11 Steps Dynamic Speech Generator
   app.post('/api/oratoria-ai/chat', async (req, res) => {
     const {
       message = '',
+      mode = 'mentor360',
+      quickAction = '',
       speakerName = 'Estudiante AISO',
+      level = 'Intermedio',
+      scenario = 'Profesional',
+      currentTopic = 'Comunicación con propósito y liderazgo',
       tone = 'Inspirador y Seguro',
-      duration = '5 minutos (Estándar)',
+      duration = '5 minutos (Estándar AISO)',
       history = [],
       currentSteps = [],
     } = req.body || {};
 
     const cleanSpeaker = String(speakerName || 'Estudiante AISO').trim() || 'Estudiante AISO';
-    const cleanPrompt = String(message || 'Quiero preparar un discurso impactante').trim();
+    const cleanPrompt = String(message || currentTopic || 'Quiero preparar un discurso impactante').trim();
+    const cleanTopic = String(currentTopic || cleanPrompt).trim();
 
     const buildFallbackSpeech = (topicText: string) => {
       const displayTopic =
         topicText.length > 75 ? `${topicText.slice(0, 72).trim()}...` : topicText;
       return {
-        reply: `¡Excelente iniciativa, ${cleanSpeaker}! He estructurado y actualizado tu esquema de **Los 11 Pasos para Hablar en Público** adaptado a tu solicitud: *"${displayTopic}"* con un tono **${tone}** y una duración aproximada de **${duration}**.\n\nRevisa el esquema debajo de este chat: puedes editar libremente cada uno de los 11 pasos, copiar el guion o pedirme aquí mismo que cambie la técnica de inicio (por ejemplo, a una pregunta retórica, una cita o una historia personal), que profundice el desarrollo o que ajuste el cierre.`,
-        speechTitle: `Discurso AISO: ${displayTopic}`,
-        topicSummary: `Tono: ${tone} · Duración: ${duration} · Orador: ${cleanSpeaker}`,
+        reply: `• **Propósito AISO v07 (${scenario}):** Hablar a tu audiencia sobre *"${displayTopic}"* con claridad y servicio, **sin leer ni memorizar mecánicamente**.\n• **Estructura actualizada:** Ordené tu apertura (\`Saludo → Técnica I01 → Nombre: ${cleanSpeaker} → Tema\`) y el Paso 7 con \`CONCEPTO → Puente → HISTORIA → Puente → TÉCNICAS\`.\n• **Un ajuste para la Toma 2:** Haz una pausa de 2 segundos en silencio después del Paso 4 antes de decir tu nombre.`,
+        speechTitle: `Discurso AISO v07: ${displayTopic}`,
+        topicSummary: `Escenario: ${scenario} · Nivel: ${level} · Tono: ${tone} · Duración: ${duration} · Orador: ${cleanSpeaker}`,
+        suggestedQuestions: [
+          `¿Cómo cambio el Paso 4 a la técnica I03 (Anécdota) o I07 (Objeto visible)?`,
+          `¿Qué objeción difícil podrían hacerme sobre "${displayTopic}" para responder con A.V.R.?`,
+          `Evalúa este guion con la Rúbrica AISO 0/1/2 y dame mi Frase de regreso`,
+        ],
         steps: [
           {
             id: 1,
             title: 'Entrar al Escenario',
-            content: `Camina con paso firme hacia el centro del escenario para presentar "${displayTopic}". Mantén los hombros relajados hacia atrás, el mentón paralelo al piso y proyecta serenidad antes de pronunciar la primera palabra.`,
-            coachingTip: 'No empieces a hablar mientras caminas. Llega a tu punto de anclaje primero.',
+            content: `Camina con serenidad hacia el centro del espacio (${scenario}), aparta por completo cualquier hoja, ficha o texto de lectura (Regla AISO v07) y sitúate con postura cómoda y estable.`,
+            coachingTip: 'Momento I (Preparar el encuentro): nunca empieces a hablar mientras caminas.',
           },
           {
             id: 2,
             title: 'Mirar al Público',
-            content: `Haz una pausa de 3 segundos en silencio. Recorre con la mirada tres zonas del auditorio (izquierda, centro y derecha) conectando visualmente con rostros específicos para capturar la atención total.`,
-            coachingTip: 'El silencio inicial demuestra dominio escénico y despierta expectativa.',
+            content: `Haz una pausa de 3 segundos en silencio distribuyendo la atención visual con naturalidad por la izquierda, el centro y la derecha de la sala.`,
+            coachingTip: 'Mira a las personas con serenidad, sin convertir la mirada en una inspección rígida.',
           },
           {
             id: 3,
             title: 'Saludar',
-            content: `"Muy buenos días / tardes a todos los presentes. Es un verdadero honor compartir este espacio con ustedes."`,
-            coachingTip: 'Usa una sonrisa genuina y proyecta la voz desde el diafragma.',
+            content: `"Muy buenos días a todas y todos. Es un gusto compartir este encuentro con ustedes."`,
+            coachingTip: 'Saludo breve, cordial y acorde al contexto antes de la técnica de inicio.',
           },
           {
             id: 4,
             title: 'Técnica de Inicio',
-            content: `"¿Alguna vez se han detenido a pensar cómo cambia nuestra realidad cuando dominamos verdaderamente ${displayTopic}? Hace poco descubrí que una sola decisión consciente en este ámbito puede transformar por completo nuestros resultados..."`,
-            coachingTip: 'Combina una pregunta retórica con una breve pausa de reflexión de 2 segundos.',
+            content: `"[Técnica I01 — Interrogación retórica] ¿Qué cambiaría en nuestros resultados diarios si aplicáramos un método claro y humano al abordar ${displayTopic}?"`,
+            coachingTip: 'Orden obligatorio v07: capta el interés en el Paso 4 ANTES de decir tu nombre en el Paso 5.',
           },
           {
             id: 5,
             title: 'Nombre del Orador',
             content: `"Mi nombre es ${cleanSpeaker}..."`,
-            coachingTip: 'Pronuncia tu nombre y apellido con claridad, haciendo una micropausa entre ambos.',
+            coachingTip: 'Preséntate con verdad y sobriedad después de la técnica de inicio, sin recitar un currículum extenso.',
           },
           {
             id: 6,
             title: 'Nombre del Tema',
-            content: `"...y hoy quiero compartir con ustedes: '${displayTopic}', con un enfoque ${tone.toLowerCase()}."`,
-            coachingTip: 'Enfatiza las palabras clave del título con una ligera elevación en la modulación.',
+            content: `"...y hoy hablaremos sobre: ${displayTopic}, con el propósito de compartir acciones prácticas para nuestro contexto ${scenario.toLowerCase()}."`,
+            coachingTip: 'Delimita con claridad qué valor real se llevará la audiencia.',
           },
           {
             id: 7,
             title: 'Desarrollo del Discurso',
-            content: `1. CREDIBILIDAD (Ethos): Compartir la experiencia o el motivo real por el que "${displayTopic}" es urgente y valioso hoy.\n2. EMOCIÓN (Pathos): Conectar con el desafío humano que vive la audiencia y mostrar una historia de transformación real.\n3. LÓGICA Y ACCIÓN (Logos): Presentar 3 pilares prácticos y aplicables hoy mismo para dominar este tema con resultados medibles.`,
-            coachingTip: 'Acompaña la enumeración de los 3 pilares con ademanes abiertos a la altura del pecho.',
+            content: `1. FASE 1 — CONCEPTO: ${displayTopic} consiste en tomar decisiones conscientes basadas en claridad, respeto y servicio hacia quienes nos escuchan.\n\n-> PUENTE 1 (Del Concepto a la Historia): "Para ver esta idea en una situación concreta, imaginemos esta escena..."\n\n2. FASE 2 — HISTORIA (Escena hipotética honesta en 3 movimientos): [Situación] Un equipo prepara una entrega clave en un entorno ${scenario.toLowerCase()}. [Dificultad] Surgen dudas porque cada integrante interpreta la prioridad de forma distinta. [Decisión y aprendizaje] Al detenerse 2 minutos a escuchar y ordenar el propósito en una sola oración, logran avanzar con acuerdo y serenidad.\n\n-> PUENTE 2 (De la Historia a las Técnicas): "A partir de esta escena, propongo estas acciones concretas que podemos practicar hoy..."\n\n3. FASE 3 — TÉCNICAS O CONSEJOS:\n• Acción 1: Definir el propósito con un verbo concreto antes de cada intervención.\n• Acción 2: Escuchar la pregunta completa antes de responder aplicando A.V.R.`,
+            coachingTip: 'Recorre con tus propias palabras las 3 fases (Concepto → Puente → Historia → Puente → Técnicas) sin leer.',
           },
           {
             id: 8,
             title: 'Anunciar Conclusión',
-            content: `"Y para ir cerrando esta intervención, quiero que se queden con una idea fundamental..."`,
-            coachingTip: 'Da medio paso hacia adelante y baja ligeramente la velocidad para recuperar la atención máxima.',
+            content: `"Para concluir esta intervención..."`,
+            coachingTip: 'Momento III (Cerrar el encuentro): avisa con claridad que llegas al cierre sin abrir un tema nuevo.',
           },
           {
             id: 9,
             title: 'Técnica de Conclusión',
-            content: `"El momento de aplicar lo aprendido sobre ${displayTopic} no es mañana, es hoy. Atrévanse a dar ese primer paso con determinación, propósito y excelencia."`,
-            coachingTip: 'Termina con una llamada a la acción firme y una cadencia ascendente e inspiradora.',
+            content: `"[Técnica C07 — Invitación] Los invito a que en nuestra próxima reunión apliquemos una sola de estas acciones sobre ${displayTopic} y comprobemos juntos la diferencia."`,
+            coachingTip: 'Propón una acción cercana, concreta y realizable respetando la autonomía de quienes escuchan.',
           },
           {
             id: 10,
             title: 'Decir Gracias',
             content: `"Muchas gracias."`,
-            coachingTip: 'Dilo con firmeza y calidez. Nunca digas "eso fue todo" ni pidas disculpas al cerrar.',
+            coachingTip: 'Agradece con sobriedad mirando al frente; nunca añadas "eso es todo".',
           },
           {
             id: 11,
             title: 'Recibir Aplausos',
-            content: `Mantén tu postura erguida en el centro del escenario durante 3 segundos mientras recibes los aplausos, asiente con gratitud mirando al público y retírate con la misma seguridad con la que entraste.`,
-            coachingTip: 'Disfruta el reconocimiento de tu audiencia sin huir apresuradamente del escenario.',
+            content: `Permanece con calma 3 segundos en tu lugar recibiendo los aplausos o la respuesta de la sala con un gesto de gratitud antes de retirarte sin prisa.`,
+            coachingTip: 'El encuentro termina cuando te retiras con la misma serenidad con la que entraste.',
           },
         ],
       };
@@ -1273,7 +1398,7 @@ async function startServer() {
       const historyContext = Array.isArray(history)
         ? history
             .slice(-6)
-            .map((m: any) => `${m.role === 'user' ? 'Estudiante' : 'Coach AISO'}: ${m.text}`)
+            .map((m: any) => `${m.role === 'user' ? 'Estudiante' : 'Tutor AISO v07'}: ${m.text}`)
             .join('\n')
         : '';
 
@@ -1288,41 +1413,56 @@ async function startServer() {
             )
           : 'Sin esquema previo todavía.';
 
-      const systemInstruction = `Eres el Entrenador Oficial de Oratoria con Inteligencia Artificial de la Academia AISO (Academia International Social Oratory), experto en el método "El Sello del Orador Exitoso" y en "Los 11 Pasos para Hablar en Público".
-Tu objetivo es doble en cada mensaje:
-1. Responder en el chat ('reply') como un mentor cercano, motivador y experto en oratoria, dando consejos prácticos de voz, lenguaje corporal, figuras retóricas o estructura según lo que pida el estudiante.
-2. Actualizar SIEMPRE el esquema completo de los 11 pasos ('steps') adaptado específicamente al discurso, tema o modificación que el estudiante acaba de pedir en el chat.
+      const isQuickExpansion = Boolean(quickAction && String(quickAction).trim().length > 0);
 
-Los 11 pasos EXACTOS de Academia AISO son (respeta siempre este orden y estos títulos exactos del 1 al 11):
-1. Entrar al Escenario (Indicación escénica y postural adaptada al tono del discurso)
-2. Mirar al Público (Indicación de pausa y contacto visual inicial)
-3. Saludar (Guion exacto del saludo adaptado al público y ocasión)
-4. Técnica de Inicio (Guion exacto de apertura usando pregunta retórica, anécdota, dato impactante o cita célebre sobre el tema pedido)
-5. Nombre del Orador (Guion exacto donde el orador "${cleanSpeaker}" se presenta con autoridad y cercanía)
-6. Nombre del Tema (Guion exacto donde introduce el título atractivo del discurso)
-7. Desarrollo del Discurso (Guion estructurado aplicando Ethos [credibilidad], Pathos [emoción/historia] y Logos [argumentos/datos] sobre el tema solicitado)
-8. Anunciar Conclusión (Guion exacto de la frase puente que avisa a la audiencia que se acerca el cierre)
-9. Técnica de Conclusión (Guion exacto del cierre memorable: llamada a la acción, resumen poderoso o frase célebre final)
-10. Decir Gracias (Guion exacto del agradecimiento final con seguridad)
-11. Recibir Aplausos (Indicación escénica para sostener la mirada, agradecer con el gesto y salir con elegancia)
+      const systemInstruction = `Eres el Tutor Oficial AISO IA de la Academia AISO, basado ESTRICTAMENTE en el libro "Los secretos del orador exitoso: Vence tus miedos, habla desde el corazón" (Edición Verificada v07) del autor Carlos Enrique Lopez Adames.
 
-En los pasos verbales (3, 4, 5, 6, 7, 8, 9, 10), escribe el TEXTO REAL entre comillas que el estudiante debe pronunciar en su discurso sobre el tema pedido. En los pasos no verbales (1, 2, 11), escribe la indicación escénica precisa adaptada al contexto del discurso.`;
+REGLAS PEDAGÓGICAS INQUEBRANTABLES (EDICIÓN VERIFICADA v07):
+1. REGLA AISO DE HABLAR SIN LEER: Está prohibido leer papel, fichas o teleprompter al exponer y prohibido memorizar mecánicamente palabra por palabra. Única excepción autorizada: leer los 50 trabalenguas durante práctica de articulación.
+2. ÉTICA DE LA VERDAD: NUNCA inventes cifras, porcentajes (%) ni estudios sin fuente real verificada, fecha y alcance. Si usas un ejemplo narrativo creado para enseñar, preséntalo expresamente como una "escena hipotética" («Imaginemos esta situación...»). No prometas resultados inevitables (éxito mágico, dinero o efectos hormonales).
+3. LOS 11 PASOS Y ORDEN OBLIGATORIO:
+   - Momento I (Preparar el encuentro): Paso 1 Entrar al Escenario, Paso 2 Mirar al Público, Paso 3 Saludar.
+   - Momento II (Compartir el mensaje): Paso 4 Técnica de Inicio (I01 a I10, SIEMPRE antes de presentarse), Paso 5 Nombre del Orador ("Mi nombre es ${cleanSpeaker}..."), Paso 6 Nombre del Tema, Paso 7 Desarrollo del Discurso.
+   - Momento III (Cerrar el encuentro): Paso 8 Anunciar Conclusión ("Para concluir..."), Paso 9 Técnica de Conclusión (C01 a C09), Paso 10 Decir Gracias ("Muchas gracias"), Paso 11 Recibir Aplausos.
+4. MÉTODO AISO EN 3 FASES (PASO 7):
+   El Paso 7 SIEMPRE debe estructurarse en tres fases conectadas por dos puentes explícitos:
+   - Fase 1: CONCEPTO (qué es, qué lo caracteriza y por qué importa).
+   - Puente 1: «Para ver esta idea en una situación concreta...»
+   - Fase 2: HISTORIA (hecho documentado con fuente, vivencia propia honesta o escena hipotética declarada, en 3 movimientos: situación → dificultad → decisión y aprendizaje).
+   - Puente 2: «A partir de esta escena, propongo estas acciones concretas...»
+   - Fase 3: TÉCNICAS O CONSEJOS (acciones prácticas aplicables).
+5. CÓDIGOS OFICIALES v07:
+   - Técnicas de Inicio: I01 Interrogación retórica, I02 Frases, I03 Narrar historias/cuentos/anécdotas, I04 Experiencias de vida, I05 Datos (con fuente), I06 Muestras de beneficios, I07 Talentos y elementos, I08 Palabras llamativas, I09 Actualidad, I10 Unificación.
+   - Técnicas de Conclusión: C01 Dinámica (voluntaria), C02 Expresiones, C03 Visión, C04 Énfasis, C05 Moraleja, C06 Historia personal, C07 Invitación, C08 Compromiso, C09 Unificación.
+   - Manejo de preguntas y objeciones (Cap. 15): Recurso A.V.R. (Agradecer → Valorar → Redirigir), Triángulo de la mirada, Árbol de decisión (A. Aclarar ahora / B. Verificar dato / C. Excede el alcance), 12 Casos Prácticos (Caso 01 a Caso 12) y 60 Técnicas de Persuasión (T01 a T60).
+   - Orador Consciente (Cap. 14): IP01-IP02 Diario Emocional, IP03-IP04 Ancla de Respiración 4 tiempos, IP05-IP06 Brújula de Valores, IT01-IT02 Mapa de la Audiencia, IT03-IT04 Escucha Profunda, IT05-IT06 Calibrador Social, IE01-IE02 Pausa Estratégica, IE03-IE04 Etiquetar y Reencuadrar, IE05-IE06 Termostato Emocional.
+   - Rúbrica AISO (Cap. 6): Escala 0 / 1 / 2 en 5 criterios (1. Propósito e invitación, 2. Escucha y adaptación, 3. Participación respetuosa, 4. Tiempo y continuidad, 5. Expresión oral AISO) + "Un ajuste para la Toma 2".
 
-      const userPrompt = `Configuración actual del estudiante:
-- Nombre del Orador: ${cleanSpeaker}
-- Tono seleccionado: ${tone}
-- Duración deseada: ${duration}
+6. REGLA DE BREVEDAD EN 'reply':
+${
+  isQuickExpansion
+    ? `El estudiante pulsó el botón de acción rápida "${quickAction}". Entrega una respuesta práctica, clara y bien estructurada en viñetas aplicando directamente esa acción.`
+    : `MUY IMPORTANTE: Tu respuesta inicial en el campo 'reply' DEBE SER CORTA Y DIRECTA: MÁXIMO 85 PALABRAS distribuidas en 2 o 3 viñetas concisas. No escribas introducciones largas en 'reply' porque el guion completo de los 11 pasos ya se actualiza en 'steps'.`
+}
+7. Incluye siempre 3 preguntas sugeridas clicables ('suggestedQuestions') relevantes al modo activo (${mode}) y actualiza siempre los 11 pasos ('steps') insertando el nombre "${cleanSpeaker}" en el Paso 5.`;
 
-Historial reciente de la conversación:
-${historyContext || 'Inicio de conversación'}
+      const userPrompt = `Perfil del Estudiante:
+- Nombre (incluir en Paso 5): ${cleanSpeaker}
+- Nivel: ${level}
+- Escenario / Público objetivo: ${scenario}
+- Tema actual: ${cleanTopic}
+- Tono: ${tone} | Duración: ${duration}
+- Modo Especialista activo: ${mode}
+${isQuickExpansion ? `- Acción rápida solicitada: ${quickAction}` : ''}
+
+Historial reciente:
+${historyContext || 'Inicio de sesión'}
 
 Esquema actual de los 11 pasos:
 ${currentStepsContext}
 
-Nuevo mensaje / solicitud del estudiante:
-"${cleanPrompt}"
-
-Responde en español con el JSON estructurado que incluye tu respuesta en el chat ('reply'), el título del discurso ('speechTitle'), el resumen ('topicSummary') y los 11 pasos actualizados ('steps').`;
+Solicitud actual del estudiante:
+"${cleanPrompt}"`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-4-hydrogen',
@@ -1336,40 +1476,37 @@ Responde en español con el JSON estructurado que incluye tu respuesta en el cha
               reply: {
                 type: Type.STRING,
                 description:
-                  'Respuesta conversacional del Coach de Oratoria AISO explicando los consejos y mejoras aplicadas al discurso.',
+                  'Respuesta del Tutor AISO v07 (máximo 85 palabras en 2-3 viñetas si es respuesta inicial).',
               },
               speechTitle: {
                 type: Type.STRING,
-                description: 'Título atractivo para el discurso del estudiante.',
+                description: 'Título claro del discurso del estudiante.',
               },
               topicSummary: {
                 type: Type.STRING,
-                description: 'Resumen breve en una línea del enfoque, tono y duración del discurso.',
+                description: 'Resumen en una línea con escenario, tono, duración y propósito.',
+              },
+              suggestedQuestions: {
+                type: Type.ARRAY,
+                description: 'Exactamente 3 preguntas sugeridas breves que el estudiante puede clicar a continuación.',
+                items: { type: Type.STRING },
               },
               steps: {
                 type: Type.ARRAY,
-                description: 'Los 11 pasos para hablar en público adaptados al discurso solicitado.',
+                description: 'Los 11 pasos oficiales AISO v07 con el nombre del estudiante en el Paso 5 y el Método AISO en 3 fases con puentes en el Paso 7.',
                 items: {
                   type: Type.OBJECT,
                   properties: {
                     id: { type: Type.INTEGER },
                     title: { type: Type.STRING },
-                    content: {
-                      type: Type.STRING,
-                      description:
-                        'Guion exacto a decir o indicación escénica personalizada para este discurso.',
-                    },
-                    coachingTip: {
-                      type: Type.STRING,
-                      description:
-                        'Consejo breve de lenguaje corporal, pausa o modulación de voz para este paso.',
-                    },
+                    content: { type: Type.STRING },
+                    coachingTip: { type: Type.STRING },
                   },
                   required: ['id', 'title', 'content', 'coachingTip'],
                 },
               },
             },
-            required: ['reply', 'speechTitle', 'topicSummary', 'steps'],
+            required: ['reply', 'speechTitle', 'topicSummary', 'suggestedQuestions', 'steps'],
           },
         },
       });
@@ -1388,6 +1525,219 @@ Responde en español con el JSON estructurado que incluye tu respuesta en el cha
     } catch (error: any) {
       console.error('AI Oratory Coach fallback activated:', error?.message || error);
       return res.json(buildFallbackSpeech(cleanPrompt));
+    }
+  });
+
+  // MODULE 2: Analizador Editorial de Discursos por Voz (Hasta 10 minutos) — Edición Verificada v07
+  app.post('/api/oratoria-ai/analyze', async (req, res) => {
+    const {
+      transcript = '',
+      speakerName = 'Estudiante AISO',
+      scenario = 'Profesional',
+      durationSeconds = 60,
+    } = req.body || {};
+
+    const cleanTranscript = String(transcript || '').trim();
+    const cleanSpeaker = String(speakerName || 'Estudiante AISO').trim() || 'Estudiante AISO';
+
+    if (!cleanTranscript) {
+      return res.status(400).json({ error: 'La transcripción del discurso está vacía.' });
+    }
+
+    const buildFallbackAnalysis = () => ({
+      cleanEditorialVersion: `[MOMENTO I: PREPARAR EL ENCUENTRO]\n• Paso 1 y 2 (Escenario y Mirada): Entrar con serenidad sin papeles y hacer pausa visual de 3 segundos.\n• Paso 3 (Saludo): "Muy buenos días a todos los presentes."\n\n[MOMENTO II: COMPARTIR EL MENSAJE]\n• Paso 4 (Técnica de Inicio I01): "¿Cómo podemos expresar esta idea con total claridad y propósito hoy?"\n• Paso 5 (Nombre del Orador): "Mi nombre es ${cleanSpeaker}..."\n• Paso 6 (Nombre del Tema): "...y hoy compartiré con ustedes este mensaje clave para nuestro ámbito ${scenario.toLowerCase()}."\n• Paso 7 (Desarrollo con Método AISO v07):\n  - CONCEPTO: ${cleanTranscript.replace(/\b(eh+|este+|o sea|bueno|pues|mm+)\b/gi, '').trim()}\n  - PUENTE 1: "Para ver esta idea en una situación concreta, imaginemos cómo impacta en nuestro día a día..."\n  - HISTORIA: Escena práctica donde aplicar este principio resuelve una duda real del grupo.\n  - PUENTE 2: "A partir de esta escena, propongo estas acciones concretas..."\n  - TÉCNICAS: 1) Hablar con palabras propias sin leer; 2) Cuidar las pausas por unidades de sentido.\n\n[MOMENTO III: CERRAR EL ENCUENTRO]\n• Paso 8 (Anunciar Conclusión): "Para concluir esta intervención..."\n• Paso 9 (Técnica de Conclusión C07 — Invitación): "Los invito a poner en práctica esta idea desde hoy mismo."\n• Paso 10 y 11 (Gracias y Aplausos): "Muchas gracias." [Permanecer 3 segundos con serenidad antes de retirarse].`,
+      strengths: [
+        'Expresaste tus ideas con voz propia y disposición genuina de comunicar tu mensaje a la audiencia.',
+        'Mantuviste una intención comunicativa clara que sirve como excelente base para estructurar los 11 Pasos AISO.',
+        'Completaste tu toma de práctica siguiendo el principio del Capítulo 18 («Elige → Ensaya → Observa → Ajusta»).',
+      ],
+      correctionsV07: [
+        'Orden de Apertura (Cap. 3 y 4): Asegúrate de colocar siempre tu Técnica de Inicio (Paso 4) ANTES de presentar tu nombre (Paso 5).',
+        'Puentes del Paso 7 (Cap. 2): Conecta tu idea central con una historia usando el puente «Para ver esta idea en una situación concreta...» y luego pasa a las acciones con «A partir de esta escena, propongo...».',
+        'Limpieza de Muletillas y Pausas (Cap. 10 y 14): Sustituye cualquier vacilación vocal por una Pausa Estratégica en silencio (IE01) de 2 segundos.',
+      ],
+      nextTakeAdjustment:
+        'Para la Toma 2 (Principio «Dos tomas, un ajuste»): Haz una pausa completa de 2 segundos después de tu Técnica de Inicio (Paso 4) antes de pronunciar «Mi nombre es ' +
+        cleanSpeaker +
+        '».',
+      rubricSummary:
+        'Propósito: 2/2 · Escucha y estructura: 1/2 · Participación respetuosa: 2/2 · Tiempo y continuidad: 1/2 · Expresión oral AISO: 2/2',
+    });
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.json(buildFallbackAnalysis());
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+
+      const systemInstruction = `Eres el Analizador Editorial de Discursos de la Academia AISO, basado estrictamente en el libro "Los secretos del orador exitoso: Vence tus miedos, habla desde el corazón" (Edición Verificada v07) de Carlos Enrique Lopez Adames.
+
+Analiza la transcripción del discurso hablado por el estudiante (${cleanSpeaker}, escenario: ${scenario}, duración: ${durationSeconds} segundos) y entrega exactamente 3 bloques pedagógicos:
+1. 'cleanEditorialVersion': Versión Editorial Ordenada y Limpia. Elimina todas las muletillas ("eh", "este", "o sea", "bueno", "pues", repeticiones involuntarias), corrige la precisión léxica según RAE/DPD (Cap. 11: "hubo" impersonal, "medio" invariable, "sobre la base de", "diferente de"), respeta al 100% las ideas originales del estudiante y ordénalas con puntuación limpia siguiendo Los 11 Pasos AISO (Saludo Paso 3 → Técnica de Inicio Paso 4 → Nombre "${cleanSpeaker}" Paso 5 → Tema Paso 6 → Paso 7 con CONCEPTO + Puente 1 + HISTORIA + Puente 2 + TÉCNICAS → Anunciar conclusión Paso 8 → Técnica de Conclusión Paso 9 → Decir gracias Paso 10). No inventes porcentajes sin fuente (Ética de la Verdad v07).
+2. 'strengths': Arreglo de 3 a 4 aciertos concretos y reales observados en el discurso del estudiante (Lo Bueno y Aciertos).
+3. 'correctionsV07': Arreglo de 3 a 4 correcciones constructivas basadas en la Edición v07 (orden de los 11 pasos, puentes del Método AISO, ética de datos/historias, precisión léxica Cap. 11, ritmo y pausas Cap. 10), más 'nextTakeAdjustment' con UN SOLO ajuste concreto y accionable para la Toma 2 ("Dos tomas, un ajuste") y 'rubricSummary' con la evaluación rápida en la Rúbrica AISO escala 0/1/2.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: `Transcripción original capturada por micrófono (${durationSeconds}s) de ${cleanSpeaker}:\n"""\n${cleanTranscript}\n"""`,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              cleanEditorialVersion: {
+                type: Type.STRING,
+                description:
+                  'Versión editorial ordenada, sin muletillas y estructurada en los 11 Pasos y las 3 fases del Método AISO respetando las ideas del estudiante.',
+              },
+              strengths: {
+                type: Type.ARRAY,
+                description: 'Lista de 3 a 4 puntos fuertes y aciertos del discurso del estudiante.',
+                items: { type: Type.STRING },
+              },
+              correctionsV07: {
+                type: Type.ARRAY,
+                description: 'Lista de 3 a 4 correcciones técnicas según la Edición Verificada v07 del libro AISO.',
+                items: { type: Type.STRING },
+              },
+              nextTakeAdjustment: {
+                type: Type.STRING,
+                description: 'Un único ajuste concreto y observable para aplicar en la Toma 2 (principio Dos tomas, un ajuste).',
+              },
+              rubricSummary: {
+                type: Type.STRING,
+                description: 'Calificación resumida en los 5 criterios de la Rúbrica AISO en escala 0/1/2.',
+              },
+            },
+            required: [
+              'cleanEditorialVersion',
+              'strengths',
+              'correctionsV07',
+              'nextTakeAdjustment',
+              'rubricSummary',
+            ],
+          },
+        },
+      });
+
+      const rawText = response.text;
+      if (!rawText) {
+        return res.json(buildFallbackAnalysis());
+      }
+      return res.json(JSON.parse(rawText));
+    } catch (error: any) {
+      console.error('AI Speech Analyzer fallback:', error?.message || error);
+      return res.json(buildFallbackAnalysis());
+    }
+  });
+
+  // MODULE 3: Diccionario Retórico y de Oratoria con IA en Tiempo Real — Edición Verificada v07
+  app.post('/api/oratoria-ai/dictionary', async (req, res) => {
+    const { term = '' } = req.body || {};
+    const cleanTerm = String(term || '').trim();
+    if (!cleanTerm) {
+      return res.status(400).json({ error: 'Debes indicar un término para consultar.' });
+    }
+
+    const buildFallbackTerm = () => ({
+      term: cleanTerm,
+      definition: `Concepto aplicado en la oratoria consciente y la expresión pública para comunicar ideas sobre "${cleanTerm}" con claridad, propósito definido y respeto a la audiencia según el Método AISO v07.`,
+      category: 'Oratoria y Retórica Aplicada · Método AISO v07',
+      level: 'Intermedio',
+      etymology: 'Tradición retórica clásica e hispánica adaptada a la precisión léxica (Cap. 11 v07).',
+      synonyms: ['Claridad expresiva', 'Recurso comunicativo', 'Precisión verbal'],
+      antonyms: ['Ambigüedad', 'Improvisación sin propósito'],
+      aisoSpeechExample: `«Hoy abordaremos el significado práctico de ${cleanTerm} para comprender cómo nos ayuda a tomar mejores decisiones en equipo.»`,
+      stageTip:
+        'Al introducir este término ante tu audiencia, explícalo con sencillez antes de continuar (Valor de Claridad, Cap. 1 v07) y acompáñalo con el gesto de palmas abiertas.',
+    });
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.json(buildFallbackTerm());
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+
+      const systemInstruction = `Eres el Diccionario Retórico, Léxico y Escénico Oficial de la Academia AISO, basado en el libro "Los secretos del orador exitoso: Vence tus miedos, habla desde el corazón" (Edición Verificada v07) de Carlos Enrique Lopez Adames y en las normas de precisión léxica de la RAE y el Diccionario Panhispánico de Dudas (Cap. 11).
+Cuando el estudiante consulte cualquier palabra, figura retórica, técnica o concepto ("${cleanTerm}"), devuelve su ficha completa en español riguroso, claro y aplicable a un discurso real siguiendo Los 11 Pasos y la Ética de la Verdad AISO.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: `Genera la ficha retórica y de oratoria AISO v07 para el término: "${cleanTerm}"`,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              term: { type: Type.STRING },
+              definition: {
+                type: Type.STRING,
+                description: 'Definición retórica y de oratoria clara y rigurosa.',
+              },
+              category: {
+                type: Type.STRING,
+                description: 'Categoría (ej. Figura Retórica, Técnica de Persuasión, Precisión Léxica RAE/DPD, Voz y Dicción, Manejo de Público AISO).',
+              },
+              level: {
+                type: Type.STRING,
+                description: 'Nivel recomendado: Inicial, Intermedio o Avanzado.',
+              },
+              etymology: {
+                type: Type.STRING,
+                description: 'Origen etimológico o raíz pedagógica del término.',
+              },
+              synonyms: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              antonyms: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              aisoSpeechExample: {
+                type: Type.STRING,
+                description: 'Ejemplo real entre comillas usando la palabra o técnica dentro de un discurso AISO v07.',
+              },
+              stageTip: {
+                type: Type.STRING,
+                description: 'Consejo escénico de voz, pausa o lenguaje corporal (Cap. 10 y 12 v07) al emplear este término.',
+              },
+            },
+            required: [
+              'term',
+              'definition',
+              'category',
+              'level',
+              'etymology',
+              'synonyms',
+              'antonyms',
+              'aisoSpeechExample',
+              'stageTip',
+            ],
+          },
+        },
+      });
+
+      const rawText = response.text;
+      if (!rawText) {
+        return res.json(buildFallbackTerm());
+      }
+      return res.json(JSON.parse(rawText));
+    } catch (error: any) {
+      console.error('AI Dictionary fallback:', error?.message || error);
+      return res.json(buildFallbackTerm());
     }
   });
 

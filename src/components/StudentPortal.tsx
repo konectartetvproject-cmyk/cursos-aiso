@@ -169,7 +169,7 @@ export default function StudentPortal() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[
-                  { id: 'nav-ai-oratoria', label: 'Aprender Oratoria con IA (11 Pasos)', icon: <Wand2 className="w-4 h-4" /> },
+                  { id: 'nav-ai-oratoria', label: 'Herramientas y Laboratorio AISO IA (v07)', icon: <Wand2 className="w-4 h-4" /> },
                   { id: 'nav-infographic', label: 'Infografía AISO', icon: <FileText className="w-4 h-4" /> },
                   { id: 'nav-slide-content', label: 'Inicio y Conclusión', icon: <PlayCircle className="w-4 h-4" /> },
                   { id: 'nav-eleven-steps', label: 'Teoría de Los 11 Pasos', icon: <ListOrdered className="w-4 h-4" /> },
@@ -183,6 +183,9 @@ export default function StudentPortal() {
                     key={item.id}
                     type="button"
                     onClick={() => {
+                      if (item.id === 'nav-ai-oratoria') {
+                        window.dispatchEvent(new CustomEvent('aiso-open-oratoria-lab'));
+                      }
                       const el = document.getElementById(item.id);
                       if (el) {
                         const y = el.getBoundingClientRect().top + window.scrollY - 100;

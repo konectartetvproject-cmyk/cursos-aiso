@@ -179,8 +179,10 @@ export default function AdminPanel() {
     }
   };
 
-  const loadAllData = useCallback(async () => {
-    setIsLoading(true);
+  const loadAllData = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     const overrides = getStatusOverrides();
     const localRegs = getLocalRegistrations();
     const localInqs = getLocalInquiries();
@@ -193,7 +195,10 @@ export default function AdminPanel() {
     let serverStatuses: Record<string, string> = {};
 
     try {
-      const token = await getToken().catch(() => null);
+      const token = await Promise.race([
+        getToken().catch(() => null),
+        new Promise<string | null>((resolve) => setTimeout(() => resolve(null), 400)),
+      ]);
       const headers: Record<string, string> = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -440,23 +445,24 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!isAuthorized) return;
-    loadAllData();
+    loadAllData(false);
 
-    const refreshAnalyticsOnly = async () => {
-      const fresh = await fetchCombinedAnalyticsSummary();
-      setAnalytics(fresh);
+    const refreshAllSilent = () => {
+      loadAllData(true);
     };
 
-    const pollInterval = window.setInterval(refreshAnalyticsOnly, 3500);
-    window.addEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
-    window.addEventListener('storage', refreshAnalyticsOnly);
-    window.addEventListener('focus', refreshAnalyticsOnly);
+    const pollInterval = window.setInterval(refreshAllSilent, 3500);
+    window.addEventListener('aiso-analytics-updated', refreshAllSilent);
+    window.addEventListener('aiso-leads-updated', refreshAllSilent);
+    window.addEventListener('storage', refreshAllSilent);
+    window.addEventListener('focus', refreshAllSilent);
 
     return () => {
       window.clearInterval(pollInterval);
-      window.removeEventListener('aiso-analytics-updated', refreshAnalyticsOnly);
-      window.removeEventListener('storage', refreshAnalyticsOnly);
-      window.removeEventListener('focus', refreshAnalyticsOnly);
+      window.removeEventListener('aiso-analytics-updated', refreshAllSilent);
+      window.removeEventListener('aiso-leads-updated', refreshAllSilent);
+      window.removeEventListener('storage', refreshAllSilent);
+      window.removeEventListener('focus', refreshAllSilent);
     };
   }, [isAuthorized, loadAllData]);
 
@@ -743,7 +749,7 @@ export default function AdminPanel() {
 
             <button
               type="button"
-              onClick={loadAllData}
+              onClick={() => loadAllData(false)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all cursor-pointer"
               title="Actualizar registros"
             >

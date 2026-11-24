@@ -54,12 +54,12 @@ export function getCourseCheckoutPricing(course: Workshop | null): CheckoutPrici
 
   if (course.id === 'caracas-ia') {
     return {
-      reservationUsd: 20,
+      reservationUsd: 5,
       reservationTitle: 'Pagar Reserva de Cupo',
-      reservationSubtitle: 'Monto deducible del total del curso',
-      fullUsd: 140,
-      fullTitle: 'Pagar Monto Completo',
-      fullSubtitle: 'Inversión total del curso a tasa BCV',
+      reservationSubtitle: 'Monto deducible del total del curso (Promo Black Friday)',
+      fullUsd: 125,
+      fullTitle: 'Pagar Monto Completo (Black Friday)',
+      fullSubtitle: 'Inversión total del curso a tasa oficial BCV (Antes $140)',
     };
   }
 

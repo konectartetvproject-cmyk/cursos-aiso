@@ -143,7 +143,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
                 Inicio:
               </span>
               <span className="font-extrabold text-slate-900 dark:text-white">
-                SÁBADO 21 DE NOVIEMBRE
+                SÁBADO 28 DE NOVIEMBRE
               </span>
             </div>
           </div>

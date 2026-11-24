@@ -15,23 +15,23 @@ export const coursesData: Workshop[] = [
     imageAlt: "Flyer oficial Curso Práctico de Inteligencia Artificial Aplicada en Caracas",
     imagePosition: "object-top",
     showFullFlyerInModal: true,
-    highlightBanner: "Reserva tu cupo hoy por $20 (monto deducible del total) · Cupos limitados",
-    startDate: "Sábado 21 de Noviembre",
-    dates: "Sábados: 21 de noviembre, 5 y 12 de diciembre",
-    schedule: "De 2:00 p.m. a 6:00 p.m.",
-    duration: "3 Sábados",
+    highlightBanner: "🖤🔥 PROMOCIÓN BLACK FRIDAY · Reserva tu cupo hoy por $5 (monto deducible del total) · Cupos limitados",
+    startDate: "¡Este fin de semana! Sábado 28 de Noviembre",
+    dates: "28 de noviembre, 5 y 12 de diciembre",
+    schedule: "De 2:00 p. m. a 6:00 p. m.",
+    duration: "3 sábados",
     academicHours: "12 horas prácticas presenciales",
-    priceStandard: "$140",
-    priceCashOffer: "$120",
-    registrationFee: "Incluida en la inversión total",
-    reservationNote: "Reserva tu cupo hoy por: $20 (Monto deducible del total del curso)",
-    description: "En la academia AISO hemos diseñado una formación 100% interactiva para estudiantes, emprendedores, creadores y profesionales que quieren dejar de ver la IA como una curiosidad y empezar a usarla como una herramienta real de trabajo, estudio y negocio. Termina el año dominando la habilidad tecnológica más demandada del momento y sal con proyectos listos en tu computadora.",
+    priceStandard: "$125",
+    priceCashOffer: "$100",
+    registrationFee: "Incluida en la inversión total (Reserva con $5 deducibles)",
+    reservationNote: "PROMOCIÓN BLACK FRIDAY: Precio anterior ~$140~ ➡️ $125 a tasa oficial BCV | $100 en efectivo (Reserva con $5 deducibles)",
+    description: "En la academia AISO hemos diseñado una formación 100% interactiva, diseñada para estudiantes, emprendedores, creadores y profesionales que quieren dejar de ver la IA como una curiosidad y empezar a usarla como una herramienta real de trabajo, estudio y negocio. No termines el año haciendo lo mismo de siempre: termina el año dominando la habilidad tecnológica más demandada del momento y sal con proyectos listos en tu computadora.",
     features: [
-      "Sitios web completos: Diseña y publica páginas funcionales para mostrar tus servicios, portafolio, proyectos o emprendimiento",
-      "Aplicaciones interactivas: Transforma ideas en prototipos y apps funcionales guiado por inteligencia artificial",
-      "Estrategias y contenidos para redes: Genera guiones, copys y piezas de comunicación de alto impacto en minutos",
-      "Dominio de Google AI: Descubre cómo usar los entornos profesionales de IA que utilizan desarrolladores en todo el mundo",
-      "Productividad y automatización: Organiza tus proyectos, redacta documentos complejos y ahorra horas de trabajo repetitivo"
+      "Sitios web completos: Diseña y publica páginas funcionales para mostrar tus servicios, portafolio, proyectos o emprendimiento.",
+      "Aplicaciones interactivas: Transforma ideas en prototipos y apps funcionales guiado por inteligencia artificial.",
+      "Estrategias y contenidos para redes: Genera guiones, copys y piezas de comunicación de alto impacto en minutos.",
+      "Dominio de Google AI: Descubre cómo usar los entornos profesionales de IA que utilizan desarrolladores en todo el mundo.",
+      "Productividad y automatización: Organiza tus proyectos, redacta documentos complejos y ahorra horas de trabajo repetitivo."
     ],
     requirements: [
       "Laptop (fundamental para realizar las prácticas en sala).",
@@ -40,10 +40,10 @@ export const coursesData: Workshop[] = [
       "Herramientas y suscripciones: Todo el curso se puede cursar y aprovechar al 100% con herramientas de libre acceso. Si además deseas activar funciones de nivel profesional o comercial (presupuesto estimado opcional de $20 a $100 en herramientas y modelos PRO), te enseñaremos a configurarlas e integrarlas.",
       "Método de pago internacional (opcional): Útil únicamente si decides activar licencias avanzadas; si no dispones de uno, te orientamos durante el taller con alternativas accesibles."
     ],
-    whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso Práctico: Inteligencia Artificial Aplicada en Caracas (inicio sábado 21 de noviembre).",
+    whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso Práctico: Inteligencia Artificial Aplicada en Caracas con la Promoción Black Friday (inicio sábado 28 de noviembre).",
     syllabus: [
       {
-        title: "Sábado 1 (21 de Noviembre): Fundamentos de Google AI y Creación de Sitios Web Completos",
+        title: "Sábado 1 (28 de Noviembre): Fundamentos de Google AI y Creación de Sitios Web Completos",
         subtitle: "De la idea al sitio web publicado (2:00 p.m. a 6:00 p.m.)",
         points: [
           "Dominio de Google AI: Configuración y uso de los entornos profesionales de IA que utilizan desarrolladores en todo el mundo.",

@@ -67,41 +67,52 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
       ? 'Formación Corporativa In-Company'
       : currentCourse);
 
+  const saveRegistrationData = async (origenLabel: string) => {
+    const saved = await recordCourseRegistration(
+      {
+        courseId: currentCourse,
+        nombre: nombre.trim() || 'Interesado Web AISO',
+        telefono: telefono.trim() || 'Por WhatsApp',
+        correo: correo.trim() || 'sin-correo@aiso.website',
+        ciudad: resolvedCity,
+        taller: resolvedTitle,
+        sede: activeCourseObj?.venue || `Sede AISO ${resolvedCity}`,
+        duracion: activeCourseObj?.duration || 'Intensivo Presencial',
+        fechaInicio: activeCourseObj?.startDate || 'Próxima Cohorte 2026',
+        horario: activeCourseObj?.schedule || 'Horario por confirmar',
+        modalidadPago: activeCourseObj
+          ? `${activeCourseObj.priceStandard} BCV${
+              activeCourseObj.priceCashOffer
+                ? ` (${activeCourseObj.priceCashOffer} efectivo)`
+                : ''
+            }`
+          : 'Por definir',
+        precioEfectivo: activeCourseObj?.priceCashOffer,
+        notaReserva: activeCourseObj?.reservationNote,
+        origen: origenLabel,
+      },
+      getToken
+    );
+    setLastRecord(saved);
+    return saved;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const saved = await recordCourseRegistration(
-        {
-          courseId: currentCourse,
-          nombre,
-          telefono,
-          correo,
-          ciudad: resolvedCity,
-          taller: resolvedTitle,
-          sede: activeCourseObj?.venue || `Sede AISO ${resolvedCity}`,
-          duracion: activeCourseObj?.duration || 'Intensivo Presencial',
-          fechaInicio: activeCourseObj?.startDate || 'Próxima Cohorte 2026',
-          horario: activeCourseObj?.schedule || 'Horario por confirmar',
-          modalidadPago: activeCourseObj
-            ? `${activeCourseObj.priceStandard} BCV${
-                activeCourseObj.priceCashOffer
-                  ? ` (${activeCourseObj.priceCashOffer} efectivo)`
-                  : ''
-              }`
-            : 'Por definir',
-          precioEfectivo: activeCourseObj?.priceCashOffer,
-          notaReserva: activeCourseObj?.reservationNote,
-          origen: 'Formulario de Inscripción General Web',
-        },
-        getToken
-      );
-      setLastRecord(saved);
+      await saveRegistrationData('Formulario de Inscripción General Web');
     } catch (err) {
       console.error('Registration submission error:', err);
     } finally {
       setIsSubmitting(false);
       setSubmitted(true);
+    }
+  };
+
+  const handleWhatsAppClickWithTypedData = () => {
+    if (nombre.trim() || telefono.trim() || correo.trim()) {
+      saveRegistrationData('Formulario Web (Clic WhatsApp con Datos)').catch(() => {});
     }
   };
 
@@ -261,6 +272,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
               <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
                 <a
                   href={getWhatsAppRegistrationUrl()}
+                  onClick={handleWhatsAppClickWithTypedData}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 shadow-xs"
@@ -305,11 +317,10 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
                   <input 
                     type="email" 
                     id="email" 
-                    required
                     value={correo}
                     onChange={(e) => setCorreo(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
-                    placeholder="tu@email.com"
+                    placeholder="tu@email.com (opcional)"
                   />
                 </div>
               </div>
@@ -323,7 +334,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
                   required
                   className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
                 >
-                  <option value="caracas-ia">Caracas · Curso Práctico: Inteligencia Artificial Aplicada - $140 BCV / $120 ef. (Reserva $20)</option>
+                  <option value="caracas-ia">Caracas · Curso Práctico: Inteligencia Artificial Aplicada (Black Friday) - $125 BCV / $100 ef. (Reserva $5)</option>
                   <option value="caracas-oratoria">Caracas · Curso de Oratoria (Millennium Mall) - $125 BCV / $100 ef. (+ $5 insc.)</option>
                   <option value="caracas-atencion">Caracas · Curso de Atención al Cliente (Millennium Mall) - $45 (Mañana o Noche)</option>
                   <option value="valencia-oratoria">Valencia · Curso de Oratoria (Urb. La Viña) - $85 BCV / $60 ef. (+ $5 insc.)</option>
@@ -353,6 +364,7 @@ export default function Registration({ selectedCourseId = 'caracas-ia', onCourse
               <div className="text-center pt-2">
                 <a
                   href={getWhatsAppRegistrationUrl()}
+                  onClick={handleWhatsAppClickWithTypedData}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold hover:underline inline-flex items-center gap-1.5"

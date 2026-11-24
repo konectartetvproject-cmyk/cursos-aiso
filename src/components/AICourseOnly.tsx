@@ -83,7 +83,7 @@ export default function AICourseOnly() {
   const [telefono, setTelefono] = useState('');
   const [correo, setCorreo] = useState(user?.email || '');
   const [selectedPlan, setSelectedPlan] = useState<'efectivo' | 'bcv'>('efectivo');
-  const [modalidadPago, setModalidadPago] = useState('Reserva $20 (Promo Efectivo $120)');
+  const [modalidadPago, setModalidadPago] = useState('Reserva $5 (Promo Black Friday Efectivo $100)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -105,9 +105,9 @@ export default function AICourseOnly() {
   const handleSelectPlan = (plan: 'efectivo' | 'bcv') => {
     setSelectedPlan(plan);
     if (plan === 'efectivo') {
-      setModalidadPago('Reserva $20 (Promo Efectivo $120)');
+      setModalidadPago('Reserva $5 (Promo Black Friday Efectivo $100)');
     } else {
-      setModalidadPago('Reserva $20 (Tasa BCV $140)');
+      setModalidadPago('Reserva $5 (Promo Black Friday Tasa BCV $125)');
     }
   };
 
@@ -339,7 +339,7 @@ export default function AICourseOnly() {
               <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-3.5 mb-3.5 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <Award className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>Reserva tu cupo con $20 (Monto deducible de la inversión total)</span>
+                  <span>🖤🔥 PROMOCIÓN BLACK FRIDAY · Reserva tu cupo hoy por $5 (Monto deducible del total)</span>
                 </div>
                 <a
                   href={WHATSAPP_OFFICIAL_URL}
@@ -372,13 +372,13 @@ export default function AICourseOnly() {
                   <Calendar className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-sky-700 dark:text-sky-400 block">
-                  Fechas Presenciales
+                  ¡Este fin de semana!
                 </span>
                 <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 leading-tight">
-                  Inicia 21 de Nov
+                  Sábado 28 de Nov
                 </span>
                 <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
-                  Sábados 21 nov, 5 y 12 dic
+                  28 de noviembre, 5 y 12 de diciembre
                 </span>
               </motion.div>
 
@@ -465,9 +465,13 @@ export default function AICourseOnly() {
           <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
             {/* Executive Pricing Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/5">
+              <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 dark:bg-amber-500/20 text-white dark:text-amber-300 text-[11px] font-extrabold uppercase tracking-wider">
+                <span>🖤🔥 PROMOCIÓN BLACK FRIDAY 🔥🖤</span>
+              </div>
+
               <div className="flex items-center justify-between gap-2 mb-4">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
-                  Inversión Total · Inscripción Incluida
+                  Inversión Total · Incluye Inscripción
                 </span>
                 <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                   Cupos Limitados
@@ -485,7 +489,7 @@ export default function AICourseOnly() {
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                   }`}
                 >
-                  Promo Efectivo ($120)
+                  Promo Efectivo ($100)
                 </button>
                 <button
                   type="button"
@@ -496,7 +500,7 @@ export default function AICourseOnly() {
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                   }`}
                 >
-                  Tasa Oficial BCV ($140)
+                  Tasa Oficial BCV ($125)
                 </button>
               </div>
 
@@ -513,21 +517,19 @@ export default function AICourseOnly() {
                     <div>
                       <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 block">
                         {selectedPlan === 'efectivo'
-                          ? 'Promoción Especial en Efectivo'
-                          : 'Inversión Estándar a Tasa BCV'}
+                          ? 'Precio Promocional en Efectivo'
+                          : 'Promoción Black Friday a Tasa Oficial BCV'}
                       </span>
                       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Incluye las 3 clases y certificado oficial
+                        Precio anterior: <span className="line-through">$140</span> · Incluye inscripción y 3 sábados
                       </span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      {selectedPlan === 'efectivo' && (
-                        <span className="text-base font-bold line-through text-slate-400 tabular-nums">
-                          $140
-                        </span>
-                      )}
+                      <span className="text-base font-bold line-through text-slate-400 tabular-nums">
+                        $140
+                      </span>
                       <span className="font-display text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
-                        {selectedPlan === 'efectivo' ? '$120' : '$140'}
+                        {selectedPlan === 'efectivo' ? '$100' : '$125'}
                       </span>
                     </div>
                   </div>
@@ -537,13 +539,13 @@ export default function AICourseOnly() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        Reserva hoy con:
+                        Reserva tu cupo hoy por:
                       </span>
                       <span className="font-display text-2xl sm:text-3xl font-black tracking-tight text-sky-700 dark:text-sky-400 tabular-nums block my-0.5">
-                        $20
+                        $5
                       </span>
                       <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                        Deducibles del total
+                        Monto deducible del total
                       </span>
                     </div>
 
@@ -552,10 +554,10 @@ export default function AICourseOnly() {
                         Restante al iniciar:
                       </span>
                       <span className="font-display text-2xl sm:text-3xl font-black tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums block my-0.5">
-                        {selectedPlan === 'efectivo' ? '$100' : '$120'}
+                        {selectedPlan === 'efectivo' ? '$95' : '$120'}
                       </span>
                       <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                        {selectedPlan === 'efectivo' ? 'Ahorras $20 en efectivo' : 'Pago Móvil / BCV'}
+                        {selectedPlan === 'efectivo' ? 'Total $100 en efectivo' : 'Total $125 a tasa BCV'}
                       </span>
                     </div>
                   </div>
@@ -711,17 +713,17 @@ export default function AICourseOnly() {
                       onChange={(e) => setModalidadPago(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-600"
                     >
-                      <option value="Reserva $20 (Promo Efectivo $120)">
-                        Reservar con $20 · Promo en Efectivo ($120 total)
+                      <option value="Reserva $5 (Promo Black Friday Efectivo $100)">
+                        Reservar con $5 · Promo Black Friday en Efectivo ($100 total)
                       </option>
-                      <option value="Reserva $20 (Tasa BCV $140)">
-                        Reservar con $20 · Tasa Oficial BCV ($140 total)
+                      <option value="Reserva $5 (Promo Black Friday Tasa BCV $125)">
+                        Reservar con $5 · Promo Black Friday Tasa BCV ($125 total)
                       </option>
-                      <option value="Pago Completo Promo Efectivo $120">
-                        Pago Completo Promo Efectivo ($120)
+                      <option value="Pago Completo Promo Black Friday Efectivo $100">
+                        Pago Completo Promo Black Friday Efectivo ($100)
                       </option>
-                      <option value="Pago Completo Tasa BCV $140">
-                        Pago Completo Tasa BCV ($140)
+                      <option value="Pago Completo Promo Black Friday Tasa BCV $125">
+                        Pago Completo Promo Black Friday Tasa BCV ($125)
                       </option>
                     </select>
                   </div>
@@ -943,7 +945,7 @@ export default function AICourseOnly() {
                 ¿Listo para dominar la Inteligencia Artificial en 3 sábados?
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
-                Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $20 deducibles del total.
+                Escríbenos directamente por WhatsApp para apartar tu cupo hoy con $5 deducibles del total (Promoción Black Friday).
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">

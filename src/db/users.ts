@@ -9,12 +9,12 @@ import {
 } from './schema.ts';
 import { eq, desc } from 'drizzle-orm';
 
-async function withDbRetry<T>(operation: () => Promise<T>, retries = 1): Promise<T> {
+async function withDbRetry<T>(operation: () => Promise<T>, retries = 3): Promise<T> {
   try {
     return await operation();
   } catch (err: any) {
     if (retries > 0) {
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 400));
       return withDbRetry(operation, retries - 1);
     }
     throw err;

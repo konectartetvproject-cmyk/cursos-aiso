@@ -793,6 +793,11 @@ export async function recordCourseRegistration(
   if (typeof window !== 'undefined') {
     const existing = getLocalRegistrations();
     localStorage.setItem(REG_STORAGE_KEY, JSON.stringify([newRecord, ...existing]));
+    try {
+      window.dispatchEvent(new CustomEvent('aiso-leads-updated', { detail: newRecord }));
+    } catch {
+      // Ignore
+    }
   }
 
   // Fire Meta Pixel CompleteRegistration & Lead events with matching eventID for CAPI deduplication
@@ -808,14 +813,14 @@ export async function recordCourseRegistration(
   );
 
   // 2. Automatically dispatch email notification to academyaiso@icloud.com via server & FormSubmit AJAX relay
-  try {
-    fetch('/api/notifications/registration-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newRecord),
-      keepalive: true,
-    }).catch(() => {});
+  const emailNotifPromise = fetch('/api/notifications/registration-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newRecord),
+    keepalive: true,
+  }).catch(() => null);
 
+  try {
     fetch(`https://formsubmit.co/ajax/${ACADEMY_NOTIFICATION_EMAIL}`, {
       method: 'POST',
       headers: {
@@ -847,31 +852,41 @@ export async function recordCourseRegistration(
     // Non-blocking
   }
 
-  // 3. Always save directly to Cloud SQL PostgreSQL backend (with optional auth token if logged in)
+  // 3. Always save directly to Cloud SQL PostgreSQL backend (with fast 400ms max token check)
   try {
-    const token = getToken ? await getToken().catch(() => null) : null;
+    const token = getToken
+      ? await Promise.race([
+          getToken().catch(() => null),
+          new Promise<string | null>((resolve) => setTimeout(() => resolve(null), 400)),
+        ])
+      : null;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    const res = await fetch('/api/registrations', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        nombre: newRecord.nombre,
-        cedula: newRecord.cedula || 'N/A',
-        telefono: newRecord.telefono,
-        correo: newRecord.correo,
-        ciudad: newRecord.ciudad,
-        taller: newRecord.taller,
-        modalidadPago: newRecord.modalidadPago,
-        motivacion: `[Origen: ${newRecord.origen}] [Sede: ${newRecord.sede}] [Inicio: ${newRecord.fechaInicio}] [Horario: ${newRecord.horario}] ${newRecord.notas || ''}`.trim(),
-      }),
-      keepalive: true,
-    });
-    if (res.ok) {
+    const [res] = await Promise.all([
+      fetch('/api/registrations', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          id: newRecord.id,
+          nombre: newRecord.nombre,
+          cedula: newRecord.cedula || 'N/A',
+          telefono: newRecord.telefono,
+          correo: newRecord.correo,
+          ciudad: newRecord.ciudad,
+          taller: newRecord.taller,
+          modalidadPago: newRecord.modalidadPago,
+          motivacion: `[Origen: ${newRecord.origen}] [Sede: ${newRecord.sede}] [Inicio: ${newRecord.fechaInicio}] [Horario: ${newRecord.horario}] ${newRecord.notas || ''}`.trim(),
+        }),
+        keepalive: true,
+      }).catch(() => null),
+      emailNotifPromise,
+    ]);
+
+    if (res && res.ok) {
       const json = await res.json();
       newRecord.syncedToCloud = true;
       if (json?.registration?.id) {
@@ -882,6 +897,11 @@ export async function recordCourseRegistration(
           r.id === newRecord.id ? newRecord : r
         );
         localStorage.setItem(REG_STORAGE_KEY, JSON.stringify(updated));
+        try {
+          window.dispatchEvent(new CustomEvent('aiso-leads-updated', { detail: newRecord }));
+        } catch {
+          // Ignore
+        }
       }
     }
   } catch (err) {
@@ -918,11 +938,21 @@ export async function recordContactInquiry(
   if (typeof window !== 'undefined') {
     const existing = getLocalInquiries();
     localStorage.setItem(INQ_STORAGE_KEY, JSON.stringify([newInquiry, ...existing]));
+    try {
+      window.dispatchEvent(new CustomEvent('aiso-leads-updated', { detail: newInquiry }));
+    } catch {
+      // Ignore
+    }
   }
 
-  // Always save directly to Cloud SQL PostgreSQL backend (with optional auth token if logged in)
+  // Always save directly to Cloud SQL PostgreSQL backend (with fast 400ms max token check)
   try {
-    const token = getToken ? await getToken().catch(() => null) : null;
+    const token = getToken
+      ? await Promise.race([
+          getToken().catch(() => null),
+          new Promise<string | null>((resolve) => setTimeout(() => resolve(null), 400)),
+        ])
+      : null;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -952,6 +982,11 @@ export async function recordContactInquiry(
           i.id === newInquiry.id ? newInquiry : i
         );
         localStorage.setItem(INQ_STORAGE_KEY, JSON.stringify(updated));
+        try {
+          window.dispatchEvent(new CustomEvent('aiso-leads-updated', { detail: newInquiry }));
+        } catch {
+          // Ignore
+        }
       }
     }
   } catch (err) {

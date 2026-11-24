@@ -69,7 +69,7 @@ export default function Hero() {
                   <span>IA Aplicada</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                  Crea webs, apps y contenido para redes · Inicia 21 Nov
+                  Crea webs, apps y contenido para redes · Inicia 28 Nov
                 </p>
               </a>
 
