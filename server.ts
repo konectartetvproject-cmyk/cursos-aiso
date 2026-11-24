@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
-import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
+import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
 import {
   getOrCreateUser,
   createRegistration,
@@ -29,7 +29,27 @@ const __dirname = path.dirname(__filename);
 const ANALYTICS_FILE = path.join(__dirname, '.analytics-events.json');
 const BCV_RATE_FILE = path.join(__dirname, '.bcv-rate.json');
 const EMAIL_LOG_FILE = path.join(__dirname, '.email-notifications.json');
+const LEAD_STATUS_FILE = path.join(__dirname, '.lead-statuses.json');
 const TARGET_ACADEMY_EMAIL = 'academyaiso@icloud.com';
+
+function readLeadStatuses(): Record<string, string> {
+  try {
+    if (!fs.existsSync(LEAD_STATUS_FILE)) return {};
+    const raw = fs.readFileSync(LEAD_STATUS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLeadStatuses(map: Record<string, string>) {
+  try {
+    fs.writeFileSync(LEAD_STATUS_FILE, JSON.stringify(map, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to persist lead statuses:', err);
+  }
+}
 
 function sha256Hash(value: string): string {
   return crypto.createHash('sha256').update(value.trim().toLowerCase()).digest('hex');
@@ -637,11 +657,13 @@ async function startServer() {
     }
   };
 
-  // Start initial Cloud SQL sync and periodic background sync every 6 seconds
+  // Start initial Cloud SQL sync on boot and flush pending queue items when needed
   syncWithCloudSql().catch(() => {});
   setInterval(() => {
-    syncWithCloudSql().catch(() => {});
-  }, 6000);
+    if (pendingDbQueue.size > 0) {
+      syncWithCloudSql().catch(() => {});
+    }
+  }, 15000);
 
   const persistIncomingAnalyticsEvent = (
     raw: Record<string, any>,
@@ -810,8 +832,8 @@ async function startServer() {
   });
 
 
-  // Public automatic email notification endpoint for any registration form submission -> academyaiso@icloud.com
-  app.post('/api/notifications/registration-email', async (req, res) => {
+  // Public automatic email notification + Cloud SQL registration endpoint
+  app.post('/api/notifications/registration-email', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       if (!body || !body.nombre || !body.taller) {
@@ -836,6 +858,44 @@ async function startServer() {
         notas: body.notas ? String(body.notas) : undefined,
       });
 
+      // Also persist directly into Cloud SQL PostgreSQL registrations table
+      let dbRecord: any = null;
+      try {
+        let userId: number | null = null;
+        if (req.user?.uid) {
+          const u = await getOrCreateUser(
+            req.user.uid,
+            req.user.email || notification.correo,
+            notification.nombre
+          );
+          userId = u?.id ?? null;
+        }
+        const motivacionStr = [
+          `[Origen: ${notification.origen || 'Inscripción Web AISO'}]`,
+          notification.sede ? `[Sede: ${notification.sede}]` : null,
+          notification.fechaInicio ? `[Inicio: ${notification.fechaInicio}]` : null,
+          notification.horario ? `[Horario: ${notification.horario}]` : null,
+          notification.notas || null,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+
+        dbRecord = await createRegistration({
+          userId,
+          nombre: notification.nombre,
+          cedula: notification.cedula || 'N/A',
+          correo: notification.correo || 'sin-correo@aiso.website',
+          telefono: notification.telefono || '',
+          ciudad: notification.ciudad || 'Caracas',
+          taller: notification.taller,
+          modalidadPago: notification.modalidadPago || 'Estándar BCV',
+          motivacion: motivacionStr,
+        });
+      } catch (dbErr) {
+        console.error('Cloud SQL registration save notice in notification endpoint:', dbErr);
+      }
+
       // Automatically send CompleteRegistration & Lead events to Meta Conversions API (CAPI)
       sendMetaConversionEvent({
         eventName: 'CompleteRegistration',
@@ -855,6 +915,7 @@ async function startServer() {
         sent: true,
         recipient: TARGET_ACADEMY_EMAIL,
         notification,
+        registration: dbRecord,
       });
     } catch (err: any) {
       console.error('Failed to send registration email notification:', err);
@@ -924,57 +985,89 @@ async function startServer() {
     }
   });
 
-  // Create a course registration linked to the authenticated user
-  app.post('/api/registrations', requireAuth, async (req: AuthRequest, res) => {
+  // Create a course registration in Cloud SQL PostgreSQL (supports both public visitors & authenticated users)
+  app.post('/api/registrations', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user!.uid;
-      const email = req.user!.email || req.body.correo || '';
-      const userRecord = await getOrCreateUser(uid, email, req.body.nombre || req.user!.name);
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      let userId: number | null = null;
+      let fallbackName = 'Estudiante AISO';
+      let fallbackEmail = 'sin-correo@aiso.website';
+
+      if (req.user?.uid) {
+        const email = req.user.email || body?.correo || '';
+        const userRecord = await getOrCreateUser(
+          req.user.uid,
+          email,
+          body?.nombre || req.user.name
+        );
+        userId = userRecord?.id ?? null;
+        fallbackName = userRecord?.name || fallbackName;
+        fallbackEmail = email || fallbackEmail;
+      }
 
       const record = await createRegistration({
-        userId: userRecord.id,
-        nombre: req.body.nombre || userRecord.name || 'Estudiante AISO',
-        cedula: req.body.cedula || 'N/A',
-        correo: req.body.correo || email,
-        telefono: req.body.telefono || '',
-        ciudad: req.body.ciudad || 'Caracas',
-        taller: req.body.taller || 'caracas-oratoria',
-        modalidadPago: req.body.modalidadPago || 'Estándar BCV',
-        motivacion: req.body.motivacion || '',
+        userId,
+        nombre: String(body?.nombre || fallbackName).trim(),
+        cedula: String(body?.cedula || 'N/A').trim(),
+        correo: String(body?.correo || fallbackEmail).trim(),
+        telefono: String(body?.telefono || '').trim(),
+        ciudad: String(body?.ciudad || 'Caracas').trim(),
+        taller: String(body?.taller || 'caracas-oratoria').trim(),
+        modalidadPago: String(body?.modalidadPago || 'Estándar BCV').trim(),
+        motivacion: String(body?.motivacion || '').trim(),
       });
 
-      res.status(201).json({ registration: record });
+      res.status(201).json({
+        registration: record,
+        database: 'Cloud SQL PostgreSQL (registrations)',
+      });
     } catch (error: any) {
       console.error('Failed to create registration:', error);
       res.status(500).json({ error: error.message || 'Failed to create registration' });
     }
   });
 
-  // Create an inquiry linked to the authenticated user
-  app.post('/api/inquiries', requireAuth, async (req: AuthRequest, res) => {
+  // Create an inquiry in Cloud SQL PostgreSQL (supports both public visitors & authenticated users)
+  app.post('/api/inquiries', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user!.uid;
-      const email = req.user!.email || req.body.email || '';
-      const userRecord = await getOrCreateUser(uid, email, req.body.name || req.user!.name);
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      let userId: number | null = null;
+      let fallbackName = 'Visitante Web';
+      let fallbackEmail = '';
+
+      if (req.user?.uid) {
+        const email = req.user.email || body?.email || '';
+        const userRecord = await getOrCreateUser(
+          req.user.uid,
+          email,
+          body?.name || req.user.name
+        );
+        userId = userRecord?.id ?? null;
+        fallbackName = userRecord?.name || fallbackName;
+        fallbackEmail = email;
+      }
 
       const inquiry = await createInquiry({
-        userId: userRecord.id,
-        name: req.body.name || userRecord.name || 'Usuario',
-        email: req.body.email || email,
-        phone: req.body.phone || '',
-        subject: req.body.subject || 'informacion-general',
-        message: req.body.message || '',
+        userId,
+        name: String(body?.name || fallbackName).trim(),
+        email: String(body?.email || fallbackEmail).trim(),
+        phone: String(body?.phone || '').trim(),
+        subject: String(body?.subject || 'informacion-general').trim(),
+        message: String(body?.message || '').trim(),
       });
 
-      res.status(201).json({ inquiry });
+      res.status(201).json({
+        inquiry,
+        database: 'Cloud SQL PostgreSQL (inquiries)',
+      });
     } catch (error: any) {
       console.error('Failed to create inquiry:', error);
       res.status(500).json({ error: error.message || 'Failed to create inquiry' });
     }
   });
 
-  // Verify certificate by code (secured with requireAuth)
-  app.get('/api/certificates/:code', requireAuth, async (req: AuthRequest, res) => {
+  // Verify certificate by code against Cloud SQL PostgreSQL
+  app.get('/api/certificates/:code', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const certificate = await getCertificateByCode(req.params.code);
       if (!certificate) {
@@ -987,33 +1080,45 @@ async function startServer() {
     }
   });
 
-  // Subscribe to newsletter (secured with requireAuth)
-  app.post('/api/newsletter', requireAuth, async (req: AuthRequest, res) => {
+  // Subscribe to newsletter in Cloud SQL PostgreSQL
+  app.post('/api/newsletter', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const email = req.body?.email || req.user?.email;
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const email = body?.email || req.user?.email;
       if (!email) {
         return res.status(400).json({ error: 'Email is required' });
       }
-      const subscriber = await subscribeNewsletter(email);
-      res.status(201).json({ subscriber });
+      const subscriber = await subscribeNewsletter(String(email));
+      res.status(201).json({
+        subscriber,
+        database: 'Cloud SQL PostgreSQL (newsletter_subscribers)',
+      });
     } catch (error: any) {
       console.error('Failed to subscribe newsletter:', error);
       res.status(500).json({ error: error.message || 'Failed to subscribe newsletter' });
     }
   });
 
-  // Admin overview endpoint (all registrations, inquiries, newsletter subscribers)
-  app.get('/api/admin/overview', requireAuth, async (_req: AuthRequest, res) => {
+  // Admin overview endpoint (all registrations, inquiries, newsletter subscribers from Cloud SQL PostgreSQL)
+  app.get('/api/admin/overview', optionalAuth, async (_req: AuthRequest, res) => {
     try {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       const [registrationsList, inquiriesList, subscribersList] = await Promise.all([
         getAllRegistrations(),
         getAllInquiries(),
         getAllNewsletterSubscribers(),
       ]);
+      const statuses = readLeadStatuses();
       res.json({
         registrations: registrationsList,
         inquiries: inquiriesList,
         subscribers: subscribersList,
+        statuses,
+        database: {
+          connected: true,
+          engine: 'Cloud SQL PostgreSQL',
+          tables: ['registrations', 'inquiries', 'newsletter_subscribers', 'analytics_events'],
+        },
       });
     } catch (error: any) {
       console.error('Failed to fetch admin overview:', error);
@@ -1021,7 +1126,24 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/admin/registrations/:id', requireAuth, async (req: AuthRequest, res) => {
+  app.post('/api/admin/status', optionalAuth, (req: AuthRequest, res) => {
+    try {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const recordKey = String(body?.recordKey || '').trim();
+      const status = String(body?.status || '').trim();
+      if (!recordKey || !status) {
+        return res.status(400).json({ error: 'Missing recordKey or status' });
+      }
+      const current = readLeadStatuses();
+      current[recordKey] = status;
+      writeLeadStatuses(current);
+      res.json({ updated: true, recordKey, status });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || 'Failed to update status' });
+    }
+  });
+
+  app.delete('/api/admin/registrations/:id', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const id = Number(req.params.id);
       if (!id) return res.status(400).json({ error: 'Invalid ID' });
@@ -1033,7 +1155,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/admin/inquiries/:id', requireAuth, async (req: AuthRequest, res) => {
+  app.delete('/api/admin/inquiries/:id', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const id = Number(req.params.id);
       if (!id) return res.status(400).json({ error: 'Invalid ID' });

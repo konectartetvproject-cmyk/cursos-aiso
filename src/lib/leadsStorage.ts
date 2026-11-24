@@ -621,6 +621,16 @@ export function setRecordStatusOverride(
   const current = getStatusOverrides();
   current[recordKey] = status;
   localStorage.setItem(STATUS_MAP_KEY, JSON.stringify(current));
+  try {
+    fetch('/api/admin/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recordKey, status }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Non-blocking
+  }
 }
 
 export function getLocalRegistrations(): AdminRegistrationRecord[] {
@@ -837,45 +847,45 @@ export async function recordCourseRegistration(
     // Non-blocking
   }
 
-  // 3. Also send to Cloud SQL backend if authenticated token is available
-  if (getToken) {
-    try {
-      const token = await getToken();
-      if (token) {
-        const res = await fetch('/api/registrations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nombre: newRecord.nombre,
-            cedula: newRecord.cedula || 'N/A',
-            telefono: newRecord.telefono,
-            correo: newRecord.correo,
-            ciudad: newRecord.ciudad,
-            taller: newRecord.taller,
-            modalidadPago: newRecord.modalidadPago,
-            motivacion: `[Origen: ${newRecord.origen}] [Sede: ${newRecord.sede}] [Inicio: ${newRecord.fechaInicio}] [Horario: ${newRecord.horario}] ${newRecord.notas || ''}`.trim(),
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          newRecord.syncedToCloud = true;
-          if (json?.registration?.id) {
-            newRecord.dbId = json.registration.id;
-          }
-          if (typeof window !== 'undefined') {
-            const updated = getLocalRegistrations().map((r) =>
-              r.id === newRecord.id ? newRecord : r
-            );
-            localStorage.setItem(REG_STORAGE_KEY, JSON.stringify(updated));
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Cloud registration sync warning:', err);
+  // 3. Always save directly to Cloud SQL PostgreSQL backend (with optional auth token if logged in)
+  try {
+    const token = getToken ? await getToken().catch(() => null) : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
+    const res = await fetch('/api/registrations', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        nombre: newRecord.nombre,
+        cedula: newRecord.cedula || 'N/A',
+        telefono: newRecord.telefono,
+        correo: newRecord.correo,
+        ciudad: newRecord.ciudad,
+        taller: newRecord.taller,
+        modalidadPago: newRecord.modalidadPago,
+        motivacion: `[Origen: ${newRecord.origen}] [Sede: ${newRecord.sede}] [Inicio: ${newRecord.fechaInicio}] [Horario: ${newRecord.horario}] ${newRecord.notas || ''}`.trim(),
+      }),
+      keepalive: true,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      newRecord.syncedToCloud = true;
+      if (json?.registration?.id) {
+        newRecord.dbId = json.registration.id;
+      }
+      if (typeof window !== 'undefined') {
+        const updated = getLocalRegistrations().map((r) =>
+          r.id === newRecord.id ? newRecord : r
+        );
+        localStorage.setItem(REG_STORAGE_KEY, JSON.stringify(updated));
+      }
+    }
+  } catch (err) {
+    console.error('Cloud registration sync warning:', err);
   }
 
   return newRecord;
@@ -910,41 +920,42 @@ export async function recordContactInquiry(
     localStorage.setItem(INQ_STORAGE_KEY, JSON.stringify([newInquiry, ...existing]));
   }
 
-  if (getToken) {
-    try {
-      const token = await getToken();
-      if (token) {
-        const res = await fetch('/api/inquiries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: newInquiry.name,
-            email: newInquiry.email,
-            phone: newInquiry.phone,
-            subject: newInquiry.subject,
-            message: `[Canal preferido: ${newInquiry.preferredContact}] ${newInquiry.message}`,
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          newInquiry.syncedToCloud = true;
-          if (json?.inquiry?.id) {
-            newInquiry.dbId = json.inquiry.id;
-          }
-          if (typeof window !== 'undefined') {
-            const updated = getLocalInquiries().map((i) =>
-              i.id === newInquiry.id ? newInquiry : i
-            );
-            localStorage.setItem(INQ_STORAGE_KEY, JSON.stringify(updated));
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Cloud inquiry sync warning:', err);
+  // Always save directly to Cloud SQL PostgreSQL backend (with optional auth token if logged in)
+  try {
+    const token = getToken ? await getToken().catch(() => null) : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
+    const res = await fetch('/api/inquiries', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        name: newInquiry.name,
+        email: newInquiry.email,
+        phone: newInquiry.phone,
+        subject: newInquiry.subject,
+        message: `[Canal preferido: ${newInquiry.preferredContact}] ${newInquiry.message}`,
+      }),
+      keepalive: true,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      newInquiry.syncedToCloud = true;
+      if (json?.inquiry?.id) {
+        newInquiry.dbId = json.inquiry.id;
+      }
+      if (typeof window !== 'undefined') {
+        const updated = getLocalInquiries().map((i) =>
+          i.id === newInquiry.id ? newInquiry : i
+        );
+        localStorage.setItem(INQ_STORAGE_KEY, JSON.stringify(updated));
+      }
+    }
+  } catch (err) {
+    console.error('Cloud inquiry sync warning:', err);
   }
 
   return newInquiry;
@@ -955,13 +966,24 @@ export function recordLocalSubscriber(email: string) {
   const normalized = email.trim().toLowerCase();
   if (!normalized) return;
   const existing = getLocalSubscribers();
-  if (existing.some((s) => s.email.toLowerCase() === normalized)) return;
-  const item: AdminSubscriberRecord = {
-    id: `sub_${Date.now()}`,
-    email: normalized,
-    createdAt: new Date().toISOString(),
-  };
-  localStorage.setItem(SUB_STORAGE_KEY, JSON.stringify([item, ...existing]));
+  if (!existing.some((s) => s.email.toLowerCase() === normalized)) {
+    const item: AdminSubscriberRecord = {
+      id: `sub_${Date.now()}`,
+      email: normalized,
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem(SUB_STORAGE_KEY, JSON.stringify([item, ...existing]));
+  }
+  try {
+    fetch('/api/newsletter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: normalized }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Non-blocking
+  }
 }
 
 export function updateLocalRegistrationStatus(

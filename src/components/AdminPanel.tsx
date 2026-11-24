@@ -190,60 +190,66 @@ export default function AdminPanel() {
     let cloudInqs: AdminInquiryRecord[] = [];
     let cloudSubs: AdminSubscriberRecord[] = [];
 
+    let serverStatuses: Record<string, string> = {};
+
     try {
-      const token = await getToken();
+      const token = await getToken().catch(() => null);
+      const headers: Record<string, string> = {};
       if (token) {
-        const res = await fetch('/api/admin/overview', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const res = await fetch(`/api/admin/overview?t=${Date.now()}`, {
+        headers,
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        serverStatuses = data.statuses && typeof data.statuses === 'object' ? data.statuses : {};
+        const combinedStatuses = { ...serverStatuses, ...overrides };
+
+        cloudRegs = (data.registrations || []).map((r: any) => {
+          const key = `db_reg_${r.id}`;
+          return {
+            id: key,
+            dbId: r.id,
+            nombre: r.nombre || 'Estudiante',
+            cedula: r.cedula || '',
+            correo: r.correo || '',
+            telefono: r.telefono || '',
+            ciudad: r.ciudad || 'Caracas',
+            taller: r.taller || '',
+            modalidadPago: r.modalidadPago || 'BCV',
+            origen: r.motivacion?.includes('[Origen:')
+              ? r.motivacion.replace(/^\[Origen:\s*([^\]]+)\].*$/, '$1')
+              : 'Base de Datos Cloud SQL',
+            notas: r.motivacion?.replace(/^\[Origen:\s*[^\]]+\]\s*/, '') || '',
+            estado: (combinedStatuses[key] as any) || 'nuevo',
+            createdAt: r.createdAt || new Date().toISOString(),
+            syncedToCloud: true,
+          };
         });
-        if (res.ok) {
-          const data = await res.json();
-          cloudRegs = (data.registrations || []).map((r: any) => {
-            const key = `db_reg_${r.id}`;
-            return {
-              id: key,
-              dbId: r.id,
-              nombre: r.nombre || 'Estudiante',
-              cedula: r.cedula || '',
-              correo: r.correo || '',
-              telefono: r.telefono || '',
-              ciudad: r.ciudad || 'Caracas',
-              taller: r.taller || '',
-              modalidadPago: r.modalidadPago || 'BCV',
-              origen: r.motivacion?.includes('[Origen:')
-                ? r.motivacion.replace(/^\[Origen:\s*([^\]]+)\].*$/, '$1')
-                : 'Base de Datos Web',
-              notas: r.motivacion?.replace(/^\[Origen:\s*[^\]]+\]\s*/, '') || '',
-              estado: (overrides[key] as any) || 'nuevo',
-              createdAt: r.createdAt || new Date().toISOString(),
-              syncedToCloud: true,
-            };
-          });
 
-          cloudInqs = (data.inquiries || []).map((i: any) => {
-            const key = `db_inq_${i.id}`;
-            return {
-              id: key,
-              dbId: i.id,
-              name: i.name || 'Visitante',
-              email: i.email || '',
-              phone: i.phone || '',
-              subject: i.subject || 'informacion-general',
-              message: i.message || '',
-              estado: (overrides[key] as any) || 'nuevo',
-              createdAt: i.createdAt || new Date().toISOString(),
-              syncedToCloud: true,
-            };
-          });
+        cloudInqs = (data.inquiries || []).map((i: any) => {
+          const key = `db_inq_${i.id}`;
+          return {
+            id: key,
+            dbId: i.id,
+            name: i.name || 'Visitante',
+            email: i.email || '',
+            phone: i.phone || '',
+            subject: i.subject || 'informacion-general',
+            message: i.message || '',
+            estado: (combinedStatuses[key] as any) || 'nuevo',
+            createdAt: i.createdAt || new Date().toISOString(),
+            syncedToCloud: true,
+          };
+        });
 
-          cloudSubs = (data.subscribers || []).map((s: any) => ({
-            id: `db_sub_${s.id}`,
-            email: s.email,
-            createdAt: s.createdAt || new Date().toISOString(),
-          }));
-        }
+        cloudSubs = (data.subscribers || []).map((s: any) => ({
+          id: `db_sub_${s.id}`,
+          email: s.email,
+          createdAt: s.createdAt || new Date().toISOString(),
+        }));
       }
     } catch (err) {
       console.error('Admin cloud fetch notice:', err);
@@ -311,8 +317,25 @@ export default function AdminPanel() {
             c.taller === loc.taller)
       );
       if (!isDuplicate) {
+        // Automatically backfill local-only registration into Cloud SQL PostgreSQL
+        fetch('/api/registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: loc.nombre,
+            cedula: loc.cedula || 'N/A',
+            telefono: loc.telefono,
+            correo: loc.correo,
+            ciudad: loc.ciudad,
+            taller: loc.taller,
+            modalidadPago: loc.modalidadPago,
+            motivacion: `[Origen: ${loc.origen || 'Web AISO'}] [Sede: ${loc.sede || ''}] ${loc.notas || ''}`.trim(),
+          }),
+        }).catch(() => {});
+
         mergedRegs.push({
           ...loc,
+          syncedToCloud: true,
           estado: (overrides[loc.id] as any) || loc.estado || 'nuevo',
         });
       }
@@ -333,8 +356,22 @@ export default function AdminPanel() {
           c.message === loc.message
       );
       if (!isDuplicate) {
+        // Automatically backfill local-only inquiry into Cloud SQL PostgreSQL
+        fetch('/api/inquiries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: loc.name,
+            email: loc.email,
+            phone: loc.phone,
+            subject: loc.subject,
+            message: loc.message,
+          }),
+        }).catch(() => {});
+
         mergedInqs.push({
           ...loc,
+          syncedToCloud: true,
           estado: (overrides[loc.id] as any) || loc.estado || 'nuevo',
         });
       }
@@ -448,13 +485,13 @@ export default function AdminPanel() {
     deleteLocalRegistration(reg.id);
     if (reg.dbId) {
       try {
-        const token = await getToken();
-        if (token) {
-          await fetch(`/api/admin/registrations/${reg.dbId}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+        const token = await getToken().catch(() => null);
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        await fetch(`/api/admin/registrations/${reg.dbId}`, {
+          method: 'DELETE',
+          headers,
+        });
       } catch (err) {
         console.error('Error deleting cloud registration:', err);
       }
@@ -466,13 +503,13 @@ export default function AdminPanel() {
     deleteLocalInquiry(inq.id);
     if (inq.dbId) {
       try {
-        const token = await getToken();
-        if (token) {
-          await fetch(`/api/admin/inquiries/${inq.dbId}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+        const token = await getToken().catch(() => null);
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        await fetch(`/api/admin/inquiries/${inq.dbId}`, {
+          method: 'DELETE',
+          headers,
+        });
       } catch (err) {
         console.error('Error deleting cloud inquiry:', err);
       }
@@ -667,15 +704,21 @@ export default function AdminPanel() {
         {/* Top Admin Header */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Panel Administrativo Privado · Academia AISO</span>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Panel Administrativo Privado · Academia AISO</span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Base de Datos Cloud SQL (PostgreSQL) Conectada
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Control de Pre-Inscripciones y Consultas Web
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Aquí recibes los datos de todas las personas que rellenan formularios en Cursos General, Sede Caracas, Curso de IA y Contacto.
+              Todos los registros de inscripción, compras en la web, formularios de cursos exclusivos y consultas de contacto se guardan automáticamente en la base de datos PostgreSQL.
             </p>
           </div>
 

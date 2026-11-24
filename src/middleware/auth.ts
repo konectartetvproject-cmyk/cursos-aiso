@@ -26,3 +26,24 @@ export const requireAuth = async (
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 };
+
+export const optionalAuth = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split('Bearer ')[1];
+    if (token && token !== 'null' && token !== 'undefined') {
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        req.user = decodedToken;
+      } catch {
+        // Proceed as unauthenticated public visitor
+      }
+    }
+  }
+  next();
+};
+
