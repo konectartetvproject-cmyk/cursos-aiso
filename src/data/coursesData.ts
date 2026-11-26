@@ -78,7 +78,7 @@ export const coursesData: Workshop[] = [
     subtitle: "Descubre todos los secretos de la Oratoria y habla en público exitosamente",
     city: "Caracas",
     venue: "Centro Comercial Millennium Mall, Caracas · Sede AISO",
-    badgeText: "CARACAS · MATUTINO",
+    badgeText: "CARACAS · JUEVES O SÁBADO",
     badgeColor: "bg-indigo-600 text-white",
     level: "Certificado de Orador de Alto Impacto",
     levelColor: "text-indigo-600 dark:text-indigo-400",
@@ -86,29 +86,30 @@ export const coursesData: Workshop[] = [
     imageAlt: "Flyer oficial Curso de Oratoria presencial en Caracas C.C. Millennium Mall",
     imagePosition: "object-top",
     showFullFlyerInModal: true,
-    highlightBanner: "Programa Intensivo: 3 Martes · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
-    startDate: "Martes 24 de Noviembre",
-    dates: "Martes: 24 de Noviembre, 01 de Diciembre y 08 de Diciembre",
+    highlightBanner: "Programa Intensivo: 3 Jueves · 9:30 a.m. a 1:00 p.m. · Certificado de Orador de Alto Impacto",
+    startDate: "Jueves 26 de Noviembre",
+    dates: "Jueves: 26 de Noviembre, 03 de Diciembre y 10 de Diciembre",
     schedule: "9:30 a.m. a 1:00 p.m.",
-    duration: "3 Martes intensivos prácticos/teóricos",
+    duration: "3 jueves intensivos prácticos/teóricos",
     academicHours: "14 horas académicas",
     priceStandard: "$125",
     priceCashOffer: "$100",
     registrationFee: "$5 (pago móvil / tasa BCV)",
     reservationNote: "Total Oferta en Efectivo: $100 (efectivo) + $5 (inscripción) = $105",
-    description: "Aprende Oratoria con todas las técnicas y prácticas que necesitas para hablar en público exitosamente. Te ayudaremos a desarrollar tu potencial, creatividad y valentía con ejercicios para desenvolverte mejor en el escenario y vivir una gran experiencia de crecimiento personal y profesional.",
+    description: "Aprende Oratoria con todas las técnicas y prácticas que necesitas para hablar en público exitosamente. Te ayudaremos a desarrollar tu potencial, creatividad y valentía para hablar en público. Diviértete con nuestros ejercicios para desenvolverte mejor en el escenario y vive la experiencia AISO con tus compañeros de clases en un curso de crecimiento personal y profesional.",
     features: [
       "Dominio escénico y metodología práctica para el control del miedo",
       "Estructuración del discurso: captar la atención, hilo conductor, inicio y cierre impactantes",
       "Manejo de la voz, respiración diafragmática y eliminación de muletillas",
       "Lenguaje corporal, inteligencia emocional y claves para persuadir e inspirar",
       "Manejo de participantes difíciles y resolución de imprevistos en vivo",
-      "Presentación del discurso final con micrófono ante familiares y amigos + Certificado"
+      "Presentación del discurso final con micrófono ante familiares y amigos + Certificado de Orador de Alto Impacto"
     ],
+    whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso de Oratoria presencial en Caracas (Grupo Jueves Matutino: inicia jueves 26 de noviembre, 9:30 a.m. a 1:00 p.m.).",
     syllabus: [
       {
         title: "Módulo 1: Fundamentos, Control Escénico y Estructura del Mensaje",
-        subtitle: "Martes 24 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 26 de Noviembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Introducción al estudio de la Oratoria y aplicaciones prácticas.",
           "Dominio escénico y metodología para el control del miedo.",
@@ -118,7 +119,7 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 2: Voz, Lenguaje Corporal y Persuasión",
-        subtitle: "Martes 01 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 03 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Manejo de la voz, respiración diafragmática y eliminación de muletillas.",
           "Lenguaje Corporal.",
@@ -129,10 +130,108 @@ export const coursesData: Workshop[] = [
       },
       {
         title: "Módulo 3: Presentación, Micrófono y Evaluación Final",
-        subtitle: "Martes 08 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+        subtitle: "Jueves 10 de Diciembre | 9:30 a.m. a 1:00 p.m.",
         points: [
           "Presentación del discurso final ante el grupo, familiares y amigos.",
           "Entrega de certificados."
+        ]
+      }
+    ],
+    scheduleVariants: [
+      {
+        id: "jueves",
+        tabLabel: "Curso de los Jueves (Inicia 26 Nov)",
+        shortLabel: "Jueves Matutino · 9:30 a.m. a 1:00 p.m.",
+        dayHeaderLabel: "Los Jueves · Inicia:",
+        turnLabel: "Turno Matutino · 14 Horas Académicas",
+        badgeText: "CARACAS · JUEVES MATUTINO",
+        highlightBanner: "Programa Intensivo: 3 Jueves (9:30 a.m. a 1:00 p.m.) · Inicia Jueves 26 de Noviembre · Certificado de Orador de Alto Impacto",
+        startDate: "Jueves 26 de Noviembre",
+        dates: "Jueves 26 de Noviembre, 03 de Diciembre y 10 de Diciembre",
+        schedule: "9:30 a.m. a 1:00 p.m.",
+        duration: "3 jueves intensivos prácticos/teóricos",
+        academicHours: "14 horas académicas",
+        image: "/assets/aistudio/definitivo_caracas_oratoria.jpeg",
+        imageAlt: "Flyer oficial Curso de Oratoria presencial en Caracas (Los Jueves - Inicia 26 de Noviembre)",
+        whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso de Oratoria presencial en Caracas (Grupo Jueves: inicia jueves 26 de noviembre, 9:30 a.m. a 1:00 p.m.).",
+        syllabus: [
+          {
+            title: "Módulo 1: Fundamentos, Control Escénico y Estructura del Mensaje",
+            subtitle: "Jueves 26 de Noviembre | 9:30 a.m. a 1:00 p.m.",
+            points: [
+              "Introducción al estudio de la Oratoria y aplicaciones prácticas.",
+              "Dominio escénico y metodología para el control del miedo.",
+              "Estructuración del discurso: captar la atención, hilo conductor, técnicas de inicio y cierre impactantes.",
+              "Ejercicios prácticos en clase desde el primer día."
+            ]
+          },
+          {
+            title: "Módulo 2: Voz, Lenguaje Corporal y Persuasión",
+            subtitle: "Jueves 03 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+            points: [
+              "Manejo de la voz, respiración diafragmática y eliminación de muletillas.",
+              "Lenguaje Corporal.",
+              "Claves para persuadir, inspirar y organizar ideas con impacto.",
+              "Inteligencia Emocional.",
+              "Manejo de participantes difíciles y resolución de imprevistos."
+            ]
+          },
+          {
+            title: "Módulo 3: Presentación, Micrófono y Evaluación Final",
+            subtitle: "Jueves 10 de Diciembre | 9:30 a.m. a 1:00 p.m.",
+            points: [
+              "Presentación del discurso final ante el grupo, familiares y amigos.",
+              "Entrega de certificados."
+            ]
+          }
+        ]
+      },
+      {
+        id: "sabado",
+        tabLabel: "Curso de los Sábados (Inicia 28 Nov)",
+        shortLabel: "Sábados Vespertino · 2:00 p.m. a 6:00 p.m.",
+        dayHeaderLabel: "Los Sábados · Inicia:",
+        turnLabel: "Turno Vespertino · 14 Horas Académicas",
+        badgeText: "CARACAS · SÁBADOS TARDE",
+        highlightBanner: "Programa Intensivo: 3 Sábados (2:00 p.m. a 6:00 p.m.) · Inicia Sábado 28 de Noviembre · Certificado de Orador de Alto Impacto",
+        startDate: "Sábado 28 de Noviembre",
+        dates: "Sábados 28 de Noviembre, 05 de Diciembre y 12 de Diciembre",
+        schedule: "2:00 p.m. a 6:00 p.m.",
+        duration: "3 sábados intensivos prácticos/teóricos",
+        academicHours: "14 horas académicas",
+        image: "/assets/aistudio/definitivo_domingos__7__cd34e15a.png",
+        imageAlt: "Flyer oficial Curso de Oratoria presencial en Caracas (Los Sábados - Inicia 28 de Noviembre)",
+        whatsappMessageText: "¡Hola Academia AISO! Deseo solicitar información e inscribirme en el Curso de Oratoria presencial en Caracas (Grupo Sábados: inicia sábado 28 de noviembre, 2:00 p.m. a 6:00 p.m.).",
+        syllabus: [
+          {
+            title: "Módulo 1: Fundamentos, Control Escénico y Estructura del Mensaje",
+            subtitle: "Sábado 28 de Noviembre | 2:00 p.m. a 6:00 p.m.",
+            points: [
+              "Introducción al estudio de la Oratoria y aplicaciones prácticas.",
+              "Dominio escénico y metodología para el control del miedo.",
+              "Estructuración del discurso: captar la atención, hilo conductor, técnicas de inicio y cierre impactantes.",
+              "Ejercicios prácticos en clase desde el primer día."
+            ]
+          },
+          {
+            title: "Módulo 2: Voz, Lenguaje Corporal y Persuasión",
+            subtitle: "Sábado 05 de Diciembre | 2:00 p.m. a 6:00 p.m.",
+            points: [
+              "Manejo de la voz, respiración diafragmática y eliminación de muletillas.",
+              "Lenguaje Corporal.",
+              "Claves para persuadir, inspirar y organizar ideas con impacto.",
+              "Inteligencia Emocional.",
+              "Manejo de participantes difíciles y resolución de imprevistos."
+            ]
+          },
+          {
+            title: "Módulo 3: Presentación, Micrófono y Evaluación Final",
+            subtitle: "Sábado 12 de Diciembre | 2:00 p.m. a 6:00 p.m.",
+            points: [
+              "Presentación del discurso final ante el grupo, familiares y amigos.",
+              "Entrega de certificados."
+            ]
+          }
         ]
       }
     ]

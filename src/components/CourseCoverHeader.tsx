@@ -168,6 +168,18 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
 
   // 2. CURSO DE ORATORIA EN CARACAS Y VALENCIA - Luminous Sky/Royal Blue & Gold Ribbon Cover
   if (course.id === 'caracas-oratoria' || course.id === 'valencia-oratoria') {
+    const isSaturdayVariant =
+      course.id === 'caracas-oratoria' &&
+      (course.startDate.toLowerCase().includes('sábado') ||
+        course.startDate.toLowerCase().includes('sabado'));
+    const turnBadge = isSaturdayVariant ? 'Vespertino' : 'Matutino';
+    const dayPrefix = isSaturdayVariant ? 'Los Sábados · Inicia:' : 'Los Jueves · Inicia:';
+    const startDateDisplay = isSaturdayVariant ? '28 de Noviembre' : '26 de Noviembre';
+    const turnFooter = isSaturdayVariant
+      ? 'Turno Vespertino · 14 Horas Académicas'
+      : 'Turno Matutino · 14 Horas Académicas';
+    const scheduleDisplay = isSaturdayVariant ? '2:00 P.M. a 6:00 P.M.' : '9:30 A.M. a 1:00 P.M.';
+
     return (
       <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-50/80 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/50 text-slate-900 dark:text-white p-6 sm:p-7 border-b border-blue-200/80 dark:border-slate-800 select-none">
         {/* Top Row */}
@@ -177,7 +189,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               <span className="font-black text-xs text-white">AiSO</span>
               <span className="h-3 w-px bg-amber-400/50" />
               <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">
-                {course.city} · Matutino
+                {course.city} · {turnBadge}
               </span>
             </div>
           </div>
@@ -208,7 +220,7 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               {course.city}
             </div>
 
-            {/* Crisp Flyer Strip: 3 CLASES | LOS MARTES (Caracas) / LOS JUEVES (Valencia) */}
+            {/* Crisp Flyer Strip: 3 CLASES | LOS JUEVES o LOS SÁBADOS */}
             <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl p-3 px-4 border border-blue-200/80 dark:border-slate-700 shadow-2xs flex flex-wrap items-center justify-between gap-2">
               <span className="text-base sm:text-lg font-black text-blue-700 dark:text-sky-400 uppercase tracking-tight">
                 3 Clases
@@ -216,10 +228,10 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
               <div className="text-left">
                 <span className="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 leading-none">
-                  {course.id === 'caracas-oratoria' ? 'Los Martes · Inicia:' : 'Los Jueves · Inicia:'}
+                  {dayPrefix}
                 </span>
                 <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase">
-                  {course.id === 'caracas-oratoria' ? '24 de Noviembre' : '26 de Noviembre'}
+                  {startDateDisplay}
                 </span>
               </div>
             </div>
@@ -245,10 +257,10 @@ export default function CourseCoverHeader({ course, onViewFlyer }: CourseCoverHe
         {/* Bottom Schedule Strip */}
         <div className="relative z-10 mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
           <span className="text-blue-800 dark:text-amber-300 uppercase tracking-wider">
-            Turno Matutino · 14 Horas Académicas
+            {turnFooter}
           </span>
           <span className="font-mono tabular-nums text-blue-900 dark:text-white bg-blue-100/80 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-lg">
-            9:30 A.M. a 1:00 P.M.
+            {scheduleDisplay}
           </span>
         </div>
       </div>

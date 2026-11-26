@@ -32,9 +32,36 @@ interface WorkshopsProps {
 export default function Workshops({ onSelectCourse, onNavigateCourseView }: WorkshopsProps) {
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'ia' | 'oratoria' | 'atencion' | 'etiqueta'>('all');
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({
+    'caracas-oratoria': 'jueves',
+  });
   const [activeModalCourse, setActiveModalCourse] = useState<Workshop | null>(null);
   const [modalTab, setModalTab] = useState<'flyer' | 'syllabus'>('syllabus');
   const [checkoutCourse, setCheckoutCourse] = useState<Workshop | null>(null);
+
+  const resolveCourseWithVariant = (baseCourse: Workshop): Workshop => {
+    if (!baseCourse.scheduleVariants || baseCourse.scheduleVariants.length === 0) {
+      return baseCourse;
+    }
+    const activeVariantId = selectedVariants[baseCourse.id] || baseCourse.scheduleVariants[0].id;
+    const variant =
+      baseCourse.scheduleVariants.find((v) => v.id === activeVariantId) ||
+      baseCourse.scheduleVariants[0];
+    return {
+      ...baseCourse,
+      badgeText: variant.badgeText,
+      highlightBanner: variant.highlightBanner,
+      startDate: variant.startDate,
+      dates: variant.dates,
+      schedule: variant.schedule,
+      duration: variant.duration,
+      academicHours: variant.academicHours,
+      image: variant.image || baseCourse.image,
+      imageAlt: variant.imageAlt || baseCourse.imageAlt,
+      whatsappMessageText: variant.whatsappMessageText,
+      syllabus: variant.syllabus,
+    };
+  };
 
   const matchesCategory = (course: Workshop) => {
     if (selectedCategory === 'all') return true;
@@ -44,11 +71,13 @@ export default function Workshops({ onSelectCourse, onNavigateCourseView }: Work
     return course.id.includes('oratoria') || course.id.includes('avanzada');
   };
 
-  const filteredCourses = coursesData.filter((course) => {
-    const cityMatch =
-      selectedCity === 'all' || course.city.toLowerCase() === selectedCity.toLowerCase();
-    return cityMatch && matchesCategory(course);
-  });
+  const filteredCourses = coursesData
+    .filter((course) => {
+      const cityMatch =
+        selectedCity === 'all' || course.city.toLowerCase() === selectedCity.toLowerCase();
+      return cityMatch && matchesCategory(course);
+    })
+    .map(resolveCourseWithVariant);
 
   const countByCity = (city: string) =>
     coursesData.filter((c) => c.city.toLowerCase() === city.toLowerCase()).length;
@@ -285,7 +314,67 @@ export default function Workshops({ onSelectCourse, onNavigateCourseView }: Work
 
                 {/* Card Body */}
                 <div className="p-6 sm:p-8 flex flex-col flex-grow bg-white dark:bg-slate-900">
-                  
+                  {/* Schedule Variants Tab Selector (e.g. Caracas Oratoria: Jueves vs Sábados) */}
+                  {course.scheduleVariants && course.scheduleVariants.length > 0 && (
+                    <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-amber-50/60 to-indigo-50/90 dark:from-indigo-950/60 dark:via-slate-800/70 dark:to-indigo-950/60 border-2 border-indigo-200/80 dark:border-indigo-800/70 shadow-sm">
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <span className="text-[11px] font-black uppercase tracking-[0.14em] text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                          Selecciona tu modalidad en Caracas:
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
+                          2 Grupos Disponibles
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {course.scheduleVariants.map((variant) => {
+                          const activeVariantId = selectedVariants[course.id] || course.scheduleVariants![0].id;
+                          const isSelected = activeVariantId === variant.id;
+                          return (
+                            <button
+                              key={variant.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedVariants((prev) => ({
+                                  ...prev,
+                                  [course.id]: variant.id,
+                                }))
+                              }
+                              className={`text-left px-3.5 py-2.5 rounded-xl border transition-all duration-200 flex items-center justify-between gap-2 ${
+                                isSelected
+                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20 ring-2 ring-amber-400/70'
+                                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                              }`}
+                            >
+                              <div>
+                                <div className="text-xs sm:text-sm font-black tracking-tight flex items-center gap-1.5">
+                                  <span>{variant.id === 'sabado' ? '🔥' : '📅'}</span>
+                                  <span>{variant.tabLabel}</span>
+                                </div>
+                                <div
+                                  className={`text-[11px] font-semibold mt-0.5 ${
+                                    isSelected ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'
+                                  }`}
+                                >
+                                  {variant.shortLabel} · {variant.schedule}
+                                </div>
+                              </div>
+                              <div
+                                className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border ${
+                                  isSelected
+                                    ? 'bg-amber-400 border-amber-300 text-slate-950'
+                                    : 'border-slate-300 dark:border-slate-600'
+                                }`}
+                              >
+                                {isSelected && <CheckCircle2 className="w-3 h-3 stroke-[3]" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Key Metadata Clean Light Grid with Upgraded Executive Typography */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 mb-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
                     <div className="flex items-start gap-3">

@@ -42,6 +42,9 @@ export default function CaracasCoursesOnly({ onNavigateCourseView }: CaracasCour
   );
 
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'ia' | 'oratoria' | 'atencion'>('all');
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({
+    'caracas-oratoria': 'jueves',
+  });
   const [activeModalCourse, setActiveModalCourse] = useState<Workshop | null>(null);
   const [modalTab, setModalTab] = useState<'flyer' | 'syllabus'>('syllabus');
 
@@ -55,12 +58,38 @@ export default function CaracasCoursesOnly({ onNavigateCourseView }: CaracasCour
   const [submitted, setSubmitted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const filteredCaracasCourses = caracasCourses.filter((course) => {
-    if (selectedCategory === 'all') return true;
-    if (selectedCategory === 'ia') return course.id.includes('ia');
-    if (selectedCategory === 'atencion') return course.id.includes('atencion');
-    return course.id.includes('oratoria');
-  });
+  const resolveCourseWithVariant = (baseCourse: Workshop): Workshop => {
+    if (!baseCourse.scheduleVariants || baseCourse.scheduleVariants.length === 0) {
+      return baseCourse;
+    }
+    const activeVariantId = selectedVariants[baseCourse.id] || baseCourse.scheduleVariants[0].id;
+    const variant =
+      baseCourse.scheduleVariants.find((v) => v.id === activeVariantId) ||
+      baseCourse.scheduleVariants[0];
+    return {
+      ...baseCourse,
+      badgeText: variant.badgeText,
+      highlightBanner: variant.highlightBanner,
+      startDate: variant.startDate,
+      dates: variant.dates,
+      schedule: variant.schedule,
+      duration: variant.duration,
+      academicHours: variant.academicHours,
+      image: variant.image || baseCourse.image,
+      imageAlt: variant.imageAlt || baseCourse.imageAlt,
+      whatsappMessageText: variant.whatsappMessageText,
+      syllabus: variant.syllabus,
+    };
+  };
+
+  const filteredCaracasCourses = caracasCourses
+    .filter((course) => {
+      if (selectedCategory === 'all') return true;
+      if (selectedCategory === 'ia') return course.id.includes('ia');
+      if (selectedCategory === 'atencion') return course.id.includes('atencion');
+      return course.id.includes('oratoria');
+    })
+    .map(resolveCourseWithVariant);
 
   const handleOpenFlyer = (course: Workshop) => {
     recordSectionVisit(course.id, `Ver Flyer Caracas: ${course.title}`);
@@ -237,6 +266,54 @@ export default function CaracasCoursesOnly({ onNavigateCourseView }: CaracasCour
 
                 {/* Card Body */}
                 <div className="p-6 sm:p-8 flex flex-col flex-grow bg-white dark:bg-slate-900">
+                  {/* Interactive Schedule Tabs if course has multiple scheduleVariants (e.g. Caracas Oratoria Jueves vs Sábados) */}
+                  {course.scheduleVariants && course.scheduleVariants.length > 1 && (
+                    <div className="mb-5 p-1.5 rounded-2xl bg-indigo-50/80 dark:bg-slate-800/90 border border-indigo-200/80 dark:border-indigo-800/60">
+                      <div className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 px-2 pt-1 pb-1.5">
+                        Selecciona el día del curso en Caracas:
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {course.scheduleVariants.map((variant) => {
+                          const isSelectedVariant =
+                            (selectedVariants[course.id] || course.scheduleVariants![0].id) ===
+                            variant.id;
+                          return (
+                            <button
+                              key={variant.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedVariants((prev) => ({
+                                  ...prev,
+                                  [course.id]: variant.id,
+                                }))
+                              }
+                              className={`py-2.5 px-3 rounded-xl text-left transition-all cursor-pointer border ${
+                                isSelectedVariant
+                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-700 hover:border-indigo-400'
+                              }`}
+                            >
+                              <span className="text-xs font-extrabold block leading-tight">
+                                {variant.id === 'jueves'
+                                  ? '📅 Jueves (Inicia 26 Nov)'
+                                  : '🔥 Sábados (Inicia 28 Nov)'}
+                              </span>
+                              <span
+                                className={`text-[11px] font-medium block mt-0.5 ${
+                                  isSelectedVariant
+                                    ? 'text-indigo-100'
+                                    : 'text-slate-500 dark:text-slate-400'
+                                }`}
+                              >
+                                {variant.schedule}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Key Metadata Clean Light Grid with Upgraded Executive Typography */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 mb-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
                     <div className="flex items-start gap-3">

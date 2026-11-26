@@ -4,6 +4,25 @@ export interface CourseClass {
   points: string[];
 }
 
+export interface CourseScheduleVariant {
+  id: string;
+  tabLabel: string;
+  shortLabel: string;
+  dayHeaderLabel: string;
+  turnLabel: string;
+  badgeText: string;
+  highlightBanner: string;
+  startDate: string;
+  dates: string;
+  schedule: string;
+  duration: string;
+  academicHours: string;
+  image?: string;
+  imageAlt?: string;
+  whatsappMessageText: string;
+  syllabus: CourseClass[];
+}
+
 export interface Workshop {
   id: string;
   title: string;
@@ -34,6 +53,7 @@ export interface Workshop {
   requirements?: string[];
   whatsappMessageText?: string;
   syllabus: CourseClass[];
+  scheduleVariants?: CourseScheduleVariant[];
 }
 
 export interface Testimonial {

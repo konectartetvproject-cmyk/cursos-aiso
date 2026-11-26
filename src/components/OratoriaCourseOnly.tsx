@@ -78,14 +78,46 @@ export default function OratoriaCourseOnly({
   const { user, getToken } = useAuth();
   const selectedCity = city;
 
-  const caracasCourse =
+  const caracasBaseCourse =
     coursesData.find((c) => c.id === 'caracas-oratoria') || coursesData[1];
   const valenciaCourse =
     coursesData.find((c) => c.id === 'valencia-oratoria') || coursesData[3];
 
+  const [caracasVariantId, setCaracasVariantId] = useState<'jueves' | 'sabado'>('jueves');
+
+  const caracasActiveVariant =
+    caracasBaseCourse.scheduleVariants?.find((v) => v.id === caracasVariantId) ||
+    caracasBaseCourse.scheduleVariants?.[0];
+
+  const caracasCourse = caracasActiveVariant
+    ? {
+        ...caracasBaseCourse,
+        badgeText: caracasActiveVariant.badgeText,
+        highlightBanner: caracasActiveVariant.highlightBanner,
+        startDate: caracasActiveVariant.startDate,
+        dates: caracasActiveVariant.dates,
+        schedule: caracasActiveVariant.schedule,
+        duration: caracasActiveVariant.duration,
+        academicHours: caracasActiveVariant.academicHours,
+        image: caracasActiveVariant.image || caracasBaseCourse.image,
+        imageAlt: caracasActiveVariant.imageAlt || caracasBaseCourse.imageAlt,
+        whatsappMessageText: caracasActiveVariant.whatsappMessageText,
+        syllabus: caracasActiveVariant.syllabus,
+      }
+    : caracasBaseCourse;
+
   const activeCourse = selectedCity === 'caracas' ? caracasCourse : valenciaCourse;
   const cityLabel = selectedCity === 'caracas' ? 'Caracas' : 'Valencia';
-  const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(activeCourse.title, cityLabel);
+  const currentCaracasDayLabel =
+    caracasVariantId === 'sabado'
+      ? 'Sábados (2:00 p.m. a 6:00 p.m.)'
+      : 'Jueves (9:30 a.m. a 1:00 p.m.)';
+  const WHATSAPP_OFFICIAL_URL = buildAisoWhatsAppUrl(
+    selectedCity === 'caracas'
+      ? `${activeCourse.title} - ${currentCaracasDayLabel}`
+      : activeCourse.title,
+    cityLabel
+  );
   const venueLabel =
     selectedCity === 'caracas'
       ? 'Caracas, C.C. Millennium Mall'
@@ -97,7 +129,7 @@ export default function OratoriaCourseOnly({
   const [selectedPlan, setSelectedPlan] = useState<'efectivo' | 'bcv'>('efectivo');
   const [modalidadPago, setModalidadPago] = useState(
     selectedCity === 'caracas'
-      ? 'Promo Efectivo $100 + $5 Inscripción'
+      ? 'Jueves (26 Nov) · Promo Efectivo $100 + $5 Inscripción'
       : 'Promo Efectivo $60 + $5 Inscripción'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,18 +151,29 @@ export default function OratoriaCourseOnly({
     setTimeout(() => setCopiedLink(false), 3000);
   };
 
+  const handleSwitchCaracasVariant = (variant: 'jueves' | 'sabado') => {
+    setCaracasVariantId(variant);
+    const dayPrefix = variant === 'sabado' ? 'Sábados (28 Nov)' : 'Jueves (26 Nov)';
+    if (selectedPlan === 'efectivo') {
+      setModalidadPago(`${dayPrefix} · Promo Efectivo $100 + $5 Inscripción`);
+    } else {
+      setModalidadPago(`${dayPrefix} · Tasa Oficial BCV $125 + $5 Inscripción`);
+    }
+  };
+
   const handleSelectPlan = (plan: 'efectivo' | 'bcv') => {
     setSelectedPlan(plan);
+    const dayPrefix = caracasVariantId === 'sabado' ? 'Sábados (28 Nov)' : 'Jueves (26 Nov)';
     if (plan === 'efectivo') {
       setModalidadPago(
         selectedCity === 'caracas'
-          ? 'Promo Efectivo $100 + $5 Inscripción'
+          ? `${dayPrefix} · Promo Efectivo $100 + $5 Inscripción`
           : 'Promo Efectivo $60 + $5 Inscripción'
       );
     } else {
       setModalidadPago(
         selectedCity === 'caracas'
-          ? 'Tasa Oficial BCV $125 + $5 Inscripción'
+          ? `${dayPrefix} · Tasa Oficial BCV $125 + $5 Inscripción`
           : 'Tasa Oficial BCV $85 + $5 Inscripción'
       );
     }
@@ -146,7 +189,10 @@ export default function OratoriaCourseOnly({
           telefono,
           correo,
           ciudad: cityLabel,
-          taller: activeCourse.title,
+          taller:
+            selectedCity === 'caracas'
+              ? `${activeCourse.title} (${currentCaracasDayLabel})`
+              : activeCourse.title,
           modalidadPago,
           origen: `Acceso Exclusivo Oratoria ${cityLabel}`,
         },
@@ -265,7 +311,9 @@ export default function OratoriaCourseOnly({
             <span aria-hidden="true">·</span>
             <span className="font-semibold text-amber-700 dark:text-amber-400">
               {selectedCity === 'caracas'
-                ? '3 Martes Presenciales (14 Horas Académicas)'
+                ? caracasVariantId === 'sabado'
+                  ? '3 Sábados Presenciales (14 Horas Académicas)'
+                  : '3 Jueves Presenciales (14 Horas Académicas)'
                 : '3 Jueves Presenciales (14 Horas Académicas)'}
             </span>
           </div>
@@ -285,9 +333,87 @@ export default function OratoriaCourseOnly({
             Descubre todos los secretos de la Oratoria, vence el miedo escénico y habla en público exitosamente.
           </p>
 
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto mb-9">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto mb-7">
             {activeCourse.description}
           </p>
+
+          {/* Interactive Schedule Selector Tabs for Caracas (Jueves default vs Sábado) */}
+          {selectedCity === 'caracas' && (
+            <div className="max-w-2xl mx-auto mb-8 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200/90 dark:border-indigo-800/70 shadow-sm">
+              <div className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-2">
+                Selecciona el día y horario de tu preferencia en Caracas:
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchCaracasVariant('jueves')}
+                  className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border ${
+                    caracasVariantId === 'jueves'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs sm:text-sm font-extrabold">
+                      📅 Curso de los Jueves
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        caracasVariantId === 'jueves'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                      }`}
+                    >
+                      Matutino
+                    </span>
+                  </div>
+                  <div
+                    className={`text-xs mt-1 font-medium ${
+                      caracasVariantId === 'jueves'
+                        ? 'text-indigo-100'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    Inicia Jueves 26 Nov · 9:30 a.m. a 1:00 p.m.
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSwitchCaracasVariant('sabado')}
+                  className={`p-3.5 rounded-xl text-left transition-all cursor-pointer border ${
+                    caracasVariantId === 'sabado'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs sm:text-sm font-extrabold">
+                      🔥 Curso de los Sábados
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        caracasVariantId === 'sabado'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                      }`}
+                    >
+                      Vespertino
+                    </span>
+                  </div>
+                  <div
+                    className={`text-xs mt-1 font-medium ${
+                      caracasVariantId === 'sabado'
+                        ? 'text-indigo-100'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    Inicia Sábado 28 Nov · 2:00 p.m. a 6:00 p.m.
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Primary WhatsApp CTA FIRST + Comprar Ahora en la Web + Share */}
           <div className="flex flex-wrap items-center justify-center gap-3.5">
@@ -413,11 +539,17 @@ export default function OratoriaCourseOnly({
                   Fechas Presenciales
                 </span>
                 <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 leading-tight">
-                  {selectedCity === 'caracas' ? 'Inicia Martes 24 Nov' : 'Inicia Jueves 26 Nov'}
+                  {selectedCity === 'caracas'
+                    ? caracasVariantId === 'sabado'
+                      ? 'Inicia Sábado 28 Nov'
+                      : 'Inicia Jueves 26 Nov'
+                    : 'Inicia Jueves 26 Nov'}
                 </span>
                 <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
                   {selectedCity === 'caracas'
-                    ? 'Martes 24 nov, 01 y 08 dic'
+                    ? caracasVariantId === 'sabado'
+                      ? 'Sábados 28 nov, 05 y 12 dic'
+                      : 'Jueves 26 nov, 03 y 10 dic'
                     : 'Jueves 26 nov, 03 y 10 dic'}
                 </span>
               </motion.div>
@@ -430,10 +562,14 @@ export default function OratoriaCourseOnly({
                   <Clock className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400 block">
-                  Horario Matutino
+                  {selectedCity === 'caracas' && caracasVariantId === 'sabado'
+                    ? 'Horario Vespertino'
+                    : 'Horario Matutino'}
                 </span>
                 <span className="font-display text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block mt-1 tabular-nums leading-tight">
-                  9:30 a.m. a 1:00 p.m.
+                  {selectedCity === 'caracas' && caracasVariantId === 'sabado'
+                    ? '2:00 p.m. a 6:00 p.m.'
+                    : '9:30 a.m. a 1:00 p.m.'}
                 </span>
                 <span className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 mt-1 block">
                   14 horas académicas
@@ -554,7 +690,9 @@ export default function OratoriaCourseOnly({
                       </span>
                       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         {selectedCity === 'caracas'
-                          ? 'Incluye los 3 martes y certificado oficial'
+                          ? caracasVariantId === 'sabado'
+                            ? 'Incluye los 3 sábados y certificado oficial'
+                            : 'Incluye los 3 jueves y certificado oficial'
                           : 'Incluye los 3 jueves y certificado oficial'}
                       </span>
                     </div>
@@ -755,11 +893,17 @@ export default function OratoriaCourseOnly({
                     >
                       {selectedCity === 'caracas' ? (
                         <>
-                          <option value="Promo Efectivo $100 + $5 Inscripción">
-                            Caracas · Promo Efectivo ($100 + $5 inscripción = $105)
+                          <option value="Jueves (26 Nov) · Promo Efectivo $100 + $5 Inscripción">
+                            Caracas (Jueves 26 Nov · 9:30 a.m.) · Promo Efectivo ($100 + $5 = $105)
                           </option>
-                          <option value="Tasa Oficial BCV $125 + $5 Inscripción">
-                            Caracas · Tasa Oficial BCV ($125 + $5 inscripción)
+                          <option value="Jueves (26 Nov) · Tasa Oficial BCV $125 + $5 Inscripción">
+                            Caracas (Jueves 26 Nov · 9:30 a.m.) · Tasa BCV ($125 + $5 inscripción)
+                          </option>
+                          <option value="Sábados (28 Nov) · Promo Efectivo $100 + $5 Inscripción">
+                            Caracas (Sábados 28 Nov · 2:00 p.m.) · Promo Efectivo ($100 + $5 = $105)
+                          </option>
+                          <option value="Sábados (28 Nov) · Tasa Oficial BCV $125 + $5 Inscripción">
+                            Caracas (Sábados 28 Nov · 2:00 p.m.) · Tasa BCV ($125 + $5 inscripción)
                           </option>
                         </>
                       ) : (
@@ -925,7 +1069,9 @@ export default function OratoriaCourseOnly({
             <div>
               <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 block mb-1">
                 {selectedCity === 'caracas'
-                  ? 'Pensum Oficial · 3 Martes Intensivos (14 Horas Académicas)'
+                  ? caracasVariantId === 'sabado'
+                    ? 'Pensum Oficial · 3 Sábados Intensivos (14 Horas Académicas)'
+                    : 'Pensum Oficial · 3 Jueves Intensivos (14 Horas Académicas)'
                   : 'Pensum Oficial · 3 Jueves Intensivos (14 Horas Académicas)'}
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
@@ -956,7 +1102,12 @@ export default function OratoriaCourseOnly({
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-mono font-extrabold text-indigo-700 dark:text-indigo-400">
-                      0{idx + 1}. {selectedCity === 'caracas' ? 'MARTES PRESENCIAL' : 'JUEVES PRESENCIAL'}
+                      0{idx + 1}.{' '}
+                      {selectedCity === 'caracas'
+                        ? caracasVariantId === 'sabado'
+                          ? 'SÁBADO PRESENCIAL'
+                          : 'JUEVES PRESENCIAL'
+                        : 'JUEVES PRESENCIAL'}
                     </span>
                     <Layers className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
                   </div>
@@ -992,7 +1143,9 @@ export default function OratoriaCourseOnly({
             <div>
               <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
                 {selectedCity === 'caracas'
-                  ? '¿Listo para dominar el escenario y hablar con impacto en 3 martes?'
+                  ? caracasVariantId === 'sabado'
+                    ? '¿Listo para dominar el escenario y hablar con impacto en 3 sábados?'
+                    : '¿Listo para dominar el escenario y hablar con impacto en 3 jueves?'
                   : '¿Listo para dominar el escenario y hablar con impacto en 3 jueves?'}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
